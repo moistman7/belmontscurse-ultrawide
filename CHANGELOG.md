@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - 16:10 (Steam Deck, 1280x800): menus were cropped at the sides because the UI scaled by a blend of
   width and height. On screens narrower than 16:9 the UI now matches the screen width, so the full

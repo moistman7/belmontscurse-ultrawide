@@ -1848,7 +1848,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.4.9 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.5.0 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
