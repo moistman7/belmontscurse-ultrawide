@@ -1,10 +1,16 @@
 # Changelog
 
+## 0.5.1
+
+- 16:10 (Steam Deck, 1280x800): the pause, map, equipment and journal menus were zoomed in, with the
+  tabs and footer cut off. They are world-space canvases seen by a camera sized for 16:9; on screens
+  narrower than 16:9 that camera is now sized to the canvas.
+- The F7 dump now lists each canvas's render mode, scale factor and camera.
+
 ## 0.5.0
 
-- 16:10 (Steam Deck, 1280x800): menus were cropped at the sides because the UI scaled by a blend of
-  width and height. On screens narrower than 16:9 the UI now matches the screen width, so the full
-  layout fits. New setting `UI.FixNarrowScreens` (default on).
+- 16:10 (Steam Deck, 1280x800): on screens narrower than 16:9 the UI now scales by screen width so
+  the full layout fits. New setting `UI.FixNarrowScreens` (default on).
 - Easy Steam Deck install: double-click launcher, sets the Steam launch option automatically.
 
 ## 0.4.9

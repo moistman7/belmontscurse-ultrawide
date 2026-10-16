@@ -383,6 +383,7 @@ public class UwBehaviour : MonoBehaviour
 			Guard("zone camera size", SizeAction);
 			Guard("skip intros", IntroAction);
 			Guard("startup fps cap", CapAction);
+			Guard("world ui camera", WorldUiAction);
 			RunOneJob();
 		}
 		catch (Exception ex)
@@ -1234,6 +1235,86 @@ public class UwBehaviour : MonoBehaviour
 		return false;
 	}
 
+	// Menus such as the pause/map/journal are world-space canvases seen by an orthographic camera whose
+	// size is fixed for a 16:9 height. On screens narrower than 16:9 the canvas is taller than that, so
+	// the camera only sees the middle of it (zoomed in, tabs and footer cut off). Size the camera to
+	// the canvas instead.
+	private static readonly System.Collections.Generic.List<Canvas> WorldCanvases = new System.Collections.Generic.List<Canvas>();
+
+	private static readonly System.Collections.Generic.Dictionary<int, float> OrigOrthoSize = new System.Collections.Generic.Dictionary<int, float>();
+
+	private static bool NarrowScreen()
+	{
+		if (Plugin.On && Plugin.FixNarrow.Value && Screen.height > 0)
+		{
+			return (float)Screen.width / (float)Screen.height < 1.7677778f;
+		}
+		return false;
+	}
+
+	private static void WorldUiScan()
+	{
+		WorldCanvases.Clear();
+		if (!NarrowScreen())
+		{
+			return;
+		}
+		foreach (ScalerEntry scaler in Scalers)
+		{
+			if (scaler.Scaler == null)
+			{
+				continue;
+			}
+			Canvas component = scaler.Scaler.GetComponent<Canvas>();
+			if (component != null && component.renderMode == RenderMode.WorldSpace && component.worldCamera != null && component.worldCamera.orthographic)
+			{
+				WorldCanvases.Add(component);
+			}
+		}
+	}
+
+	private static void WorldUiAction()
+	{
+		if (!NarrowScreen())
+		{
+			if (OrigOrthoSize.Count > 0)
+			{
+				foreach (Canvas item in WorldCanvases)
+				{
+					if (item != null && item.worldCamera != null && OrigOrthoSize.TryGetValue(item.worldCamera.GetInstanceID(), out var value))
+					{
+						item.worldCamera.orthographicSize = value;
+					}
+				}
+				OrigOrthoSize.Clear();
+			}
+			return;
+		}
+		foreach (Canvas item2 in WorldCanvases)
+		{
+			if (item2 == null || item2.worldCamera == null)
+			{
+				continue;
+			}
+			RectTransform rectTransform = item2.GetComponent<RectTransform>();
+			float num = rectTransform.rect.height * rectTransform.lossyScale.y * 0.5f;
+			if (num <= 1f)
+			{
+				continue;
+			}
+			Camera worldCamera = item2.worldCamera;
+			int instanceID = worldCamera.GetInstanceID();
+			if (!OrigOrthoSize.ContainsKey(instanceID))
+			{
+				OrigOrthoSize[instanceID] = worldCamera.orthographicSize;
+			}
+			if (Math.Abs(worldCamera.orthographicSize - num) > 0.01f)
+			{
+				worldCamera.orthographicSize = num;
+			}
+		}
+	}
+
 	private static void ScanCanvases()
 	{
 		HashSet<int> seen = new HashSet<int>();
@@ -1274,6 +1355,7 @@ public class UwBehaviour : MonoBehaviour
 
 	private static void UiJob()
 	{
+		WorldUiScan();
 		_uiPass++;
 		bool fullPass = _uiPass % 8 == 0;
 		float num = ((Screen.height > 0) ? ((float)Screen.width / (float)Screen.height) : 1.7777778f);
@@ -1848,7 +1930,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.5.0 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.5.1 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -1927,6 +2009,17 @@ public class UwBehaviour : MonoBehaviour
 				handler.AppendLiteral(" children=");
 				handler.AppendFormatted(root.childCount);
 				stringBuilder6.AppendLine(ref handler);
+				try
+				{
+					Canvas cv = scaler.Scaler.GetComponent<Canvas>();
+					if (cv != null)
+					{
+						stringBuilder.AppendLine("    renderMode=" + cv.renderMode + " scaleFactor=" + cv.scaleFactor.ToString("F4") + " planeDistance=" + cv.planeDistance + " worldCamera=" + ((cv.worldCamera != null) ? (cv.worldCamera.name + " ortho=" + cv.worldCamera.orthographic + " size=" + cv.worldCamera.orthographicSize.ToString("F2") + " fov=" + cv.worldCamera.fieldOfView + " aspect=" + cv.worldCamera.aspect.ToString("F3") + " rect=" + cv.worldCamera.rect) : "none") + " lossyScale=" + root.lossyScale + " pos=" + root.position);
+					}
+				}
+				catch (Exception)
+				{
+				}
 				for (int i = 0; i < root.childCount; i++)
 				{
 					RectTransform rectTransform = root.GetChild(i).TryCast<RectTransform>();

@@ -10,7 +10,7 @@ using Il2CppInterop.Runtime.Injection;
 
 namespace BelmontsCurseUltrawide;
 
-[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.5.0")]
+[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.5.1")]
 public class Plugin : BasePlugin
 {
 	internal static Plugin Instance;
@@ -137,7 +137,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.5.0 loaded. F10 = HUD centered / at screen edges, F6 = big HUD, F7 = write a diagnostic dump to this log." + (DebugHotkeys.Value ? " Testing keys on: F8 = all fixes, End = camera fix." : ""));
+		Log.LogInfo("Belmont's Curse Ultrawide 0.5.1 loaded. F10 = HUD centered / at screen edges, F6 = big HUD, F7 = write a diagnostic dump to this log." + (DebugHotkeys.Value ? " Testing keys on: F8 = all fixes, End = camera fix." : ""));
 		ManualLogSource log2 = Log;
 		bepInExInfoLogInterpolatedStringHandler = new BepInExInfoLogInterpolatedStringHandler(181, 11, out isEnabled);
 		if (isEnabled)
