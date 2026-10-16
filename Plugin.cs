@@ -10,7 +10,7 @@ using Il2CppInterop.Runtime.Injection;
 
 namespace BelmontsCurseUltrawide;
 
-[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.5.1")]
+[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.6.0")]
 public class Plugin : BasePlugin
 {
 	internal static Plugin Instance;
@@ -23,6 +23,10 @@ public class Plugin : BasePlugin
 
 	internal static ConfigEntry<float> MatchValue;
 	internal static ConfigEntry<bool> FixNarrow;
+	internal static ConfigEntry<bool> PadShortcuts;
+	internal static ConfigEntry<bool> AutoBigHud;
+	internal static ConfigEntry<bool> AutoBigHudDone;
+	internal static ConfigEntry<string> LastGameVersion;
 
 	internal static ConfigEntry<bool> FixCameraRect;
 
@@ -80,6 +84,10 @@ public class Plugin : BasePlugin
 		MatchValue = Config.Bind("General", "CanvasMatch", 1f, "CanvasScaler match value used on ultrawide. 0 = match width (zoomed), 1 = match height (no zoom).");
 		FixVideos = Config.Bind("General", "FixVideos", defaultValue: true, "Stop pre-rendered videos from being stretched/zoomed on ultrawide (fits them inside the screen instead).");
 		FixNarrow = Config.Bind("UI", "FixNarrowScreens", defaultValue: true, "On screens narrower than 16:9 (16:10 such as the Steam Deck), match the UI to the screen width so menus are not cropped/zoomed.");
+		PadShortcuts = Config.Bind("Input", "GamepadShortcuts", defaultValue: true, "Controller shortcut for players without a keyboard (Steam Deck): press the left and right stick buttons (L3 + R3) together to toggle the bigger HUD.");
+		AutoBigHud = Config.Bind("UI", "AutoBigHUD", defaultValue: true, "On small screens (height 900 or less, such as the Steam Deck) turn the bigger HUD on once, the first time the game runs there. After that your own choice (F6 / L3+R3 / BigHUD) is kept.");
+		AutoBigHudDone = Config.Bind("UI", "AutoBigHUDApplied", defaultValue: false, "Set automatically once AutoBigHUD has been applied. Set to false to apply it again.");
+		LastGameVersion = Config.Bind("General", "LastGameVersion", "", "Filled in automatically: the game version seen on the last run, used to log a warning when the game gets updated. Leave alone.");
 		RemoveLetterbox = Config.Bind("General", "RemoveCutsceneLetterbox", defaultValue: true, "Hide the black cinematic bars the game draws during cutscenes.");
 		FixCameraRect = Config.Bind("General", "FixCameraRect", defaultValue: true, "Remove side bars caused by a camera viewport narrower than the screen.");
 		Camera16x9Logic = Config.Bind("Camera", "LimitCameraLogicAspect", defaultValue: true, "On screens wider than CameraLogicMaxAspect, the game's camera logic (room limits, follow, zoom) is told the screen is CameraLogicMaxAspect wide, while the picture still renders at full width. Fixes the camera losing the player on 32:9. The End key toggles it for the current session (not saved).");
@@ -137,7 +145,22 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.5.1 loaded. F10 = HUD centered / at screen edges, F6 = big HUD, F7 = write a diagnostic dump to this log." + (DebugHotkeys.Value ? " Testing keys on: F8 = all fixes, End = camera fix." : ""));
+		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F10 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F7 = write a diagnostic dump to this log." + (DebugHotkeys.Value ? " Testing keys on: F8 = all fixes, End = camera fix." : ""));
+		try
+		{
+			string gameVersion = UnityEngine.Application.version;
+			Log.LogInfo("Game version " + gameVersion + " (Unity " + UnityEngine.Application.unityVersion + ")");
+			string lastVersion = LastGameVersion.Value ?? "";
+			if (lastVersion.Length > 0 && lastVersion != gameVersion)
+			{
+				Log.LogWarning("The game was updated (" + lastVersion + " -> " + gameVersion + "). If something looks wrong, check for a newer release of this mod.");
+			}
+			LastGameVersion.Value = gameVersion;
+		}
+		catch (Exception ex3)
+		{
+			Log.LogWarning("Game version check: " + ex3.Message);
+		}
 		ManualLogSource log2 = Log;
 		bepInExInfoLogInterpolatedStringHandler = new BepInExInfoLogInterpolatedStringHandler(181, 11, out isEnabled);
 		if (isEnabled)

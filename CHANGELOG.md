@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0
+
+- Controller shortcut for the bigger HUD: press L3 + R3 (both stick buttons) together. Useful on the
+  Steam Deck without a keyboard. Setting: `Input.GamepadShortcuts`.
+- On small screens (height 900 or less, e.g. the Deck's 1280x800) the bigger HUD is turned on once, the
+  first time the game runs there. Your own choice is kept afterwards. Setting: `UI.AutoBigHUD`.
+- Logs the game version and warns when the game has been updated since the last run.
+- Steam Deck: added an uninstaller (`Uninstall from Steam Deck`).
+- The all-in-one zip (BepInEx included) installs offline.
+
 ## 0.5.1
 
 - 16:10 (Steam Deck, 1280x800): the pause, map, equipment and journal menus were zoomed in, with the

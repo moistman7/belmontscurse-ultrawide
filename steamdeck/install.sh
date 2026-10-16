@@ -51,7 +51,7 @@ elif [ -f "$HERE/../winhttp.dll" ] && [ -d "$HERE/../BepInEx/core" ]; then
     # All-in-one zip: BepInEx is bundled next to the steamdeck folder, no download needed
     echo "Installing the bundled BepInEx ..."
     BUNDLE="$(cd "$HERE/.." && pwd)"
-    for item in winhttp.dll doorstop_config.ini .doorstop_version changelog.txt dotnet BepInEx; do
+    for item in winhttp.dll doorstop_config.ini .doorstop_version dotnet BepInEx; do
         [ -e "$BUNDLE/$item" ] && cp -rf "$BUNDLE/$item" "$GAME/"
     done
 else

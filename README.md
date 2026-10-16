@@ -34,7 +34,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.5.1 loaded`.
+   `Belmont's Curse Ultrawide 0.6.0 loaded`.
 
 To uninstall, delete the DLL.
 
@@ -58,8 +58,9 @@ game's Properties > General > Launch Options and paste:
 
     WINEDLLOVERRIDES="winhttp=n,b" %command%
 
-The F6/F7/F10 keys need a keyboard. Without one, set `UI.CenterHUD` and `UI.BigHUD` in
-`BepInEx/config/local.belmontscurse.ultrawide.cfg` instead (edit it with the game closed).
+No keyboard needed: press the left and right stick buttons (L3 + R3) together to toggle the bigger
+HUD. On the Deck's small screen the bigger HUD is turned on automatically the first time. To remove
+the mod, double-click **Uninstall from Steam Deck** in the `steamdeck` folder.
 
 ## Keys
 
@@ -67,6 +68,7 @@ The F6/F7/F10 keys need a keyboard. Without one, set `UI.CenterHUD` and `UI.BigH
 |---|---|
 | F10 | HUD in the centered 16:9 area, or at the screen edges (remembered) |
 | F6 | Bigger HUD on/off (remembered) |
+| L3 + R3 (controller) | Bigger HUD on/off, same as F6 (press both stick buttons together) |
 | F7 | Write a diagnostic dump to the log and to `BepInEx/BelmontsCurseUltrawide_dump.txt` |
 
 ## Settings
@@ -83,6 +85,8 @@ game is closed. The defaults are meant to just work.
 | `UI.FixNarrowScreens` | `true` | On screens narrower than 16:9 (16:10, e.g. the Steam Deck) the UI matches the screen width so menus are not cropped. |
 | `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F10). |
 | `UI.BigHUD` | `false` | Bigger HUD (same as F6). |
+| `UI.AutoBigHUD` | `true` | On small screens (height 900 or less, e.g. the Steam Deck) turns the bigger HUD on once, the first time. Your choice is kept afterwards. |
+| `Input.GamepadShortcuts` | `true` | L3 + R3 toggles the bigger HUD. |
 | `UI.HUDScale` | `1.25` | How much bigger BigHUD makes it (1.1 to 1.6 is sensible). |
 | `Resolution.ForceResolution` | `true` | Use the monitor's resolution at startup. |
 | `Resolution.Width` / `Height` | `0` | `0` = native; set both to force a specific resolution. |

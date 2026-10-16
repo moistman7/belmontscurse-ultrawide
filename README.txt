@@ -43,12 +43,13 @@ Prefer a terminal? Run:  ./steamdeck/install.sh
 If it can't find the game:  ./steamdeck/install.sh "/path/to/Castlevania Belmont's Curse"
 
 Steam Deck notes:
-- The F6 / F7 / F10 keys need a keyboard. Without one, change the settings file instead (see
-  SETTINGS below).
+- No keyboard needed: press the left and right stick buttons (L3 + R3) together to toggle the
+  bigger HUD. On the Deck's small screen the bigger HUD is turned on automatically the first time.
+  The other keys (F7 dump, F10) need a keyboard; the settings file covers the rest (see SETTINGS).
 - Check it worked: BepInEx/LogOutput.log in the game folder should contain
   "Belmont's Curse Ultrawide".
-- To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll and clear the game's launch
-  option in Steam.
+- To uninstall: double-click "Uninstall from Steam Deck" in the steamdeck folder. It removes the
+  mod, and BepInEx and the launch option too if no other mods use them.
 
 
 WINDOWS
@@ -64,15 +65,16 @@ Plain zip (mod only), if you don't have BepInEx yet:
    Run the game once; the first launch can sit on a black screen for a few minutes.
 2. Extract this zip into the game folder (the BepInEx/plugins folder gets the mod DLL). You can
    ignore the "steamdeck" folder on Windows.
-3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.5.1 loaded".
+3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.6.0 loaded".
 
 To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 
 
-KEYS (keyboard)
----------------
+KEYS & CONTROLLER
+----------------
 F10   HUD in the centered 16:9 area, or at the screen edges (remembered)
 F6    Bigger HUD on / off (remembered)
+L3+R3 Bigger HUD on / off with a controller (both stick buttons together)
 F7    Write a diagnostic dump to BepInEx/BelmontsCurseUltrawide_dump.txt
 
 
@@ -83,6 +85,8 @@ game closed. The defaults are meant to just work. The useful ones:
 
   UI.CenterHUD            true = HUD in the centered 16:9 area (same as F10)
   UI.BigHUD               true = bigger HUD (same as F6)
+  UI.AutoBigHUD           turns the bigger HUD on once on small screens such as the Deck (default true)
+  Input.GamepadShortcuts  L3 + R3 toggles the bigger HUD (default true)
   UI.HUDScale             how much bigger BigHUD makes it (1.1 to 1.6 is sensible)
   UI.FixNarrowScreens     fixes menus on 16:10 screens such as the Steam Deck (default true)
   General.SkipIntros      false keeps the startup logos

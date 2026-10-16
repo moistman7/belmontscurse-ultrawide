@@ -384,6 +384,8 @@ public class UwBehaviour : MonoBehaviour
 			Guard("skip intros", IntroAction);
 			Guard("startup fps cap", CapAction);
 			Guard("world ui camera", WorldUiAction);
+			Guard("gamepad shortcut", PadAction);
+			Guard("auto big hud", AutoHudAction);
 			RunOneJob();
 		}
 		catch (Exception ex)
@@ -459,6 +461,44 @@ public class UwBehaviour : MonoBehaviour
 				job.MaxMs = totalMilliseconds;
 			}
 			break;
+		}
+	}
+
+	private static bool _autoHudDone;
+
+	// Controller shortcut for players without a keyboard: both stick buttons (L3 + R3) toggle the big HUD.
+	private static void PadAction()
+	{
+		if (!Plugin.PadShortcuts.Value)
+		{
+			return;
+		}
+		Gamepad current = Gamepad.current;
+		if (current != null && current.leftStickButton.isPressed && current.rightStickButton.isPressed && (current.leftStickButton.wasPressedThisFrame || current.rightStickButton.wasPressedThisFrame))
+		{
+			Plugin.BigHud.Value = !Plugin.BigHud.Value;
+			Plugin.Instance.Log.LogInfo("Big HUD = " + Plugin.BigHud.Value + " (controller shortcut, x" + Plugin.HudScale.Value + ")");
+			Kick();
+		}
+	}
+
+	// Small screens (Steam Deck): turn the big HUD on once, then leave the choice to the player.
+	private static void AutoHudAction()
+	{
+		if (_autoHudDone || Time.unscaledTime < Plugin.ForceDelay.Value + 3f)
+		{
+			return;
+		}
+		_autoHudDone = true;
+		if (Plugin.AutoBigHud.Value && !Plugin.AutoBigHudDone.Value && Screen.height > 0 && Screen.height <= 900)
+		{
+			if (!Plugin.BigHud.Value)
+			{
+				Plugin.BigHud.Value = true;
+				Plugin.Instance.Log.LogInfo("Small screen (" + Screen.width + "x" + Screen.height + "): big HUD turned on (UI.AutoBigHUD). Toggle it with F6 or L3+R3.");
+			}
+			Plugin.AutoBigHudDone.Value = true;
+			Kick();
 		}
 	}
 
@@ -1930,7 +1970,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.5.1 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.6.0 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);

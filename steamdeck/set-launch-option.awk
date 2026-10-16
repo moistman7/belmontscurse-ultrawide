@@ -1,5 +1,6 @@
 # Sets "LaunchOptions" for one app in Steam's localconfig.vdf.
 # Usage: awk -v appid=123 -v opt='...' -f set-launch-option.awk localconfig.vdf > out
+#        (-v remove=1 deletes our option instead; -v query=1 prints the current value to stderr)
 function esc(s) { gsub("\\\\", "\\\\\\\\", s); gsub("\"", "\\\"", s); return s }
 function ind(n,   s) { s = ""; while (n-- > 0) s = s "\t"; return s }
 {
@@ -13,10 +14,10 @@ function ind(n,   s) { s = ""; while (n-- > 0) s = s "\t"; return s }
     }
     if (t == "}") {
         if (inapp && depth == appdepth) {
-            if (!done) { print ind(depth) "\"LaunchOptions\"\t\t\"" esc(opt) "\""; done = 1 }
+            if (!done && !remove) { print ind(depth) "\"LaunchOptions\"\t\t\"" esc(opt) "\""; done = 1 }
             inapp = 0
         } else if (inapps && depth == appsdepth) {
-            if (!done) {
+            if (!done && !remove) {
                 print ind(depth) "\"" appid "\""
                 print ind(depth) "{"
                 print ind(depth + 1) "\"LaunchOptions\"\t\t\"" esc(opt) "\""
@@ -29,6 +30,10 @@ function ind(n,   s) { s = ""; while (n-- > 0) s = s "\t"; return s }
     }
     if (t == "\"Apps\"" && !seenapps) { seenapps = 1; pendapps = 1; print; next }
     if (inapps && !inapp && depth == appsdepth && t == "\"" appid "\"") { pendapp = 1; print; next }
+    if (inapp && depth == appdepth && t ~ /^"LaunchOptions"/ && remove) {
+        if (index(t, "winhttp=n") > 0) { done = 1; next }   # drop only our launch option
+        print; next
+    }
     if (inapp && depth == appdepth && t ~ /^"LaunchOptions"/ && query) {
         v = t; sub(/^"LaunchOptions"[ \t]*"/, "", v); sub(/"$/, "", v); print v > "/dev/stderr"; print; next
     }
@@ -37,4 +42,4 @@ function ind(n,   s) { s = ""; while (n-- > 0) s = s "\t"; return s }
     }
     print
 }
-END { if (!done && !query) exit 3 }
+END { if (!done && !query && !remove) exit 3 }

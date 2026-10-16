@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Uninstall Belmont's Curse Ultrawide
+Comment=Removes the mod (and BepInEx if nothing else uses it)
+Exec=bash -c 'cd "$(dirname "%k")" && bash ./uninstall.sh; echo; read -r -p "Press Enter to close..." _'
+Terminal=true
+Icon=edit-delete
