@@ -68,10 +68,10 @@ the mod, double-click **Uninstall from Steam Deck** in the `steamdeck` folder.
 |---|---|
 | F7 | HUD in the centered 16:9 area, or at the screen edges (remembered) |
 | F6 | Bigger HUD on/off (remembered) |
-| F9 | Auto-advance voiced dialogue on/off (remembered) |
+| F5 | Auto-advance voiced dialogue on/off (remembered) |
 | L3 + R3 (controller) | Bigger HUD on/off, same as F6 (press both stick buttons together) |
 | Select + L3 (controller) | Centered HUD on/off, same as F7 |
-| Select + R3 (controller) | Auto-advance voiced dialogue on/off, same as F9 |
+| Select + R3 (controller) | Auto-advance voiced dialogue on/off, same as F5 |
 | Select + Start (controller) | Diagnostic dump, same as F10 |
 | F10 | Write a diagnostic dump to the log and to `BepInEx/BelmontsCurseUltrawide_dump.txt` |
 
@@ -94,7 +94,7 @@ game is closed. The defaults are meant to just work.
 | `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F7). |
 | `UI.BigHUD` | `false` | Bigger HUD (same as F6). |
 | `UI.AutoBigHUD` | `true` | On small screens (height 900 or less, e.g. the Steam Deck) turns the bigger HUD on once, the first time. Your choice is kept afterwards. |
-| `Dialogue.AutoAdvanceVoiced` | `false` | Advances voiced dialogue once the voice and text are done (same as F9). Unvoiced lines still wait for you. |
+| `Dialogue.AutoAdvanceVoiced` | `false` | Advances voiced dialogue once the voice and text are done (same as F5). Unvoiced lines still wait for you. |
 | `Dialogue.AutoAdvanceDelay` | `0.4` | Seconds to wait before advancing. |
 | `Input.GamepadShortcuts` | `true` | L3 + R3 toggles the bigger HUD. |
 | `UI.HUDScale` | `1.25` | How much bigger BigHUD makes it (1.1 to 1.6 is sensible). |

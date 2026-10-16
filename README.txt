@@ -75,7 +75,7 @@ KEYS & CONTROLLER
 ----------------
 F7    HUD in the centered 16:9 area, or at the screen edges (remembered)
 F6    Bigger HUD on / off (remembered)
-F9    Auto-advance voiced dialogue on / off (remembered)
+F5    Auto-advance voiced dialogue on / off (remembered)
 L3+R3 Bigger HUD on / off with a controller (both stick buttons together)
 Select+L3     Centered HUD on / off with a controller
 Select+R3     Auto-advance voiced dialogue on / off with a controller
@@ -95,7 +95,7 @@ game closed. The defaults are meant to just work. The useful ones:
   UI.CenterHUD            true = HUD in the centered 16:9 area (same as F7)
   UI.BigHUD               true = bigger HUD (same as F6)
   UI.AutoBigHUD           turns the bigger HUD on once on small screens such as the Deck (default true)
-  Dialogue.AutoAdvanceVoiced  true = voiced dialogue advances when the voice ends (same as F9, default false)
+  Dialogue.AutoAdvanceVoiced  true = voiced dialogue advances when the voice ends (same as F5, default false)
   Dialogue.AutoAdvanceDelay   seconds to wait before advancing (default 0.4)
   Input.GamepadShortcuts  L3 + R3 toggles the bigger HUD (default true)
   UI.HUDScale             how much bigger BigHUD makes it (1.1 to 1.6 is sensible)
