@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- 16:10 (Steam Deck, 1280x800): menus were cropped at the sides because the UI scaled by a blend of
+  width and height. On screens narrower than 16:9 the UI now matches the screen width, so the full
+  layout fits. New setting `UI.FixNarrowScreens` (default on).
+
 ## 0.4.9
 
 - F7 dump also lists the lights near the screen, everything drawn at a few screen points, and the

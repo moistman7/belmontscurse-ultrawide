@@ -22,6 +22,7 @@ public class Plugin : BasePlugin
 	internal static ConfigEntry<bool> Enabled;
 
 	internal static ConfigEntry<float> MatchValue;
+	internal static ConfigEntry<bool> FixNarrow;
 
 	internal static ConfigEntry<bool> FixCameraRect;
 
@@ -78,6 +79,7 @@ public class Plugin : BasePlugin
 		DebugHotkeys = Config.Bind("General", "DebugHotkeys", defaultValue: false, "Enable the testing keys: F8 = all fixes on/off, End = camera fix on/off (current session only). Off by default so nothing gets switched off by accident. F10 (HUD centered or at the screen edges), F6 (big HUD) and F7 (diagnostic dump) always work.");
 		MatchValue = Config.Bind("General", "CanvasMatch", 1f, "CanvasScaler match value used on ultrawide. 0 = match width (zoomed), 1 = match height (no zoom).");
 		FixVideos = Config.Bind("General", "FixVideos", defaultValue: true, "Stop pre-rendered videos from being stretched/zoomed on ultrawide (fits them inside the screen instead).");
+		FixNarrow = Config.Bind("UI", "FixNarrowScreens", defaultValue: true, "On screens narrower than 16:9 (16:10 such as the Steam Deck), match the UI to the screen width so menus are not cropped/zoomed.");
 		RemoveLetterbox = Config.Bind("General", "RemoveCutsceneLetterbox", defaultValue: true, "Hide the black cinematic bars the game draws during cutscenes.");
 		FixCameraRect = Config.Bind("General", "FixCameraRect", defaultValue: true, "Remove side bars caused by a camera viewport narrower than the screen.");
 		Camera16x9Logic = Config.Bind("Camera", "LimitCameraLogicAspect", defaultValue: true, "On screens wider than CameraLogicMaxAspect, the game's camera logic (room limits, follow, zoom) is told the screen is CameraLogicMaxAspect wide, while the picture still renders at full width. Fixes the camera losing the player on 32:9. The End key toggles it for the current session (not saved).");

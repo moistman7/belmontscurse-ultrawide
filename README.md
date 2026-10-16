@@ -40,8 +40,8 @@ To uninstall, delete the DLL.
 
 ## Steam Deck / Linux (Proton)
 
-The Deck's own screen is 16:10, so this mod only matters when you dock it to an ultrawide monitor
-(or run another Linux machine with one). Setup is one script:
+The Deck's own screen is 16:10 (the mod fixes the cropped menus there) and it also handles docking to an ultrawide monitor
+(or any Linux machine with one). Setup is one script:
 
 1. Switch to Desktop Mode and extract the release zip (or just download `steamdeck/install.sh`).
 2. Open a terminal in that folder and run `./install.sh`. It finds the game (including on an SD
@@ -76,6 +76,7 @@ game is closed. The defaults are meant to just work.
 | `General.StartupFpsCap` | `60` | Frame rate limit during startup only. `0` = off. Still getting a black screen at launch? Try `30`. |
 | `Camera.CameraLogicAspect` | `auto` | Recommended. `2.4` lets the camera use 21:9 framing (wider view, but it may misbehave in some rooms). |
 | `UI.CenterMenus` | `true` | Pause menu, journal and popups in the centered 16:9 area. |
+| `UI.FixNarrowScreens` | `true` | On screens narrower than 16:9 (16:10, e.g. the Steam Deck) the UI matches the screen width so menus are not cropped. |
 | `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F10). |
 | `UI.BigHUD` | `false` | Bigger HUD (same as F6). |
 | `UI.HUDScale` | `1.25` | How much bigger BigHUD makes it (1.1 to 1.6 is sensible). |

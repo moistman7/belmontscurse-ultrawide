@@ -1291,15 +1291,17 @@ public class UwBehaviour : MonoBehaviour
 				bool num3 = Plugin.On && num > num2 + 0.01f;
 				float matchWidthOrHeight = scaler.matchWidthOrHeight;
 				float value;
-				if (num3)
+				bool narrow = Plugin.On && Plugin.FixNarrow.Value && num < num2 - 0.01f;
+				if (num3 || narrow)
 				{
 					if (!OrigMatch.ContainsKey(scaler2.Id))
 					{
 						OrigMatch[scaler2.Id] = matchWidthOrHeight;
 					}
-					if (Math.Abs(matchWidthOrHeight - Plugin.MatchValue.Value) > 0.001f)
+					float target = (narrow ? 0f : Plugin.MatchValue.Value);
+					if (Math.Abs(matchWidthOrHeight - target) > 0.001f)
 					{
-						scaler.matchWidthOrHeight = Plugin.MatchValue.Value;
+						scaler.matchWidthOrHeight = target;
 					}
 				}
 				else if (OrigMatch.TryGetValue(scaler2.Id, out value))
