@@ -105,7 +105,7 @@ public class Plugin : BasePlugin
 		KeyCenterHud = Config.Bind("Hotkeys", "CenterHUD", Key.F7, "Key that toggles the HUD between the centered 16:9 area and the screen edges. Use a key name such as F10, Home, Backquote or Numpad5.");
 		KeyBigHud = Config.Bind("Hotkeys", "BigHUD", Key.F6, "Key that toggles the bigger HUD.");
 		KeyAutoAdvance = Config.Bind("Hotkeys", "AutoAdvanceVoiced", Key.F5, "Key that toggles auto-advance for voiced dialogue.");
-		KeyDump = Config.Bind("Hotkeys", "DiagnosticDump", Key.F10, "Key that writes the diagnostic dump to the log.");
+		KeyDump = Config.Bind("Hotkeys", "DiagnosticDump", Key.F9, "Key that writes the diagnostic dump to the log.");
 		PadModifier = Config.Bind("Controller", "Modifier", GamepadButton.Select, "Hold this controller button and press one of the buttons below. (L3 + R3 together always toggles the bigger HUD.) Needs Input.GamepadShortcuts. Button names: Select, Start, North, South, East, West, LeftShoulder, RightShoulder, LeftStick, RightStick, DpadUp, DpadDown, DpadLeft, DpadRight.");
 		PadCenterHud = Config.Bind("Controller", "CenterHUD", GamepadButton.LeftStick, "Modifier + this button toggles the centered HUD.");
 		PadAutoAdvance = Config.Bind("Controller", "AutoAdvanceVoiced", GamepadButton.RightStick, "Modifier + this button toggles auto-advance for voiced dialogue.");
@@ -174,7 +174,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F7 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F5 = auto-advance voiced dialogue (controller: Select + R3), F10 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
+		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F7 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F5 = auto-advance voiced dialogue (controller: Select + R3), F9 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;

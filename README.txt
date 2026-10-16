@@ -81,7 +81,7 @@ Select+L3     Centered HUD on / off with a controller
 Select+R3     Auto-advance voiced dialogue on / off with a controller
 Select+Start  Diagnostic dump with a controller
 (Controller buttons can be changed in the [Controller] section of the settings file.)
-F10   Write a diagnostic dump to BepInEx/BelmontsCurseUltrawide_dump.txt
+F9    Write a diagnostic dump to BepInEx/BelmontsCurseUltrawide_dump.txt
 
 Every key can be changed in the [Hotkeys] section of the settings file, using a key name such as
 F10, Home, Backquote or Numpad5.
@@ -120,7 +120,7 @@ TROUBLESHOOTING
 
 REPORTING A PROBLEM
 -------------------
-Press F10 in game while the problem is on screen, then send BepInEx/BelmontsCurseUltrawide_dump.txt,
+Press F9 in game while the problem is on screen, then send BepInEx/BelmontsCurseUltrawide_dump.txt,
 BepInEx/LogOutput.log and a screenshot, and say which resolution / device you use. These files
 stay on your machine; nothing is transmitted.
 
