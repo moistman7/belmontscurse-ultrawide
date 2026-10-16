@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
 - Voiced dialogue can advance automatically once the voice line and text are done: `Dialogue.AutoAdvanceVoiced` (F5, or Select + R3 on a controller). Off by default.
 - All keyboard keys are remappable (`[Hotkeys]`), and every shortcut has a controller button combo (`[Controller]`). Defaults: F5 auto-advance, F6 bigger HUD, F7 centered HUD, F9 diagnostic dump. The testing keys (F8, End) are removed.

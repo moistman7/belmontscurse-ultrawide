@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace BelmontsCurseUltrawide;
 
-[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.6.0")]
+[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.7.0")]
 public class Plugin : BasePlugin
 {
 	internal static Plugin Instance;
@@ -179,7 +179,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F7 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F5 = auto-advance voiced dialogue (controller: Select + R3), F9 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
+		Log.LogInfo("Belmont's Curse Ultrawide 0.7.0 loaded. F7 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F5 = auto-advance voiced dialogue (controller: Select + R3), F9 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;
