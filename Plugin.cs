@@ -7,6 +7,8 @@ using BepInEx.Core.Logging.Interpolation;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using Il2CppInterop.Runtime.Injection;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace BelmontsCurseUltrawide;
 
@@ -56,6 +58,28 @@ public class Plugin : BasePlugin
 
 	internal static ConfigEntry<string> HudScaleCanvases;
 
+	internal static ConfigEntry<bool> AutoAdvance;
+
+	internal static ConfigEntry<float> AutoAdvanceDelay;
+
+	internal static ConfigEntry<Key> KeyCenterHud;
+
+	internal static ConfigEntry<Key> KeyBigHud;
+
+	internal static ConfigEntry<Key> KeyAutoAdvance;
+
+	internal static ConfigEntry<Key> KeyDump;
+
+	internal static ConfigEntry<Key> KeyAllFixes;
+
+	internal static ConfigEntry<GamepadButton> PadModifier;
+
+	internal static ConfigEntry<GamepadButton> PadCenterHud;
+
+	internal static ConfigEntry<GamepadButton> PadAutoAdvance;
+
+	internal static ConfigEntry<GamepadButton> PadDump;
+
 	internal static ConfigEntry<bool> DebugHotkeys;
 
 	internal static ConfigEntry<bool> SkipIntros;
@@ -80,7 +104,18 @@ public class Plugin : BasePlugin
 		Enabled = Config.Bind("General", "EnableFix", defaultValue: true, "Apply the ultrawide fix. F8 toggles everything for the current session (not saved).");
 		SkipIntros = Config.Bind("General", "SkipIntros", defaultValue: true, "Skip the company logos at startup (first-launch settings screens like brightness and language are still shown).");
 		StartupFpsCap = Config.Bind("General", "StartupFpsCap", 60, "Limit the frame rate to this while the game starts up (logos, loading, until the title screen), which avoids the occasional black screen at startup. After that your in-game frame rate and V-Sync settings are put back. 0 = off.");
-		DebugHotkeys = Config.Bind("General", "DebugHotkeys", defaultValue: false, "Enable the testing keys: F8 = all fixes on/off, End = camera fix on/off (current session only). Off by default so nothing gets switched off by accident. F10 (HUD centered or at the screen edges), F6 (big HUD) and F7 (diagnostic dump) always work.");
+		AutoAdvance = Config.Bind("Dialogue", "AutoAdvanceVoiced", defaultValue: false, "Advance voiced dialogue automatically once the voice line has finished and the text is fully shown. Lines without voice still wait for you. F9 toggles it in game (saved).");
+		AutoAdvanceDelay = Config.Bind("Dialogue", "AutoAdvanceDelay", 0.4f, "Seconds to wait after the voice and text are done before advancing.");
+		KeyCenterHud = Config.Bind("Hotkeys", "CenterHUD", Key.F10, "Key that toggles the HUD between the centered 16:9 area and the screen edges. Use a key name such as F10, Home, Backquote or Numpad5.");
+		KeyBigHud = Config.Bind("Hotkeys", "BigHUD", Key.F6, "Key that toggles the bigger HUD.");
+		KeyAutoAdvance = Config.Bind("Hotkeys", "AutoAdvanceVoiced", Key.F9, "Key that toggles auto-advance for voiced dialogue.");
+		KeyDump = Config.Bind("Hotkeys", "DiagnosticDump", Key.F7, "Key that writes the diagnostic dump to the log.");
+		KeyAllFixes = Config.Bind("Hotkeys", "AllFixesTest", Key.F8, "Testing key (needs General.DebugHotkeys): all fixes on/off.");
+		PadModifier = Config.Bind("Controller", "Modifier", GamepadButton.Select, "Hold this controller button and press one of the buttons below. (L3 + R3 together always toggles the bigger HUD.) Needs Input.GamepadShortcuts. Button names: Select, Start, North, South, East, West, LeftShoulder, RightShoulder, LeftStick, RightStick, DpadUp, DpadDown, DpadLeft, DpadRight.");
+		PadCenterHud = Config.Bind("Controller", "CenterHUD", GamepadButton.LeftStick, "Modifier + this button toggles the centered HUD.");
+		PadAutoAdvance = Config.Bind("Controller", "AutoAdvanceVoiced", GamepadButton.RightStick, "Modifier + this button toggles auto-advance for voiced dialogue.");
+		PadDump = Config.Bind("Controller", "DiagnosticDump", GamepadButton.Start, "Modifier + this button writes the diagnostic dump to the log.");
+		DebugHotkeys = Config.Bind("General", "DebugHotkeys", defaultValue: false, "Enable the testing keys: F8 = all fixes on/off (current session only). Off by default so nothing gets switched off by accident. F10 (HUD centered or at the screen edges), F6 (big HUD) and F7 (diagnostic dump) always work.");
 		MatchValue = Config.Bind("General", "CanvasMatch", 1f, "CanvasScaler match value used on ultrawide. 0 = match width (zoomed), 1 = match height (no zoom).");
 		FixVideos = Config.Bind("General", "FixVideos", defaultValue: true, "Stop pre-rendered videos from being stretched/zoomed on ultrawide (fits them inside the screen instead).");
 		FixNarrow = Config.Bind("UI", "FixNarrowScreens", defaultValue: true, "On screens narrower than 16:9 (16:10 such as the Steam Deck), match the UI to the screen width so menus are not cropped/zoomed.");
@@ -90,7 +125,7 @@ public class Plugin : BasePlugin
 		LastGameVersion = Config.Bind("General", "LastGameVersion", "", "Filled in automatically: the game version seen on the last run, used to log a warning when the game gets updated. Leave alone.");
 		RemoveLetterbox = Config.Bind("General", "RemoveCutsceneLetterbox", defaultValue: true, "Hide the black cinematic bars the game draws during cutscenes.");
 		FixCameraRect = Config.Bind("General", "FixCameraRect", defaultValue: true, "Remove side bars caused by a camera viewport narrower than the screen.");
-		Camera16x9Logic = Config.Bind("Camera", "LimitCameraLogicAspect", defaultValue: true, "On screens wider than CameraLogicMaxAspect, the game's camera logic (room limits, follow, zoom) is told the screen is CameraLogicMaxAspect wide, while the picture still renders at full width. Fixes the camera losing the player on 32:9. The End key toggles it for the current session (not saved).");
+		Camera16x9Logic = Config.Bind("Camera", "LimitCameraLogicAspect", defaultValue: true, "On screens wider than CameraLogicMaxAspect, the game's camera logic (room limits, follow, zoom) is told the screen is CameraLogicMaxAspect wide, while the picture still renders at full width. Fixes the camera losing the player on 32:9.");
 		CameraMaxAspect = Config.Bind("Camera", "CameraLogicAspect", "auto", "What the game's camera logic is told the screen shape is. auto = 16:9 on any wider screen, which is what the rooms are built for (fixes the camera swinging or stopping when entering areas). Or a number: the widest aspect the camera logic sees (2.4 = 21:9, 1.778 = 16:9).");
 		FixScreenSize = Config.Bind("Camera", "FixWidthBasedZoom", defaultValue: true, "Rooms/fights that size the camera by width are converted to the height a 16:9 screen would show, so they are not zoomed in on ultrawide.");
 		DisableConfiners = Config.Bind("Camera", "DisableConfiners", defaultValue: false, "Old workaround: switch off the Cinemachine room confiners entirely. Usually not needed with Camera16x9Logic on.");
@@ -145,7 +180,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F10 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F7 = write a diagnostic dump to this log." + (DebugHotkeys.Value ? " Testing keys on: F8 = all fixes, End = camera fix." : ""));
+		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F10 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F9 = auto-advance voiced dialogue (controller: Select + R3), F7 = diagnostic dump. Controller: hold Select + L3 for the centered HUD." + (DebugHotkeys.Value ? " Testing key on: F8 = all fixes." : ""));
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;

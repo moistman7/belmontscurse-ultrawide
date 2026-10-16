@@ -97,9 +97,10 @@ public class UwBehaviour : MonoBehaviour
 
 	private static KeyControl _kF10;
 
-	private static KeyControl _kEnd;
 
 	private static KeyControl _kF6;
+
+	private static KeyControl _kF9;
 
 	private static float _nextForce;
 
@@ -386,6 +387,7 @@ public class UwBehaviour : MonoBehaviour
 			Guard("world ui camera", WorldUiAction);
 			Guard("gamepad shortcut", PadAction);
 			Guard("auto big hud", AutoHudAction);
+				Guard("auto advance", VoiceAdvance.Tick);
 			RunOneJob();
 		}
 		catch (Exception ex)
@@ -474,7 +476,31 @@ public class UwBehaviour : MonoBehaviour
 			return;
 		}
 		Gamepad current = Gamepad.current;
-		if (current != null && current.leftStickButton.isPressed && current.rightStickButton.isPressed && (current.leftStickButton.wasPressedThisFrame || current.rightStickButton.wasPressedThisFrame))
+		if (current == null)
+		{
+			return;
+		}
+		if (current[Plugin.PadModifier.Value].isPressed)
+		{
+			// Modifier held: each feature has its own button.
+			if (current[Plugin.PadCenterHud.Value].wasPressedThisFrame)
+			{
+				Plugin.CenterHud.Value = !Plugin.CenterHud.Value;
+				Plugin.Instance.Log.LogInfo("HUD centered = " + Plugin.CenterHud.Value + " (controller shortcut)");
+				Kick();
+			}
+			if (current[Plugin.PadAutoAdvance.Value].wasPressedThisFrame)
+			{
+				Plugin.AutoAdvance.Value = !Plugin.AutoAdvance.Value;
+				Plugin.Instance.Log.LogInfo("Auto-advance voiced dialogue = " + Plugin.AutoAdvance.Value + " (controller shortcut)");
+			}
+			if (current[Plugin.PadDump.Value].wasPressedThisFrame)
+			{
+				Dump();
+			}
+			return;
+		}
+		if (current.leftStickButton.isPressed && current.rightStickButton.isPressed && (current.leftStickButton.wasPressedThisFrame || current.rightStickButton.wasPressedThisFrame))
 		{
 			Plugin.BigHud.Value = !Plugin.BigHud.Value;
 			Plugin.Instance.Log.LogInfo("Big HUD = " + Plugin.BigHud.Value + " (controller shortcut, x" + Plugin.HudScale.Value + ")");
@@ -509,14 +535,20 @@ public class UwBehaviour : MonoBehaviour
 		{
 			return;
 		}
-		if (current.Pointer != _kbPtr)
+		// Re-resolved every frame so edits to the key settings apply without a restart.
+		if (true)
 		{
 			_kbPtr = current.Pointer;
-			_kF8 = current.f8Key;
-			_kF7 = current.f7Key;
-			_kF10 = current.f10Key;
-			_kEnd = current.endKey;
-			_kF6 = current.f6Key;
+			_kF8 = current[Plugin.KeyAllFixes.Value];
+			_kF7 = current[Plugin.KeyDump.Value];
+			_kF10 = current[Plugin.KeyCenterHud.Value];
+			_kF6 = current[Plugin.KeyBigHud.Value];
+			_kF9 = current[Plugin.KeyAutoAdvance.Value];
+		}
+		if (_kF9.wasPressedThisFrame)
+		{
+			Plugin.AutoAdvance.Value = !Plugin.AutoAdvance.Value;
+			Plugin.Instance.Log.LogInfo("Auto-advance voiced dialogue = " + Plugin.AutoAdvance.Value);
 		}
 		if (_kF7.wasPressedThisFrame)
 		{
@@ -553,12 +585,6 @@ public class UwBehaviour : MonoBehaviour
 			{
 				Plugin.On = !Plugin.On;
 				Plugin.Instance.Log.LogInfo("Fix enabled = " + Plugin.On + " (this session only)");
-				Kick();
-			}
-			if (_kEnd.wasPressedThisFrame)
-			{
-				Plugin.CamOn = !Plugin.CamOn;
-				Plugin.Instance.Log.LogInfo("Camera aspect limit = " + Plugin.CamOn + " (this session only)");
 				Kick();
 			}
 		}

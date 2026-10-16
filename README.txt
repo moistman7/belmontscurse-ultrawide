@@ -45,7 +45,8 @@ If it can't find the game:  ./steamdeck/install.sh "/path/to/Castlevania Belmont
 Steam Deck notes:
 - No keyboard needed: press the left and right stick buttons (L3 + R3) together to toggle the
   bigger HUD. On the Deck's small screen the bigger HUD is turned on automatically the first time.
-  The other keys (F7 dump, F10) need a keyboard; the settings file covers the rest (see SETTINGS).
+  Hold Select and press L3 for the centered HUD, R3 for auto-advance of voiced dialogue, or Start
+  for the diagnostic dump (see KEYS & CONTROLLER).
 - Check it worked: BepInEx/LogOutput.log in the game folder should contain
   "Belmont's Curse Ultrawide".
 - To uninstall: double-click "Uninstall from Steam Deck" in the steamdeck folder. It removes the
@@ -74,8 +75,16 @@ KEYS & CONTROLLER
 ----------------
 F10   HUD in the centered 16:9 area, or at the screen edges (remembered)
 F6    Bigger HUD on / off (remembered)
+F9    Auto-advance voiced dialogue on / off (remembered)
 L3+R3 Bigger HUD on / off with a controller (both stick buttons together)
+Select+L3     Centered HUD on / off with a controller
+Select+R3     Auto-advance voiced dialogue on / off with a controller
+Select+Start  Diagnostic dump with a controller
+(Controller buttons can be changed in the [Controller] section of the settings file.)
 F7    Write a diagnostic dump to BepInEx/BelmontsCurseUltrawide_dump.txt
+
+Every key can be changed in the [Hotkeys] section of the settings file, using a key name such as
+F10, Home, Backquote or Numpad5.
 
 
 SETTINGS
@@ -86,6 +95,8 @@ game closed. The defaults are meant to just work. The useful ones:
   UI.CenterHUD            true = HUD in the centered 16:9 area (same as F10)
   UI.BigHUD               true = bigger HUD (same as F6)
   UI.AutoBigHUD           turns the bigger HUD on once on small screens such as the Deck (default true)
+  Dialogue.AutoAdvanceVoiced  true = voiced dialogue advances when the voice ends (same as F9, default false)
+  Dialogue.AutoAdvanceDelay   seconds to wait before advancing (default 0.4)
   Input.GamepadShortcuts  L3 + R3 toggles the bigger HUD (default true)
   UI.HUDScale             how much bigger BigHUD makes it (1.1 to 1.6 is sensible)
   UI.FixNarrowScreens     fixes menus on 16:10 screens such as the Steam Deck (default true)
