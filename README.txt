@@ -25,8 +25,8 @@ you dock the Deck to an ultrawide monitor.
 3. Open the "steamdeck" folder and double-click "Install on Steam Deck".
    (If the Deck asks, choose to run / Execute it.)
    It finds the game (including on an SD card), installs BepInEx and the mod, and sets the Steam
-   launch option for you. If Steam is open, it asks to close it first. You need an internet
-   connection for the first install.
+   launch option for you. If Steam is open, it asks to close it first. The all-in-one zip works
+   offline; the plain zip needs an internet connection for the first install.
 4. Go back to Gaming Mode and start the game.
 
 The FIRST launch can sit on a black screen for several minutes while BepInEx sets itself up.
@@ -53,6 +53,11 @@ Steam Deck notes:
 
 WINDOWS
 -------
+ALL-IN-ONE zip (BepInEx included): close the game, extract the zip into the game folder (where
+"Castlevania Belmont's Curse.exe" is), allow it to merge/overwrite, and launch. That's it. The
+first launch can sit on a black screen for a few minutes. Ignore the "steamdeck" folder.
+
+Plain zip (mod only), if you don't have BepInEx yet:
 1. Close the game. Install BepInEx 6 bleeding edge, build be.788, "Unity IL2CPP x64" (NOT
    BepInEx 5) into the game folder (where "Castlevania Belmont's Curse.exe" is):
    https://builds.bepinex.dev/projects/bepinex_be
@@ -107,3 +112,9 @@ stay on your machine; nothing is transmitted.
   https://github.com/moistman7/belmontscurse-ultrawide
 
 Licence: MIT.
+
+
+CREDITS
+-------
+The all-in-one zip bundles BepInEx 6 (be.788, Unity IL2CPP x64), which is a separate open-source
+project (LGPL-2.1): https://github.com/BepInEx/BepInEx. It is included unmodified.

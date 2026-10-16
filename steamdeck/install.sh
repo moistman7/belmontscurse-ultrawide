@@ -13,7 +13,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null 2>&1 || die "'$1' is required but not installed."; }
-need curl; need unzip
+
 
 find_game() {
     local roots=("$HOME/.local/share/Steam" "$HOME/.steam/steam" "$HOME/.var/app/com.valvesoftware.Steam/.local/share/Steam")
@@ -47,7 +47,15 @@ TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 # 1. BepInEx (the Windows build; Proton runs the game as a Windows program)
 if [ -f "$GAME/winhttp.dll" ] && [ -d "$GAME/BepInEx/core" ]; then
     echo "BepInEx already installed, skipping."
+elif [ -f "$HERE/../winhttp.dll" ] && [ -d "$HERE/../BepInEx/core" ]; then
+    # All-in-one zip: BepInEx is bundled next to the steamdeck folder, no download needed
+    echo "Installing the bundled BepInEx ..."
+    BUNDLE="$(cd "$HERE/.." && pwd)"
+    for item in winhttp.dll doorstop_config.ini .doorstop_version changelog.txt dotnet BepInEx; do
+        [ -e "$BUNDLE/$item" ] && cp -rf "$BUNDLE/$item" "$GAME/"
+    done
 else
+    need curl; need unzip
     echo "Downloading BepInEx 6 be.788 ..."
     curl -fL --progress-bar -o "$TMP/bepinex.zip" "$BEPINEX_URL"
     unzip -qo "$TMP/bepinex.zip" -d "$GAME"
@@ -57,8 +65,9 @@ mkdir -p "$GAME/BepInEx/plugins"
 # 2. The plugin: use the DLL shipped next to this script, otherwise fetch the latest release
 DLL="$(find "$HERE" "$HERE/.." -maxdepth 4 -name BelmontsCurseUltrawide.dll 2>/dev/null | head -n1 || true)"
 if [ -z "$DLL" ]; then
+    need curl; need unzip
     echo "Fetching the latest plugin release ..."
-    ZIP_URL="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | sed -n 's/.*"browser_download_url": *"\([^"]*\.zip\)".*/\1/p' | head -n1)"
+    ZIP_URL="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | sed -n 's/.*"browser_download_url": *"\([^"]*\.zip\)".*/\1/p' | grep -vi allinone | head -n1)"
     [ -n "$ZIP_URL" ] || die "Could not find a release zip. Download it from https://github.com/$REPO/releases and run this script from the extracted folder."
     curl -fL --progress-bar -o "$TMP/plugin.zip" "$ZIP_URL"
     unzip -qo "$TMP/plugin.zip" -d "$TMP/plugin"
