@@ -103,6 +103,8 @@ public class UwBehaviour : MonoBehaviour
 
 	private static float _nextForce;
 
+	private static bool _forceSkipLogged;
+
 	private static float _nextCamSearch;
 
 	private static Camera _cam;
@@ -541,6 +543,19 @@ public class UwBehaviour : MonoBehaviour
 		{
 			num = Display.main.systemWidth;
 			num2 = Display.main.systemHeight;
+			// Auto mode is only for ultrawide. On 16:9/16:10 screens (Steam Deck under Proton/gamescope,
+			// whose panel also reports as portrait 800x1280) the reported "native" size is not what the
+			// game runs at, and forcing it zooms the picture a couple of seconds after launch.
+			if (num2 <= 0 || (float)num / (float)num2 <= 1.7877778f)
+			{
+				if (!_forceSkipLogged)
+				{
+					_forceSkipLogged = true;
+					Plugin.Instance.Log.LogInfo("ForceResolution: display reports " + num + "x" + num2 + " (not ultrawide), leaving the resolution alone. Set Resolution.Width/Height to force one.");
+				}
+				_nextForce = float.MaxValue;
+				return;
+			}
 		}
 		if (Screen.width != num || Screen.height != num2)
 		{
