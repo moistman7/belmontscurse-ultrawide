@@ -68,18 +68,73 @@ fi
 cp -f "$DLL" "$GAME/BepInEx/plugins/BelmontsCurseUltrawide.dll"
 echo "Plugin installed."
 
+
+# 3. Steam launch option (needed so Proton loads BepInEx). Done automatically when possible.
+OPT_SET=0
+set_launch_option() {
+    local lib appid cfg cur
+    lib="$(dirname "$(dirname "$(dirname "$GAME")")")"
+    appid="$(grep -l "\"installdir\"[[:space:]]*\"$GAME_DIR_NAME\"" "$lib"/steamapps/appmanifest_*.acf 2>/dev/null | head -n1 | sed 's/.*appmanifest_\([0-9]*\)\.acf/\1/')"
+    [ -n "$appid" ] || return 1
+    for cfg in "$HOME"/.local/share/Steam/userdata/*/config/localconfig.vdf "$HOME"/.steam/steam/userdata/*/config/localconfig.vdf \
+               "$HOME"/.var/app/com.valvesoftware.Steam/.local/share/Steam/userdata/*/config/localconfig.vdf; do
+        [ -f "$cfg" ] && break
+        cfg=""
+    done
+    [ -n "$cfg" ] || return 1
+
+    if pgrep -x steam >/dev/null 2>&1 || pgrep -x steamwebhelper >/dev/null 2>&1; then
+        echo
+        echo "Steam has to be closed to change the game's launch option."
+        read -r -p "Close Steam now? [Y/n] " ans || ans=n
+        case "${ans:-Y}" in [nN]*) return 1 ;; esac
+        steam -shutdown >/dev/null 2>&1 || pkill -x steam || true
+        for _ in $(seq 1 30); do pgrep -x steam >/dev/null 2>&1 || break; sleep 1; done
+        pgrep -x steam >/dev/null 2>&1 && return 1
+        sleep 2
+    fi
+
+    cur="$(awk -v appid="$appid" -v query=1 -f "$HERE/set-launch-option.awk" "$cfg" 2>&1 >/dev/null || true)"
+    case "$cur" in
+        *winhttp=n*) OPT_SET=1; return 0 ;;                       # already set
+        ?*) echo "The game already has launch options ($cur); not overwriting them."; return 1 ;;
+    esac
+
+    cp -f "$cfg" "$cfg.bak-belmonts-curse"
+    if awk -v appid="$appid" -v opt="$LAUNCH_OPT" -f "$HERE/set-launch-option.awk" "$cfg" > "$TMP/localconfig.vdf" \
+        && [ -s "$TMP/localconfig.vdf" ]; then
+        cp -f "$TMP/localconfig.vdf" "$cfg"
+        echo "Launch option set (backup: $cfg.bak-belmonts-curse)."
+        OPT_SET=1
+        return 0
+    fi
+    return 1
+}
+if [ -f "$HERE/set-launch-option.awk" ]; then
+    set_launch_option || true
+else
+    echo "(set-launch-option.awk not found next to the script; setting the launch option manually.)"
+fi
+
+echo
+echo "=============================================="
+echo " Installed."
+echo "=============================================="
+if [ "$OPT_SET" = 1 ]; then
+    echo "Steam launch option: set automatically. Start Steam and launch the game."
+else
+    cat <<MSG
+One manual step left. In Steam:
+  Castlevania: Belmont's Curse > Properties (gear icon) > General > Launch Options
+  paste exactly:
+
+      $LAUNCH_OPT
+MSG
+fi
 cat <<MSG
 
-Almost done. One manual step (Steam can't be changed safely from a script):
-
-  In Steam (Gaming or Desktop Mode):
-    Castlevania: Belmont's Curse > Properties (gear icon) > General > Launch Options
-    paste exactly:
-
-        $LAUNCH_OPT
-
-Then launch the game. The FIRST launch can sit on a black screen for several minutes while
-BepInEx sets itself up under Proton. Don't close it. Later launches are quick.
+The FIRST launch can sit on a black screen for several minutes while BepInEx sets itself up
+under Proton. Don't close it. Later launches are quick.
 
 Check it worked: $GAME/BepInEx/LogOutput.log should mention "Belmont's Curse Ultrawide".
 To uninstall: delete BelmontsCurseUltrawide.dll from BepInEx/plugins and clear the launch option.

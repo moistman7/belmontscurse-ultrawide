@@ -40,19 +40,23 @@ To uninstall, delete the DLL.
 
 ## Steam Deck / Linux (Proton)
 
-The Deck's own screen is 16:10 (the mod fixes the cropped menus there) and it also handles docking to an ultrawide monitor
-(or any Linux machine with one). Setup is one script:
+The Deck's own screen is 16:10 (the mod fixes the cropped menus there), and it also handles
+docking to an ultrawide monitor. Install takes a few clicks:
 
-1. Switch to Desktop Mode and extract the release zip (or just download `steamdeck/install.sh`).
-2. Open a terminal in that folder and run `./install.sh`. It finds the game (including on an SD
-   card), installs BepInEx 6 be.788 and the plugin. If it can't find the game, pass the folder:
-   `./install.sh "/path/to/Castlevania Belmont's Curse"`.
-3. In Steam, open the game's Properties > General > Launch Options and paste:
+1. Switch to Desktop Mode and download the release zip (the `BelmontsCurseUltrawide-v*.zip`) from
+   the Releases page. Extract it (right-click > Extract).
+2. Open the extracted folder, then `steamdeck`, and double-click **Install on Steam Deck**. (If the
+   Deck asks, choose to run it / "Execute".) It finds the game (including on an SD card), installs
+   BepInEx 6 be.788 and the plugin, and sets the Steam launch option for you. If Steam is open it
+   asks to close it first.
+3. Go back to Gaming Mode and play. The first launch can sit on a black screen for several minutes;
+   later ones are quick.
 
-        WINEDLLOVERRIDES="winhttp=n,b" %command%
+Prefer a terminal? Run `./steamdeck/install.sh` (add the game folder as an argument if it can't
+find it). If you'd rather set the launch option yourself, or the script says it couldn't, open the
+game's Properties > General > Launch Options and paste:
 
-4. Launch the game. The first launch can sit on a black screen for several minutes; later ones are
-   quick.
+    WINEDLLOVERRIDES="winhttp=n,b" %command%
 
 The F6/F7/F10 keys need a keyboard. Without one, set `UI.CenterHUD` and `UI.BigHUD` in
 `BepInEx/config/local.belmontscurse.ultrawide.cfg` instead (edit it with the game closed).

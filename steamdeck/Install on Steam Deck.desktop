@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Install Belmont's Curse Ultrawide
+Comment=Installs BepInEx and the plugin for Castlevania: Belmont's Curse
+Exec=bash -c 'cd "$(dirname "%k")" && bash ./install.sh; echo; read -r -p "Press Enter to close..." _'
+Terminal=true
+Icon=system-software-install
