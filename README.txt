@@ -73,7 +73,7 @@ To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 
 KEYS & CONTROLLER
 ----------------
-F10   HUD in the centered 16:9 area, or at the screen edges (remembered)
+F7    HUD in the centered 16:9 area, or at the screen edges (remembered)
 F6    Bigger HUD on / off (remembered)
 F9    Auto-advance voiced dialogue on / off (remembered)
 L3+R3 Bigger HUD on / off with a controller (both stick buttons together)
@@ -81,7 +81,7 @@ Select+L3     Centered HUD on / off with a controller
 Select+R3     Auto-advance voiced dialogue on / off with a controller
 Select+Start  Diagnostic dump with a controller
 (Controller buttons can be changed in the [Controller] section of the settings file.)
-F7    Write a diagnostic dump to BepInEx/BelmontsCurseUltrawide_dump.txt
+F10   Write a diagnostic dump to BepInEx/BelmontsCurseUltrawide_dump.txt
 
 Every key can be changed in the [Hotkeys] section of the settings file, using a key name such as
 F10, Home, Backquote or Numpad5.
@@ -92,7 +92,7 @@ SETTINGS
 BepInEx/config/local.belmontscurse.ultrawide.cfg is created on the first launch. Edit it with the
 game closed. The defaults are meant to just work. The useful ones:
 
-  UI.CenterHUD            true = HUD in the centered 16:9 area (same as F10)
+  UI.CenterHUD            true = HUD in the centered 16:9 area (same as F7)
   UI.BigHUD               true = bigger HUD (same as F6)
   UI.AutoBigHUD           turns the bigger HUD on once on small screens such as the Deck (default true)
   Dialogue.AutoAdvanceVoiced  true = voiced dialogue advances when the voice ends (same as F9, default false)
@@ -120,7 +120,7 @@ TROUBLESHOOTING
 
 REPORTING A PROBLEM
 -------------------
-Press F7 in game while the problem is on screen, then send BepInEx/BelmontsCurseUltrawide_dump.txt,
+Press F10 in game while the problem is on screen, then send BepInEx/BelmontsCurseUltrawide_dump.txt,
 BepInEx/LogOutput.log and a screenshot, and say which resolution / device you use. These files
 stay on your machine; nothing is transmitted.
 

@@ -102,10 +102,10 @@ public class Plugin : BasePlugin
 		StartupFpsCap = Config.Bind("General", "StartupFpsCap", 60, "Limit the frame rate to this while the game starts up (logos, loading, until the title screen), which avoids the occasional black screen at startup. After that your in-game frame rate and V-Sync settings are put back. 0 = off.");
 		AutoAdvance = Config.Bind("Dialogue", "AutoAdvanceVoiced", defaultValue: false, "Advance voiced dialogue automatically once the voice line has finished and the text is fully shown. Lines without voice still wait for you. F9 toggles it in game (saved).");
 		AutoAdvanceDelay = Config.Bind("Dialogue", "AutoAdvanceDelay", 0.4f, "Seconds to wait after the voice and text are done before advancing.");
-		KeyCenterHud = Config.Bind("Hotkeys", "CenterHUD", Key.F10, "Key that toggles the HUD between the centered 16:9 area and the screen edges. Use a key name such as F10, Home, Backquote or Numpad5.");
+		KeyCenterHud = Config.Bind("Hotkeys", "CenterHUD", Key.F7, "Key that toggles the HUD between the centered 16:9 area and the screen edges. Use a key name such as F10, Home, Backquote or Numpad5.");
 		KeyBigHud = Config.Bind("Hotkeys", "BigHUD", Key.F6, "Key that toggles the bigger HUD.");
 		KeyAutoAdvance = Config.Bind("Hotkeys", "AutoAdvanceVoiced", Key.F9, "Key that toggles auto-advance for voiced dialogue.");
-		KeyDump = Config.Bind("Hotkeys", "DiagnosticDump", Key.F7, "Key that writes the diagnostic dump to the log.");
+		KeyDump = Config.Bind("Hotkeys", "DiagnosticDump", Key.F10, "Key that writes the diagnostic dump to the log.");
 		PadModifier = Config.Bind("Controller", "Modifier", GamepadButton.Select, "Hold this controller button and press one of the buttons below. (L3 + R3 together always toggles the bigger HUD.) Needs Input.GamepadShortcuts. Button names: Select, Start, North, South, East, West, LeftShoulder, RightShoulder, LeftStick, RightStick, DpadUp, DpadDown, DpadLeft, DpadRight.");
 		PadCenterHud = Config.Bind("Controller", "CenterHUD", GamepadButton.LeftStick, "Modifier + this button toggles the centered HUD.");
 		PadAutoAdvance = Config.Bind("Controller", "AutoAdvanceVoiced", GamepadButton.RightStick, "Modifier + this button toggles auto-advance for voiced dialogue.");
@@ -125,7 +125,7 @@ public class Plugin : BasePlugin
 		DisableConfiners = Config.Bind("Camera", "DisableConfiners", defaultValue: false, "Old workaround: switch off the Cinemachine room confiners entirely. Usually not needed with Camera16x9Logic on.");
 		CenterMenus = Config.Bind("UI", "CenterMenus", defaultValue: true, "Keep the pause menu, journal and popups inside a centered 16:9 area (their backgrounds still fill the screen).");
 		MenuCanvases = Config.Bind("UI", "MenuCanvases", "GameMenu,Canvas_ConfirmPopup", "Canvas names CenterMenus applies to.");
-		CenterHud = Config.Bind("UI", "CenterHUD", defaultValue: false, "Keep the HUD and full-screen dialogue inside a centered 16:9 area instead of the screen edges. F10 toggles it in game (saved).");
+		CenterHud = Config.Bind("UI", "CenterHUD", defaultValue: false, "Keep the HUD and full-screen dialogue inside a centered 16:9 area instead of the screen edges. F7 toggles it in game (saved).");
 		HudCanvases = Config.Bind("UI", "HudCanvases", "HUD_Canvas,DialogueBoxFullScreen", "Canvas names CenterHUD applies to.");
 		BigHud = Config.Bind("UI", "BigHUD", defaultValue: false, "Draw the HUD (health, magic, notifications) bigger. F6 toggles it in game (saved).");
 		HudScale = Config.Bind("UI", "HUDScale", 1.25f, "How much bigger the HUD is when BigHUD is on. 1.25 = 25% bigger. Sensible range 1.1 to 1.6.");
@@ -174,7 +174,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F10 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F9 = auto-advance voiced dialogue (controller: Select + R3), F7 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
+		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F7 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F9 = auto-advance voiced dialogue (controller: Select + R3), F10 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;

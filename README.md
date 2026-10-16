@@ -66,14 +66,14 @@ the mod, double-click **Uninstall from Steam Deck** in the `steamdeck` folder.
 
 | Key | Action |
 |---|---|
-| F10 | HUD in the centered 16:9 area, or at the screen edges (remembered) |
+| F7 | HUD in the centered 16:9 area, or at the screen edges (remembered) |
 | F6 | Bigger HUD on/off (remembered) |
 | F9 | Auto-advance voiced dialogue on/off (remembered) |
 | L3 + R3 (controller) | Bigger HUD on/off, same as F6 (press both stick buttons together) |
-| Select + L3 (controller) | Centered HUD on/off, same as F10 |
+| Select + L3 (controller) | Centered HUD on/off, same as F7 |
 | Select + R3 (controller) | Auto-advance voiced dialogue on/off, same as F9 |
-| Select + Start (controller) | Diagnostic dump, same as F7 |
-| F7 | Write a diagnostic dump to the log and to `BepInEx/BelmontsCurseUltrawide_dump.txt` |
+| Select + Start (controller) | Diagnostic dump, same as F10 |
+| F10 | Write a diagnostic dump to the log and to `BepInEx/BelmontsCurseUltrawide_dump.txt` |
 
 Keyboard keys can be changed in the `[Hotkeys]` section of the settings file, and the controller buttons in
 `[Controller]` (see below). Use a key name such as
@@ -91,7 +91,7 @@ game is closed. The defaults are meant to just work.
 | `Camera.CameraLogicAspect` | `auto` | Recommended. `2.4` lets the camera use 21:9 framing (wider view, but it may misbehave in some rooms). |
 | `UI.CenterMenus` | `true` | Pause menu, journal and popups in the centered 16:9 area. |
 | `UI.FixNarrowScreens` | `true` | On screens narrower than 16:9 (16:10, e.g. the Steam Deck) the UI matches the screen width so menus are not cropped. |
-| `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F10). |
+| `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F7). |
 | `UI.BigHUD` | `false` | Bigger HUD (same as F6). |
 | `UI.AutoBigHUD` | `true` | On small screens (height 900 or less, e.g. the Steam Deck) turns the bigger HUD on once, the first time. Your choice is kept afterwards. |
 | `Dialogue.AutoAdvanceVoiced` | `false` | Advances voiced dialogue once the voice and text are done (same as F9). Unvoiced lines still wait for you. |
@@ -126,7 +126,7 @@ Other settings in the file are for troubleshooting and can be left alone.
 
 ## Reporting a problem
 
-Press F7 in game while the problem is on screen, then attach `BepInEx/BelmontsCurseUltrawide_dump.txt`,
+Press F10 in game while the problem is on screen, then attach `BepInEx/BelmontsCurseUltrawide_dump.txt`,
 `BepInEx/LogOutput.log` and a screenshot if you can. Mention your resolution. These files stay
 local; nothing is transmitted.
 
