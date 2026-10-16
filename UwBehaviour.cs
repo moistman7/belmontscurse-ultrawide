@@ -91,7 +91,6 @@ public class UwBehaviour : MonoBehaviour
 
 	private static IntPtr _kbPtr;
 
-	private static KeyControl _kF8;
 
 	private static KeyControl _kF7;
 
@@ -539,7 +538,6 @@ public class UwBehaviour : MonoBehaviour
 		if (true)
 		{
 			_kbPtr = current.Pointer;
-			_kF8 = current[Plugin.KeyAllFixes.Value];
 			_kF7 = current[Plugin.KeyDump.Value];
 			_kF10 = current[Plugin.KeyCenterHud.Value];
 			_kF6 = current[Plugin.KeyBigHud.Value];
@@ -578,15 +576,6 @@ public class UwBehaviour : MonoBehaviour
 			}
 			log2.LogInfo(bepInExInfoLogInterpolatedStringHandler);
 			Kick();
-		}
-		if (Plugin.DebugHotkeys.Value)
-		{
-			if (_kF8.wasPressedThisFrame)
-			{
-				Plugin.On = !Plugin.On;
-				Plugin.Instance.Log.LogInfo("Fix enabled = " + Plugin.On + " (this session only)");
-				Kick();
-			}
 		}
 	}
 

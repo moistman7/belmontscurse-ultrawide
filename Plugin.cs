@@ -70,8 +70,6 @@ public class Plugin : BasePlugin
 
 	internal static ConfigEntry<Key> KeyDump;
 
-	internal static ConfigEntry<Key> KeyAllFixes;
-
 	internal static ConfigEntry<GamepadButton> PadModifier;
 
 	internal static ConfigEntry<GamepadButton> PadCenterHud;
@@ -79,8 +77,6 @@ public class Plugin : BasePlugin
 	internal static ConfigEntry<GamepadButton> PadAutoAdvance;
 
 	internal static ConfigEntry<GamepadButton> PadDump;
-
-	internal static ConfigEntry<bool> DebugHotkeys;
 
 	internal static ConfigEntry<bool> SkipIntros;
 
@@ -101,7 +97,7 @@ public class Plugin : BasePlugin
 	public override void Load()
 	{
 		Instance = this;
-		Enabled = Config.Bind("General", "EnableFix", defaultValue: true, "Apply the ultrawide fix. F8 toggles everything for the current session (not saved).");
+		Enabled = Config.Bind("General", "EnableFix", defaultValue: true, "Apply the ultrawide fix.");
 		SkipIntros = Config.Bind("General", "SkipIntros", defaultValue: true, "Skip the company logos at startup (first-launch settings screens like brightness and language are still shown).");
 		StartupFpsCap = Config.Bind("General", "StartupFpsCap", 60, "Limit the frame rate to this while the game starts up (logos, loading, until the title screen), which avoids the occasional black screen at startup. After that your in-game frame rate and V-Sync settings are put back. 0 = off.");
 		AutoAdvance = Config.Bind("Dialogue", "AutoAdvanceVoiced", defaultValue: false, "Advance voiced dialogue automatically once the voice line has finished and the text is fully shown. Lines without voice still wait for you. F9 toggles it in game (saved).");
@@ -110,12 +106,10 @@ public class Plugin : BasePlugin
 		KeyBigHud = Config.Bind("Hotkeys", "BigHUD", Key.F6, "Key that toggles the bigger HUD.");
 		KeyAutoAdvance = Config.Bind("Hotkeys", "AutoAdvanceVoiced", Key.F9, "Key that toggles auto-advance for voiced dialogue.");
 		KeyDump = Config.Bind("Hotkeys", "DiagnosticDump", Key.F7, "Key that writes the diagnostic dump to the log.");
-		KeyAllFixes = Config.Bind("Hotkeys", "AllFixesTest", Key.F8, "Testing key (needs General.DebugHotkeys): all fixes on/off.");
 		PadModifier = Config.Bind("Controller", "Modifier", GamepadButton.Select, "Hold this controller button and press one of the buttons below. (L3 + R3 together always toggles the bigger HUD.) Needs Input.GamepadShortcuts. Button names: Select, Start, North, South, East, West, LeftShoulder, RightShoulder, LeftStick, RightStick, DpadUp, DpadDown, DpadLeft, DpadRight.");
 		PadCenterHud = Config.Bind("Controller", "CenterHUD", GamepadButton.LeftStick, "Modifier + this button toggles the centered HUD.");
 		PadAutoAdvance = Config.Bind("Controller", "AutoAdvanceVoiced", GamepadButton.RightStick, "Modifier + this button toggles auto-advance for voiced dialogue.");
 		PadDump = Config.Bind("Controller", "DiagnosticDump", GamepadButton.Start, "Modifier + this button writes the diagnostic dump to the log.");
-		DebugHotkeys = Config.Bind("General", "DebugHotkeys", defaultValue: false, "Enable the testing keys: F8 = all fixes on/off (current session only). Off by default so nothing gets switched off by accident. F10 (HUD centered or at the screen edges), F6 (big HUD) and F7 (diagnostic dump) always work.");
 		MatchValue = Config.Bind("General", "CanvasMatch", 1f, "CanvasScaler match value used on ultrawide. 0 = match width (zoomed), 1 = match height (no zoom).");
 		FixVideos = Config.Bind("General", "FixVideos", defaultValue: true, "Stop pre-rendered videos from being stretched/zoomed on ultrawide (fits them inside the screen instead).");
 		FixNarrow = Config.Bind("UI", "FixNarrowScreens", defaultValue: true, "On screens narrower than 16:9 (16:10 such as the Steam Deck), match the UI to the screen width so menus are not cropped/zoomed.");
@@ -180,7 +174,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F10 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F9 = auto-advance voiced dialogue (controller: Select + R3), F7 = diagnostic dump. Controller: hold Select + L3 for the centered HUD." + (DebugHotkeys.Value ? " Testing key on: F8 = all fixes." : ""));
+		Log.LogInfo("Belmont's Curse Ultrawide 0.6.0 loaded. F10 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F9 = auto-advance voiced dialogue (controller: Select + R3), F7 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;
