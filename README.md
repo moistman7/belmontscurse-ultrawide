@@ -34,7 +34,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.7.0 loaded`.
+   `Belmont's Curse Ultrawide 0.7.1 loaded`.
 
 To uninstall, delete the DLL.
 
@@ -96,6 +96,9 @@ game is closed. The defaults are meant to just work.
 | `UI.AutoBigHUD` | `true` | On small screens (height 900 or less, e.g. the Steam Deck) turns the bigger HUD on once, the first time. Your choice is kept afterwards. |
 | `Dialogue.AutoAdvanceVoiced` | `false` | Advances voiced dialogue once the voice and text are done (same as F5). Unvoiced lines still wait for you. |
 | `Dialogue.AutoAdvanceDelay` | `0.4` | Seconds to wait before advancing. |
+| `Dialogue.AutoAdvanceUnvoiced` | `false` | Also advance lines without voice, after a reading-time delay. |
+| `Dialogue.UnvoicedBaseSeconds` / `Dialogue.UnvoicedSecondsPerCharacter` | `1.0` / `0.05` | Delay for unvoiced lines: base seconds plus this per character. |
+| `UI.ShowMessages` | `true` | Short on-screen message when you toggle auto-advance or the HUD options. |
 | `Input.GamepadShortcuts` | `true` | L3 + R3 toggles the bigger HUD. |
 | `UI.HUDScale` | `1.25` | How much bigger BigHUD makes it (1.1 to 1.6 is sensible). |
 | `Resolution.ForceResolution` | `true` | Use the monitor's resolution at startup. |

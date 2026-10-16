@@ -24,6 +24,7 @@
     <Reference Include="UnityEngine.AnimationModule" HintPath="$(InteropDir)\UnityEngine.AnimationModule.dll" Private="false" />
     <Reference Include="UnityEngine.UI" HintPath="$(InteropDir)\UnityEngine.UI.dll" Private="false" />
     <Reference Include="UnityEngine.UIModule" HintPath="$(InteropDir)\UnityEngine.UIModule.dll" Private="false" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(InteropDir)\UnityEngine.TextRenderingModule.dll" Private="false" />
     <Reference Include="UnityEngine.VideoModule" HintPath="$(InteropDir)\UnityEngine.VideoModule.dll" Private="false" />
     <Reference Include="Unity.InputSystem" HintPath="$(InteropDir)\Unity.InputSystem.dll" Private="false" />
     <Reference Include="Unity.RenderPipelines.Core.Runtime" HintPath="$(InteropDir)\Unity.RenderPipelines.Core.Runtime.dll" Private="false" />

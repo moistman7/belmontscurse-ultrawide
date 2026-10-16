@@ -387,6 +387,7 @@ public class UwBehaviour : MonoBehaviour
 			Guard("gamepad shortcut", PadAction);
 			Guard("auto big hud", AutoHudAction);
 				Guard("auto advance", VoiceAdvance.Tick);
+				Guard("toast", Toast.Tick);
 			RunOneJob();
 		}
 		catch (Exception ex)
@@ -486,16 +487,19 @@ public class UwBehaviour : MonoBehaviour
 			{
 				Plugin.CenterHud.Value = !Plugin.CenterHud.Value;
 				Plugin.Instance.Log.LogInfo("HUD centered = " + Plugin.CenterHud.Value + " (controller shortcut)");
+				Toast.Show("Centered HUD: " + OnOff(Plugin.CenterHud.Value));
 				Kick();
 			}
 			if (current[Plugin.PadAutoAdvance.Value].wasPressedThisFrame)
 			{
 				Plugin.AutoAdvance.Value = !Plugin.AutoAdvance.Value;
 				Plugin.Instance.Log.LogInfo("Auto-advance voiced dialogue = " + Plugin.AutoAdvance.Value + " (controller shortcut)");
+				Toast.Show("Auto-advance: " + OnOff(Plugin.AutoAdvance.Value));
 			}
 			if (current[Plugin.PadDump.Value].wasPressedThisFrame)
 			{
 				Dump();
+				Toast.Show("Diagnostic dump written");
 			}
 			return;
 		}
@@ -503,6 +507,7 @@ public class UwBehaviour : MonoBehaviour
 		{
 			Plugin.BigHud.Value = !Plugin.BigHud.Value;
 			Plugin.Instance.Log.LogInfo("Big HUD = " + Plugin.BigHud.Value + " (controller shortcut, x" + Plugin.HudScale.Value + ")");
+			Toast.Show("Bigger HUD: " + OnOff(Plugin.BigHud.Value));
 			Kick();
 		}
 	}
@@ -527,6 +532,11 @@ public class UwBehaviour : MonoBehaviour
 		}
 	}
 
+	private static string OnOff(bool value)
+	{
+		return value ? "ON" : "OFF";
+	}
+
 	private static void ReadKeys()
 	{
 		Keyboard current = Keyboard.current;
@@ -547,10 +557,12 @@ public class UwBehaviour : MonoBehaviour
 		{
 			Plugin.AutoAdvance.Value = !Plugin.AutoAdvance.Value;
 			Plugin.Instance.Log.LogInfo("Auto-advance voiced dialogue = " + Plugin.AutoAdvance.Value);
+			Toast.Show("Auto-advance: " + OnOff(Plugin.AutoAdvance.Value));
 		}
 		if (_kF7.wasPressedThisFrame)
 		{
 			Dump();
+			Toast.Show("Diagnostic dump written");
 		}
 		bool isEnabled;
 		if (_kF10.wasPressedThisFrame)
@@ -559,6 +571,7 @@ public class UwBehaviour : MonoBehaviour
 			ManualLogSource log = Plugin.Instance.Log;
 			isEnabled = Plugin.CenterHud.Value;
 			log.LogInfo("HUD centered = " + isEnabled);
+			Toast.Show("Centered HUD: " + OnOff(Plugin.CenterHud.Value));
 			Kick();
 		}
 		if (_kF6.wasPressedThisFrame)
@@ -575,6 +588,7 @@ public class UwBehaviour : MonoBehaviour
 				bepInExInfoLogInterpolatedStringHandler.AppendLiteral(")");
 			}
 			log2.LogInfo(bepInExInfoLogInterpolatedStringHandler);
+			Toast.Show("Bigger HUD: " + OnOff(Plugin.BigHud.Value));
 			Kick();
 		}
 	}
@@ -1985,7 +1999,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.7.0 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.7.1 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);

@@ -66,7 +66,7 @@ Plain zip (mod only), if you don't have BepInEx yet:
    Run the game once; the first launch can sit on a black screen for a few minutes.
 2. Extract this zip into the game folder (the BepInEx/plugins folder gets the mod DLL). You can
    ignore the "steamdeck" folder on Windows.
-3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.7.0 loaded".
+3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.7.1 loaded".
 
 To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 
@@ -97,6 +97,8 @@ game closed. The defaults are meant to just work. The useful ones:
   UI.AutoBigHUD           turns the bigger HUD on once on small screens such as the Deck (default true)
   Dialogue.AutoAdvanceVoiced  true = voiced dialogue advances when the voice ends (same as F5, default false)
   Dialogue.AutoAdvanceDelay   seconds to wait before advancing (default 0.4)
+  Dialogue.AutoAdvanceUnvoiced  true = also advance lines without voice after a reading-time delay (default false)
+  UI.ShowMessages             short on-screen message when you toggle auto-advance or the HUD (default true)
   Input.GamepadShortcuts  L3 + R3 toggles the bigger HUD (default true)
   UI.HUDScale             how much bigger BigHUD makes it (1.1 to 1.6 is sensible)
   UI.FixNarrowScreens     fixes menus on 16:10 screens such as the Steam Deck (default true)

@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace BelmontsCurseUltrawide;
 
-[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.7.0")]
+[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.7.1")]
 public class Plugin : BasePlugin
 {
 	internal static Plugin Instance;
@@ -62,6 +62,14 @@ public class Plugin : BasePlugin
 
 	internal static ConfigEntry<float> AutoAdvanceDelay;
 
+	internal static ConfigEntry<bool> AutoAdvanceUnvoiced;
+
+	internal static ConfigEntry<float> UnvoicedBaseSeconds;
+
+	internal static ConfigEntry<float> UnvoicedSecondsPerCharacter;
+
+	internal static ConfigEntry<bool> ShowToasts;
+
 	internal static ConfigEntry<Key> KeyCenterHud;
 
 	internal static ConfigEntry<Key> KeyBigHud;
@@ -102,6 +110,10 @@ public class Plugin : BasePlugin
 		StartupFpsCap = Config.Bind("General", "StartupFpsCap", 60, "Limit the frame rate to this while the game starts up (logos, loading, until the title screen), which avoids the occasional black screen at startup. After that your in-game frame rate and V-Sync settings are put back. 0 = off.");
 		AutoAdvance = Config.Bind("Dialogue", "AutoAdvanceVoiced", defaultValue: false, "Advance voiced dialogue automatically once the voice line has finished and the text is fully shown. Lines without voice still wait for you. F5 toggles it in game (saved).");
 		AutoAdvanceDelay = Config.Bind("Dialogue", "AutoAdvanceDelay", 0.4f, "Seconds to wait after the voice and text are done before advancing.");
+		AutoAdvanceUnvoiced = Config.Bind("Dialogue", "AutoAdvanceUnvoiced", defaultValue: false, "Also advance lines that have no voice, after a reading-time delay (UnvoicedBaseSeconds + UnvoicedSecondsPerCharacter per character).");
+		UnvoicedBaseSeconds = Config.Bind("Dialogue", "UnvoicedBaseSeconds", 1.0f, "Unvoiced lines: seconds to wait after the text is fully shown, before the per-character time.");
+		UnvoicedSecondsPerCharacter = Config.Bind("Dialogue", "UnvoicedSecondsPerCharacter", 0.05f, "Unvoiced lines: extra seconds per character of the line (0.05 is roughly 20 characters per second).");
+		ShowToasts = Config.Bind("UI", "ShowMessages", defaultValue: true, "Show a short on-screen message when you toggle auto-advance, the bigger HUD or the centered HUD.");
 		KeyCenterHud = Config.Bind("Hotkeys", "CenterHUD", Key.F7, "Key that toggles the HUD between the centered 16:9 area and the screen edges. Use a key name such as F10, Home, Backquote or Numpad5.");
 		KeyBigHud = Config.Bind("Hotkeys", "BigHUD", Key.F6, "Key that toggles the bigger HUD.");
 		KeyAutoAdvance = Config.Bind("Hotkeys", "AutoAdvanceVoiced", Key.F5, "Key that toggles auto-advance for voiced dialogue.");
@@ -179,7 +191,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.7.0 loaded. F7 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F5 = auto-advance voiced dialogue (controller: Select + R3), F9 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
+		Log.LogInfo("Belmont's Curse Ultrawide 0.7.1 loaded. F7 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F5 = auto-advance voiced dialogue (controller: Select + R3), F9 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;

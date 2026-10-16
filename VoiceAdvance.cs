@@ -3,63 +3,114 @@ using UnityEngine;
 
 namespace BelmontsCurseUltrawide;
 
-// Advances voiced dialogue lines once the voice clip has finished and the text is fully shown.
+// Advances dialogue lines automatically. Voiced lines advance once the voice clip has finished and the
+// text is fully shown. Unvoiced lines (optional) advance after a reading-time delay.
 internal static class VoiceAdvance
 {
-	private static bool _voiceWasActive;
+	private static CutsceneLineReader _reader;
 
-	private static bool _waiting;
+	private static float _nextSearch;
+
+	private static bool _lineOpen;
+
+	private static bool _wasReading;
+
+	private static bool _sawVoice;
+
+	private static bool _handled;
 
 	private static float _readyAt;
 
 	internal static void Tick()
 	{
-		if (!Plugin.AutoAdvance.Value)
+		bool voiced = Plugin.AutoAdvance.Value;
+		bool unvoiced = Plugin.AutoAdvanceUnvoiced.Value;
+		if (!voiced && !unvoiced)
 		{
-			_voiceWasActive = false;
-			_waiting = false;
-			return;
-		}
-		bool voiceActive = AnyVoiceActive();
-		if (_voiceWasActive && !voiceActive)
-		{
-			_waiting = true;
-			_readyAt = 0f;
-		}
-		else if (voiceActive)
-		{
-			_waiting = false;
-		}
-		_voiceWasActive = voiceActive;
-		if (!_waiting)
-		{
-			return;
-		}
-		CutsceneLineReader reader = FindActiveReader();
-		if (reader == null)
-		{
-			// The line was already dismissed (or the voice was not part of a dialogue box).
-			_waiting = false;
-			return;
-		}
-		if (reader._isReading)
-		{
-			_readyAt = 0f;
+			Reset();
 			return;
 		}
 		float now = Time.unscaledTime;
+		if ((_reader == null || !_reader.isActiveAndEnabled) && now >= _nextSearch)
+		{
+			_nextSearch = now + 0.25f;
+			_reader = FindActiveReader();
+		}
+		if (_reader == null || !_reader.isActiveAndEnabled || !_reader._isActive)
+		{
+			Reset();
+			return;
+		}
+		bool voiceActive = AnyVoiceActive();
+		if (_reader._isReading)
+		{
+			// Text is still appearing: this is (the start of) a new line.
+			if (!_wasReading)
+			{
+				_handled = false;
+				_readyAt = 0f;
+				_sawVoice = false;
+			}
+			_wasReading = true;
+			_lineOpen = true;
+			_sawVoice |= voiceActive;
+			return;
+		}
+		_wasReading = false;
+		if (!_lineOpen)
+		{
+			// Picked up mid-line: judge it from what we see from now on.
+			_lineOpen = true;
+			_sawVoice = voiceActive;
+		}
+		_sawVoice |= voiceActive;
+		if (_handled)
+		{
+			return;
+		}
+		if (voiceActive)
+		{
+			_readyAt = 0f;
+			return;
+		}
+		float delay;
+		if (_sawVoice)
+		{
+			if (!voiced)
+			{
+				return;
+			}
+			delay = Math.Max(0f, Plugin.AutoAdvanceDelay.Value);
+		}
+		else
+		{
+			if (!unvoiced)
+			{
+				return;
+			}
+			delay = Math.Max(Plugin.AutoAdvanceDelay.Value, Plugin.UnvoicedBaseSeconds.Value + Math.Max(0, _reader._nbMaxVisibleCharacters) * Plugin.UnvoicedSecondsPerCharacter.Value);
+		}
 		if (_readyAt == 0f)
 		{
-			_readyAt = now + Math.Max(0f, Plugin.AutoAdvanceDelay.Value);
+			_readyAt = now + delay;
 			return;
 		}
 		if (now < _readyAt)
 		{
 			return;
 		}
-		_waiting = false;
-		Plugin.Instance.Log.LogInfo("Auto-advance: voice finished, ending line on " + reader.gameObject.name);
-		reader.End();
+		_handled = true;
+		Plugin.Instance.Log.LogInfo("Auto-advance: ending " + (_sawVoice ? "voiced" : "unvoiced") + " line on " + _reader.gameObject.name);
+		_reader.End();
+	}
+
+	private static void Reset()
+	{
+		_lineOpen = false;
+		_wasReading = false;
+		_sawVoice = false;
+		_handled = false;
+		_readyAt = 0f;
 	}
 
 	private static bool AnyVoiceActive()
