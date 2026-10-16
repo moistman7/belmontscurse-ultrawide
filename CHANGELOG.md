@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Voiced dialogue can advance automatically once the voice line and text are done: `Dialogue.AutoAdvanceVoiced` (F5, or Select + R3 on a controller). Off by default.
+- All keyboard keys are remappable (`[Hotkeys]`), and every shortcut has a controller button combo (`[Controller]`). Defaults: F5 auto-advance, F6 bigger HUD, F7 centered HUD, F9 diagnostic dump. The testing keys (F8, End) are removed.
+- The title and save screens are now kept inside the centered 16:9 area, so the save slot labels line up with their cards (`StartMenuView` added to `UI.MenuCanvases`).
+
 ## 0.6.0
 
 - Controller shortcut for the bigger HUD: press L3 + R3 (both stick buttons) together. Useful on the
