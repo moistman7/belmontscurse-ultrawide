@@ -84,7 +84,7 @@ game is closed. The defaults are meant to just work.
 | `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F10). |
 | `UI.BigHUD` | `false` | Bigger HUD (same as F6). |
 | `UI.HUDScale` | `1.25` | How much bigger BigHUD makes it (1.1 to 1.6 is sensible). |
-| `Resolution.ForceResolution` | `true` | Use the monitor's resolution at startup. |
+| `Resolution.ForceResolution` | `true` | Use the monitor's resolution at startup (ultrawide displays only, unless Width/Height are set). |
 | `Resolution.Width` / `Height` | `0` | `0` = native; set both to force a specific resolution. |
 | `Resolution.ScreenMode` | `FullScreenWindow` | Or `ExclusiveFullScreen`, `MaximizedWindow`, `Windowed`. |
 

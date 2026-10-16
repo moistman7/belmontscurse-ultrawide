@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1
+
+- Steam Deck: the picture zoomed in a couple of seconds after launch. The automatic resolution
+  forcing picked up the Deck's reported panel size under Proton (not the 1280x800 the game runs at).
+  `Resolution.ForceResolution` with Width/Height at 0 now only forces on ultrawide displays.
+
 ## 0.5.0
 
 - 16:10 (Steam Deck, 1280x800): menus were cropped at the sides because the UI scaled by a blend of

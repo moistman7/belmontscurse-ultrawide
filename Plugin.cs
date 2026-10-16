@@ -10,7 +10,7 @@ using Il2CppInterop.Runtime.Injection;
 
 namespace BelmontsCurseUltrawide;
 
-[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.5.0")]
+[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.5.1")]
 public class Plugin : BasePlugin
 {
 	internal static Plugin Instance;
@@ -93,7 +93,7 @@ public class Plugin : BasePlugin
 		BigHud = Config.Bind("UI", "BigHUD", defaultValue: false, "Draw the HUD (health, magic, notifications) bigger. F6 toggles it in game (saved).");
 		HudScale = Config.Bind("UI", "HUDScale", 1.25f, "How much bigger the HUD is when BigHUD is on. 1.25 = 25% bigger. Sensible range 1.1 to 1.6.");
 		HudScaleCanvases = Config.Bind("UI", "HUDScaleCanvases", "HUD_Canvas", "Canvas names BigHUD applies to.");
-		ForceResolution = Config.Bind("Resolution", "ForceResolution", defaultValue: true, "Set the resolution at startup (replaces the -screen-width/-screen-height launch options).");
+		ForceResolution = Config.Bind("Resolution", "ForceResolution", defaultValue: true, "Set the resolution at startup (replaces the -screen-width/-screen-height launch options). With Width/Height at 0 this only happens on ultrawide displays; 16:9 and 16:10 screens (Steam Deck) are left alone.");
 		ResWidth = Config.Bind("Resolution", "Width", 0, "Target width in pixels. 0 = use the monitor's native width.");
 		ResHeight = Config.Bind("Resolution", "Height", 0, "Target height in pixels. 0 = use the monitor's native height.");
 		ScreenMode = Config.Bind("Resolution", "ScreenMode", "FullScreenWindow", "FullScreenWindow (borderless), ExclusiveFullScreen, MaximizedWindow or Windowed.");
@@ -137,7 +137,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.5.0 loaded. F10 = HUD centered / at screen edges, F6 = big HUD, F7 = write a diagnostic dump to this log." + (DebugHotkeys.Value ? " Testing keys on: F8 = all fixes, End = camera fix." : ""));
+		Log.LogInfo("Belmont's Curse Ultrawide 0.5.1 loaded. F10 = HUD centered / at screen edges, F6 = big HUD, F7 = write a diagnostic dump to this log." + (DebugHotkeys.Value ? " Testing keys on: F8 = all fixes, End = camera fix." : ""));
 		ManualLogSource log2 = Log;
 		bepInExInfoLogInterpolatedStringHandler = new BepInExInfoLogInterpolatedStringHandler(181, 11, out isEnabled);
 		if (isEnabled)
