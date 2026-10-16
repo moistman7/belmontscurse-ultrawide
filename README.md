@@ -38,6 +38,25 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 
 To uninstall, delete the DLL.
 
+## Steam Deck / Linux (Proton)
+
+The Deck's own screen is 16:10, so this mod only matters when you dock it to an ultrawide monitor
+(or run another Linux machine with one). Setup is one script:
+
+1. Switch to Desktop Mode and extract the release zip (or just download `steamdeck/install.sh`).
+2. Open a terminal in that folder and run `./install.sh`. It finds the game (including on an SD
+   card), installs BepInEx 6 be.788 and the plugin. If it can't find the game, pass the folder:
+   `./install.sh "/path/to/Castlevania Belmont's Curse"`.
+3. In Steam, open the game's Properties > General > Launch Options and paste:
+
+        WINEDLLOVERRIDES="winhttp=n,b" %command%
+
+4. Launch the game. The first launch can sit on a black screen for several minutes; later ones are
+   quick.
+
+The F6/F7/F10 keys need a keyboard. Without one, set `UI.CenterHUD` and `UI.BigHUD` in
+`BepInEx/config/local.belmontscurse.ultrawide.cfg` instead (edit it with the game closed).
+
 ## Keys
 
 | Key | Action |
