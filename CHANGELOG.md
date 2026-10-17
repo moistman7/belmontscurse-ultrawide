@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.5 (unreleased)
+
+- **Keep mouse always hidden** (`Input.HideMouseAlways`, off by default; also in the mod menu): the cursor stays hidden instead of returning on movement; works on its own, without hide-on-idle. It still shows in the history window and the mod menu.
+
 ## 0.8.4
 
 - **Controller button sprites in the history window** are repaired. 0.8.3 loaded only the matching glyph descriptor, which could leave the shoulder and face-button sprites empty so only the D-pad showed; it now falls back to loading the full glyph folder and logs when it has to.

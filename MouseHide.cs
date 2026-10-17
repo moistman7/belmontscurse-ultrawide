@@ -12,7 +12,14 @@ internal static class MouseHide
 	internal static void Tick()
 	{
 		// When the game locks the cursor it is already managing it.
-		if (!Plugin.HideMouse.Value || Cursor.lockState != CursorLockMode.None) { Restore(); return; }
+		if (!(Plugin.HideMouse.Value || Plugin.HideMouseAlways.Value) || Cursor.lockState != CursorLockMode.None) { Restore(); return; }
+		if (Plugin.HideMouseAlways.Value)
+		{
+			// The mod's own windows are mouse-driven, so the cursor stays available there.
+			if (ModMenu.IsOpen || DialogueHistory.IsOpen) { Restore(); return; }
+			if (Cursor.visible) { Cursor.visible = false; _hidden = true; }
+			return;
+		}
 		float now = Time.unscaledTime;
 		var mouse = Mouse.current;
 		if (mouse != null && (mouse.delta.ReadValue().sqrMagnitude > 0.01f || mouse.leftButton.isPressed || mouse.rightButton.isPressed ||

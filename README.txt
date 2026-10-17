@@ -104,6 +104,7 @@ game closed. The defaults are meant to just work. The useful ones:
   UI.CenterHUD            true = HUD in the centered 16:9 area (same as F8)
   UI.HUDSafeAreaHorizontal / HUDSafeAreaVertical  inset each HUD edge by this percent (0-20, default 0)
   Input.HideMouseOnIdle / MouseIdleSeconds  hide the mouse cursor after it has been still (default off, 3 s)
+  Input.HideMouseAlways                     keep the cursor hidden all the time, independent of hide-on-idle (default off)
   Graphics.EnableTAAOption   adds Temporal Anti-Aliasing to the Video menu anti-aliasing choices (default true)
   Dialogue.HistoryEnabled    record dialogue for this session (default true; turning off clears history)
   Dialogue.SaveHistoryToDisk keep history between sessions in BepInEx/BelmontsCurseUltrawide_history.txt (text and speakers only, default false)

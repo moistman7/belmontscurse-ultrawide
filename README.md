@@ -129,6 +129,7 @@ game is closed. The defaults are meant to just work.
 | `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F8). |
 | `UI.HUDSafeAreaHorizontal` / `HUDSafeAreaVertical` | `0` / `0` | Margin at each HUD edge, in percent (0–20). |
 | `Input.HideMouseOnIdle` / `MouseIdleSeconds` | `false` / `3` | Hide the mouse cursor after it has been still for this many seconds; it returns when you move or click. |
+| `Input.HideMouseAlways` | `false` | Keep the cursor hidden all the time, no need for hide-on-idle (it still shows in the history window and mod menu). Game menus then need keyboard or controller. |
 | `Hotkeys.ModMenu` / `Controller.ModMenu` | `F1` / `LeftShoulder` | Open the mod settings menu from anywhere (controller: modifier + this button). |
 | `Graphics.EnableTAAOption` | `true` | Adds Temporal Anti-Aliasing (the game's own TAA mode) to the Video menu's anti-aliasing choices. |
 | `Dialogue.HistoryEnabled` | `true` | Record session dialogue history (F10 / Select + North). Turning it off clears recorded lines. |

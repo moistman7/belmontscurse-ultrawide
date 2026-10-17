@@ -98,6 +98,7 @@ internal static class ModMenu
 		Switch("On-screen messages", Plugin.ShowToasts);
 		Switch("Controller shortcuts", Plugin.PadShortcuts);
 		Switch("Hide mouse when idle", Plugin.HideMouse);
+		Switch("Keep mouse always hidden", Plugin.HideMouseAlways);
 		Slide("Mouse idle time", Plugin.MouseIdleSeconds, 0.5f, 15f, 0.5f, " s");
 		Switch("TAA in Video menu", Plugin.EnableTaaOption, "reopen Settings");
 		Switch("Skip intros", Plugin.SkipIntros, "next launch");
