@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.6
+
+- Fixed history controller glyphs disappearing after entering a level: retain the descriptor, sprites and textures, and reload invalid cached descriptors. Confirmed with an Xbox controller on Windows.
+- Cached resolved glyphs, controller shortcut controls and history row transforms. History headers and mod settings footers skip unchanged UI work; missing sprites still retry. All features and UI remain available.
+- F9 now reports recent Unity frame intervals (average, median, p95, p99, maximum and counts above 25/50 ms), separated into gameplay/game menus, history and mod settings. Focus gaps, mode transitions and diagnostic dumps are excluded; loading/startup remain included. These are Update intervals, not GPU presentation timings.
+- Diagnostic dumps no longer count toward plugin Update or per-feature CPU timings. Added tests for the frame sampler (28 tests total).
+- Tested at 3440x1440 on Windows: history and settings each averaged about 6.06 ms per frame, p99 below 6.86 ms. Real dialogue capture and voice replay remain unverified in this test session; Steam Deck, other aspect ratios and non-Xbox glyphs remain untested.
+
 ## 0.8.5
 
 - **Keep mouse always hidden** (`Input.HideMouseAlways`, off by default; also in the mod menu): the cursor stays hidden instead of returning on movement; works on its own, without hide-on-idle. It still shows in the history window and the mod menu.

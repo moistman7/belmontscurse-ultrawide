@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,6 +15,7 @@ internal static class HistoryView
 	private sealed class Row
 	{
 		internal GameObject Root;
+		internal RectTransform Rect;
 		internal int Index = -1;
 		internal Image Back, Glow, Portrait;
 		internal TextMeshProUGUI Speaker, Body;
@@ -36,6 +38,18 @@ internal static class HistoryView
 	private static bool _dirty;
 	private static int _fontVersion = -1;
 	private static int _sig;
+	private static float _nextGlyphRefresh;
+	private static bool _retryGlyphs;
+
+	internal static void Dump(StringBuilder sb)
+	{
+		sb.AppendLine("History glyph slots: root=" + (_root != null && _root.activeSelf));
+		foreach (var slot in new[] { _nav, _older, _newer, _replay, _close, _current })
+		{
+			if (slot == null) continue;
+			sb.AppendLine("  " + slot.Root.name + " active=" + slot.Icon.gameObject.activeSelf + " enabled=" + slot.Icon.enabled + " sprite=" + GamepadGlyphs.Describe(slot.Icon.sprite) + " label=" + slot.Label.text);
+		}
+	}
 	private static float _width, _height, _cardHeight, _cardWidth, _uiWidth;
 	private static Sprite _panel;
 	private static UnityEngine.UI.Image.Type _panelType = UnityEngine.UI.Image.Type.Sliced;
@@ -266,7 +280,7 @@ internal static class HistoryView
 		{
 			var row = Rows[i % pool];
 			if (row.Index != i || _dirty) Bind(row, i);
-			Place(row.Root.GetComponent<RectTransform>(), new Vector2(PadX, -(PadY + (i - _scroll) * stride)), new Vector2(_cardWidth, _cardHeight));
+			Place(row.Rect, new Vector2(PadX, -(PadY + (i - _scroll) * stride)), new Vector2(_cardWidth, _cardHeight));
 		}
 		_dirty = false;
 	}
@@ -276,24 +290,29 @@ internal static class HistoryView
 	{
 		if (_root == null || !_root.activeSelf || _pages == null) return;
 		Scroll();
-		bool pad = Plugin.PadShortcuts.Value && Gamepad.current != null;
+		var controller = Plugin.PadShortcuts.Value ? Gamepad.current : null;
+		bool pad = controller != null;
 		var entry = DialogueHistory.SelectedEntry;
 		var liveNow = DialogueHistory.LiveEntry;
 		// Header text only changes with these; skip rebuilding strings on every other frame.
 		int sig = HashCode.Combine(_sel, DialogueHistory.Focus, HistoryVoice.Playing, pad, entry?.HasVoice == true, liveNow != null && liveNow.HasVoice, _pages.Count);
-		if (sig == _sig) return;
+		sig = HashCode.Combine(sig, controller?.deviceId ?? -1, Plugin.PadReplay.Value, Plugin.KeyReplay.Value, liveNow != null);
+		// Retry missing assets at a low rate; resolved and retained glyphs need no idle UI work.
+		if (sig == _sig && (!_retryGlyphs || Time.unscaledTime < _nextGlyphRefresh)) return;
+		_nextGlyphRefresh = Time.unscaledTime + 0.5f;
+		_retryGlyphs = false;
 		_sig = sig;
 		string action = HistoryVoice.Playing ? "Stop" : entry?.HasVoice == true ? "Voice" : "No voice";
 		SetText(_title, "History\n" + (_sel + 1) + " / " + _pages.Count);
-		Set(_nav, pad, GamepadGlyphs.Dpad(), "Up/Down", "Select", -1);
-		Set(_older, pad, GamepadGlyphs.Get(GamepadButton.LeftShoulder), "PgUp", _sel > 0 ? "Older" : "Oldest", DialogueHistory.Older);
-		Set(_newer, pad, GamepadGlyphs.Get(GamepadButton.RightShoulder), "PgDn", _sel < _pages.Count - 1 ? "Newer" : "Latest", DialogueHistory.Newer);
-		Set(_replay, pad, GamepadGlyphs.Get(Plugin.PadReplay.Value), Plugin.KeyReplay.Value.ToString(), action, DialogueHistory.Replay);
+		Set(_nav, pad, pad ? GamepadGlyphs.Dpad() : null, "Up/Down", "Select", -1);
+		Set(_older, pad, pad ? GamepadGlyphs.Get(GamepadButton.LeftShoulder) : null, "PgUp", _sel > 0 ? "Older" : "Oldest", DialogueHistory.Older);
+		Set(_newer, pad, pad ? GamepadGlyphs.Get(GamepadButton.RightShoulder) : null, "PgDn", _sel < _pages.Count - 1 ? "Newer" : "Latest", DialogueHistory.Newer);
+		Set(_replay, pad, pad ? GamepadGlyphs.Get(Plugin.PadReplay.Value) : null, Plugin.KeyReplay.Value.ToString(), action, DialogueHistory.Replay);
 		var live = DialogueHistory.LiveEntry;
 		_currentBox.gameObject.SetActive(live != null);
-		if (live != null) Set(_current, pad, GamepadGlyphs.Get(GamepadButton.South), "Enter", live.HasVoice ? (HistoryVoice.Playing ? "Stop" : "Current") : "Current", DialogueHistory.Current);
+		if (live != null) Set(_current, pad, pad ? GamepadGlyphs.Get(GamepadButton.South) : null, "Enter", live.HasVoice ? (HistoryVoice.Playing ? "Stop" : "Current") : "Current", DialogueHistory.Current);
 		if (liveNow != null) CenterCurrent();
-		Set(_close, pad, GamepadGlyphs.Get(GamepadButton.East), "Esc", "Close", DialogueHistory.Exit);
+		Set(_close, pad, pad ? GamepadGlyphs.Get(GamepadButton.East) : null, "Esc", "Close", DialogueHistory.Exit);
 	}
 
 	// Glyph + label are centered as a group inside the Current panel.
@@ -309,6 +328,7 @@ internal static class HistoryView
 	private static void Set(Slot slot, bool pad, Sprite glyph, string key, string text, int focus)
 	{
 		bool on = focus >= 0 && DialogueHistory.Focus == focus, icon = pad && glyph != null;
+		if (pad && glyph == null) _retryGlyphs = true;
 		if (slot.Icon.sprite != glyph) slot.Icon.sprite = glyph;
 		if (slot.Icon.gameObject.activeSelf != icon) slot.Icon.gameObject.SetActive(icon);
 		SetText(slot.Label, icon ? text : key + "  " + text);
@@ -360,7 +380,7 @@ internal static class HistoryView
 	{
 		var root = new GameObject("HistoryEntry");
 		root.AddComponent<RectTransform>().SetParent(_content, false);
-		var row = new Row { Root = root };
+		var row = new Row { Root = root, Rect = root.GetComponent<RectTransform>() };
 		row.Back = NewImage(root, "Card"); Stretch(row.Back.rectTransform);
 		row.Glow = NewImage(root, "Selected"); Stretch(row.Glow.rectTransform);
 		row.Portrait = NewImage(root, "Portrait"); row.Portrait.preserveAspect = true;

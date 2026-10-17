@@ -13,6 +13,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -76,6 +77,8 @@ public class UwBehaviour : MonoBehaviour
 	private static readonly System.Collections.Generic.Dictionary<string, double> ActionMaxMs = new System.Collections.Generic.Dictionary<string, double>();
 
 	private static readonly Stopwatch FrameWatch = new Stopwatch();
+	private static readonly FrameIntervals FrameSamples = new();
+	private static int _dumpSerial;
 
 	private static double _updateMaxMs;
 
@@ -330,7 +333,9 @@ public class UwBehaviour : MonoBehaviour
 		try
 		{
 			long started = Stopwatch.GetTimestamp();
+			int dumpBefore = _dumpSerial;
 			a();
+			if (dumpBefore != _dumpSerial) return;
 			double took = (Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency;
 			ActionMaxMs.TryGetValue(name, out var worst);
 			if (took > worst) ActionMaxMs[name] = took;
@@ -390,6 +395,9 @@ public class UwBehaviour : MonoBehaviour
 
 	private void Update()
 	{
+		if (Application.isFocused) FrameSamples.Record(Stopwatch.GetTimestamp(), ModMenu.IsOpen ? 2 : DialogueHistory.IsOpen ? 1 : 0);
+		else FrameSamples.ResetClock();
+		int dumpBefore = _dumpSerial;
 		FrameWatch.Restart();
 		try
 		{
@@ -415,6 +423,7 @@ public class UwBehaviour : MonoBehaviour
 			Plugin.Instance.Log.LogError(ex.ToString());
 		}
 		FrameWatch.Stop();
+		if (dumpBefore != _dumpSerial) return;
 		double totalMilliseconds = FrameWatch.Elapsed.TotalMilliseconds;
 		_updateTotalMs += totalMilliseconds;
 		_updateRuns++;
@@ -487,6 +496,19 @@ public class UwBehaviour : MonoBehaviour
 	}
 
 	private static bool _autoHudDone;
+	private static IntPtr _padPtr;
+	private static readonly GamepadButton[] PadButtons = new GamepadButton[9];
+	private static readonly ButtonControl[] PadControls = new ButtonControl[9];
+
+	private static ButtonControl PadCtl(Gamepad pad, int slot, GamepadButton button)
+	{
+		if (PadControls[slot] == null || PadButtons[slot] != button)
+		{
+			PadControls[slot] = pad[button];
+			PadButtons[slot] = button;
+		}
+		return PadControls[slot];
+	}
 
 	// Controller shortcut for players without a keyboard: both stick buttons (L3 + R3) toggle the big HUD.
 	private static void PadAction()
@@ -500,40 +522,47 @@ public class UwBehaviour : MonoBehaviour
 		{
 			return;
 		}
-		if (current[Plugin.PadModifier.Value].isPressed)
+		if (_padPtr != current.Pointer)
 		{
-			if (current[Plugin.PadMenu.Value].wasPressedThisFrame)
+			_padPtr = current.Pointer;
+			Array.Clear(PadControls, 0, PadControls.Length);
+		}
+		if (PadCtl(current, 0, Plugin.PadModifier.Value).isPressed)
+		{
+			if (PadCtl(current, 1, Plugin.PadMenu.Value).wasPressedThisFrame)
 				ModMenu.Toggle();
-			if (current[Plugin.PadHistory.Value].wasPressedThisFrame)
+			if (PadCtl(current, 2, Plugin.PadHistory.Value).wasPressedThisFrame)
 				DialogueHistory.Toggle();
 			// Modifier held: each feature has its own button.
-			if (current[Plugin.PadCenterHud.Value].wasPressedThisFrame)
+			if (PadCtl(current, 3, Plugin.PadCenterHud.Value).wasPressedThisFrame)
 			{
 				Plugin.CenterHud.Value = !Plugin.CenterHud.Value;
 				Plugin.Instance.Log.LogInfo("HUD centered = " + Plugin.CenterHud.Value + " (controller shortcut)");
 				Toast.Show("Centered HUD: " + OnOff(Plugin.CenterHud.Value));
 				Kick();
 			}
-			if (current[Plugin.PadAutoAdvance.Value].wasPressedThisFrame)
+			if (PadCtl(current, 4, Plugin.PadAutoAdvance.Value).wasPressedThisFrame)
 			{
 				Plugin.AutoAdvance.Value = !Plugin.AutoAdvance.Value;
 				Plugin.Instance.Log.LogInfo("Auto-advance voiced dialogue = " + Plugin.AutoAdvance.Value + " (controller shortcut)");
 				Toast.Show("Auto-advance (voiced): " + OnOff(Plugin.AutoAdvance.Value));
 			}
-			if (current[Plugin.PadAutoAdvanceUnvoiced.Value].wasPressedThisFrame)
+			if (PadCtl(current, 5, Plugin.PadAutoAdvanceUnvoiced.Value).wasPressedThisFrame)
 			{
 				Plugin.AutoAdvanceUnvoiced.Value = !Plugin.AutoAdvanceUnvoiced.Value;
 				Plugin.Instance.Log.LogInfo("Auto-advance unvoiced dialogue = " + Plugin.AutoAdvanceUnvoiced.Value + " (controller shortcut)");
 				Toast.Show("Auto-advance (no voice): " + OnOff(Plugin.AutoAdvanceUnvoiced.Value));
 			}
-			if (current[Plugin.PadDump.Value].wasPressedThisFrame)
+			if (PadCtl(current, 6, Plugin.PadDump.Value).wasPressedThisFrame)
 			{
 				Dump();
 				Toast.Show("Diagnostic dump written");
 			}
 			return;
 		}
-		if (current.leftStickButton.isPressed && current.rightStickButton.isPressed && (current.leftStickButton.wasPressedThisFrame || current.rightStickButton.wasPressedThisFrame))
+		var leftStick = PadCtl(current, 7, GamepadButton.LeftStick);
+		var rightStick = PadCtl(current, 8, GamepadButton.RightStick);
+		if (leftStick.isPressed && rightStick.isPressed && (leftStick.wasPressedThisFrame || rightStick.wasPressedThisFrame))
 		{
 			Plugin.BigHud.Value = !Plugin.BigHud.Value;
 			Plugin.Instance.Log.LogInfo("Big HUD = " + Plugin.BigHud.Value + " (controller shortcut, x" + Plugin.HudScale.Value + ")");
@@ -2069,6 +2098,8 @@ public class UwBehaviour : MonoBehaviour
 
 	private static void Dump()
 	{
+		_dumpSerial++;
+		FrameSamples.ResetClock();
 		ManualLogSource log = Plugin.Instance.Log;
 		StringBuilder stringBuilder = new StringBuilder();
 		try
@@ -2076,7 +2107,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.5 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.6 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2099,6 +2130,9 @@ public class UwBehaviour : MonoBehaviour
 			stringBuilder.AppendLine("HUD safe area: horizontal=" + Plugin.HudSafeHorizontal.Value + "% vertical=" + Plugin.HudSafeVertical.Value + "%");
 			stringBuilder.AppendLine("Dialogue history: hooks=" + DialogueHistory.Available + " enabled=" + Plugin.HistoryEnabled.Value + " lines=" + DialogueHistory.Count + " open=" + DialogueHistory.IsOpen);
 			stringBuilder.AppendLine("History voices: recorded=" + DialogueHistory.VoicedCount + " replaying=" + HistoryVoice.Playing);
+			GamepadGlyphs.Dump(stringBuilder);
+			HistoryView.Dump(stringBuilder);
+			FrameSamples.Dump(stringBuilder);
 			stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder4 = stringBuilder2;
 			handler = new StringBuilder.AppendInterpolatedStringHandler(61, 4, stringBuilder2);

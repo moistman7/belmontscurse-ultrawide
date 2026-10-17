@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <Compile Include="../../Logic.cs" Link="Logic.cs" />
+	<Compile Include="../../FrameIntervals.cs" Link="FrameIntervals.cs" />
   </ItemGroup>
 
 </Project>

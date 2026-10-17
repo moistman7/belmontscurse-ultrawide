@@ -46,6 +46,10 @@ internal static class ModMenu
 	private static bool _global, _confirmReset, _cursorWasVisible;
 	private static EventSystem _events;
 	private static bool _eventsWere;
+	private static int _footerDevice = -2, _footerVisible;
+	private static bool _footerSlider;
+	private static bool _retryFooterGlyphs;
+	private static float _nextFooterRefresh;
 	private static readonly Color Gold = new(0.85f, 0.729f, 0.508f, 1);
 	private static readonly Color Bright = new(1f, 0.94f, 0.78f, 1);
 	private static readonly Color Dim = new(0.72f, 0.63f, 0.46f, 1);
@@ -347,13 +351,21 @@ internal static class ModMenu
 					row.Value.text = item.Toggle.Value ? "On" : "Off"; row.Value.color = item.Toggle.Value ? Bright : Dim; break;
 			}
 		}
-		UpdateFooter();
+		UpdateFooter(true);
 	}
 
-	private static void UpdateFooter()
+	private static void UpdateFooter(bool force = false)
 	{
-		bool pad = Gamepad.current != null;
+		var controller = Gamepad.current;
+		bool pad = controller != null;
 		bool slider = Items.Count > _sel && Items[_sel].Kind == Kind.Slider;
+		int device = controller?.deviceId ?? -1;
+		float now = Time.unscaledTime;
+		if (!force && device == _footerDevice && slider == _footerSlider && _visible == _footerVisible && (!_retryFooterGlyphs || now < _nextFooterRefresh)) return;
+		_footerDevice = device; _footerSlider = slider; _footerVisible = _visible;
+		// Retry occasionally for assets that were not available on the first attempt.
+		_nextFooterRefresh = now + 0.5f;
+		_retryFooterGlyphs = false;
 		SetFooter(0, pad ? GamepadGlyphs.Dpad() : null, "Up/Down", "Select", pad);
 		if (slider) SetFooter(1, pad ? GamepadGlyphs.Dpad() : null, "Left/Right", "Adjust", pad);
 		else SetFooter(1, pad ? GamepadGlyphs.Get(GamepadButton.South) : null, "Enter", "Change", pad);
@@ -363,6 +375,7 @@ internal static class ModMenu
 	private static void SetFooter(int slot, Sprite glyph, string key, string text, bool pad)
 	{
 		bool icon = pad && glyph != null;
+		if (pad && glyph == null) _retryFooterGlyphs = true;
 		var image = Icons[slot];
 		if (image.sprite != glyph) image.sprite = glyph;
 		if (image.gameObject.activeSelf != icon) image.gameObject.SetActive(icon);
