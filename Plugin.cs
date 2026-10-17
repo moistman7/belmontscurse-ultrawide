@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace BelmontsCurseUltrawide;
 
-[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.8.6")]
+[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.8.7")]
 public class Plugin : BasePlugin
 {
 	internal static Plugin Instance;
@@ -21,7 +21,6 @@ public class Plugin : BasePlugin
 	// Menu layout switches are read once at startup: changing them while menus exist leaves their scaling half-applied.
 	internal static bool MenusOn, NarrowOn;
 
-	internal static bool CamOn;
 
 	internal static ConfigEntry<bool> Enabled;
 
@@ -41,7 +40,6 @@ public class Plugin : BasePlugin
 
 	internal static ConfigEntry<bool> FixVideos;
 
-	internal static ConfigEntry<bool> Camera16x9Logic;
 
 	internal static ConfigEntry<string> CameraMaxAspect;
 
@@ -178,10 +176,9 @@ public class Plugin : BasePlugin
 		LastGameVersion = Config.Bind("General", "LastGameVersion", "", "Filled in automatically: the game version seen on the last run, used to log a warning when the game gets updated. Leave alone.");
 		RemoveLetterbox = Config.Bind("General", "RemoveCutsceneLetterbox", defaultValue: true, "Hide the black cinematic bars the game draws during cutscenes.");
 		FixCameraRect = Config.Bind("General", "FixCameraRect", defaultValue: true, "Remove side bars caused by a camera viewport narrower than the screen.");
-		Camera16x9Logic = Config.Bind("Camera", "LimitCameraLogicAspect", defaultValue: true, "On screens wider than CameraLogicMaxAspect, the game's camera logic (room limits, follow, zoom) is told the screen is CameraLogicMaxAspect wide, while the picture still renders at full width. Fixes the camera losing the player on 32:9.");
 		CameraMaxAspect = Config.Bind("Camera", "CameraLogicAspect", "auto", "What the game's camera logic is told the screen shape is. auto = 16:9 on any wider screen, which is what the rooms are built for (fixes the camera swinging or stopping when entering areas). Or a number: the widest aspect the camera logic sees (2.4 = 21:9, 1.778 = 16:9).");
 		FixScreenSize = Config.Bind("Camera", "FixWidthBasedZoom", defaultValue: true, "Rooms/fights that size the camera by width are converted to the height a 16:9 screen would show, so they are not zoomed in on ultrawide.");
-		DisableConfiners = Config.Bind("Camera", "DisableConfiners", defaultValue: false, "Old workaround: switch off the Cinemachine room confiners entirely. Usually not needed with Camera16x9Logic on.");
+		DisableConfiners = Config.Bind("Camera", "DisableConfiners", defaultValue: false, "Old workaround: switch off the Cinemachine room confiners entirely. Usually not needed.");
 		CenterMenus = Config.Bind("UI", "CenterMenus", defaultValue: true, "Keep the pause menu, journal and popups inside a centered 16:9 area (their backgrounds still fill the screen).");
 		MenuCanvases = Config.Bind("UI", "MenuCanvases", "GameMenu,Canvas_ConfirmPopup,StartMenuView", "Canvas names CenterMenus applies to.");
 		if (MenuCanvases.Value == "GameMenu,Canvas_ConfirmPopup")
@@ -201,7 +198,6 @@ public class Plugin : BasePlugin
 		ForceDelay = Config.Bind("Resolution", "DelaySeconds", 2f, "Wait this long after launch before forcing the resolution, so the game's own setup runs first.");
 		ForceWindow = Config.Bind("Resolution", "RetrySeconds", 15f, "Keep re-applying for this many seconds if the game changes it back. After that the in-game settings are left alone.");
 		On = Enabled.Value;
-		CamOn = Camera16x9Logic.Value;
 		MenusOn = CenterMenus.Value;
 		NarrowOn = FixNarrow.Value;
 		bool isEnabled;
@@ -243,7 +239,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.8.6 loaded. F5 = auto-advance voiced dialogue, F6 = auto-advance unvoiced dialogue, F7 = big HUD (controller: L3 + R3), F8 = HUD centered / at screen edges, F9 = diagnostic dump, F10 = dialogue history (controller: Select + North). Controller: hold Select, then R3 / Right Shoulder / L3 / Start for the other functions in that order.");
+		Log.LogInfo("Belmont's Curse Ultrawide 0.8.7 loaded. F5 = auto-advance voiced dialogue, F6 = auto-advance unvoiced dialogue, F7 = big HUD (controller: L3 + R3), F8 = HUD centered / at screen edges, F9 = diagnostic dump, F10 = dialogue history (controller: Select + North). Controller: hold Select, then R3 / Right Shoulder / L3 / Start for the other functions in that order.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;
@@ -266,7 +262,7 @@ public class Plugin : BasePlugin
 			bepInExInfoLogInterpolatedStringHandler.AppendLiteral("Settings: fixes=");
 			bepInExInfoLogInterpolatedStringHandler.AppendFormatted(On ? "on" : "OFF");
 			bepInExInfoLogInterpolatedStringHandler.AppendLiteral(", camera logic=");
-			bepInExInfoLogInterpolatedStringHandler.AppendFormatted(CamOn ? CameraMaxAspect.Value : "OFF");
+			bepInExInfoLogInterpolatedStringHandler.AppendFormatted(CameraMaxAspect.Value);
 			bepInExInfoLogInterpolatedStringHandler.AppendLiteral(", width-based zoom fix=");
 			bepInExInfoLogInterpolatedStringHandler.AppendFormatted(FixScreenSize.Value);
 			bepInExInfoLogInterpolatedStringHandler.AppendLiteral(", ");

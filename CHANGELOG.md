@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.7
+
+- The camera aspect limit is now always on (16:9 for the game's camera logic on wider screens) and the "Camera aspect limit" switch and `LimitCameraLogicAspect` setting are removed. `CameraLogicAspect` still controls the cap.
+- The gameplay camera is now also found when the game switches it to physical camera properties; previously the limit could silently never apply on 32:9, so the camera stopped following the player.
+- F9 lists `physical=` and `tracked=` for each Cinemachine brain to help diagnose camera issues.
+
 ## 0.8.6
 
 - Fixed history controller glyphs disappearing after entering a level: retain the descriptor, sprites and textures, and reload invalid cached descriptors. Confirmed with an Xbox controller on Windows.

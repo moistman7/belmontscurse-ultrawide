@@ -305,7 +305,6 @@ public class UwBehaviour : MonoBehaviour
 	internal static void ApplyFixToggles()
 	{
 
-		Plugin.CamOn = Plugin.Camera16x9Logic.Value;
 		Kick();
 	}
 
@@ -741,7 +740,7 @@ public class UwBehaviour : MonoBehaviour
 			if (!(item == null))
 			{
 				Camera component = item.GetComponent<Camera>();
-				if (component != null && component.targetTexture == null && component.isActiveAndEnabled && !component.usePhysicalProperties)
+				if (component != null && component.targetTexture == null && component.isActiveAndEnabled)
 				{
 					camera = component;
 					break;
@@ -783,7 +782,7 @@ public class UwBehaviour : MonoBehaviour
 		}
 		float num = ((Screen.height > 0) ? ((float)Screen.width / (float)Screen.height) : 1.7777778f);
 		float num2 = LogicAspectCap(num);
-		if (Plugin.On && Plugin.CamOn && num > num2 + 0.01f)
+		if (Plugin.On && num > num2 + 0.01f)
 		{
 			if (!_camSpoofed)
 			{
@@ -2107,7 +2106,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.6 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.7 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2296,6 +2295,11 @@ public class UwBehaviour : MonoBehaviour
 					handler.AppendFormatted(item3.gameObject.name);
 					handler.AppendLiteral("' live camera=");
 					handler.AppendFormatted((activeVirtualCamera == null) ? "none" : activeVirtualCamera.Name);
+					Camera brainCam = item3.GetComponent<Camera>();
+					handler.AppendLiteral(" physical=");
+					handler.AppendFormatted(brainCam != null && brainCam.usePhysicalProperties);
+					handler.AppendLiteral(" tracked=");
+					handler.AppendFormatted(brainCam != null && _cam != null && brainCam.Pointer == _cam.Pointer);
 					stringBuilder10.AppendLine(ref handler);
 				}
 			}

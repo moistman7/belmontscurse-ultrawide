@@ -76,7 +76,6 @@ internal static class ModMenu
 	{
 		if (Items.Count > 0) return;
 		Header("Ultrawide fixes");
-		Switch("Camera aspect limit", Plugin.Camera16x9Logic);
 		Switch("Camera zoom fix", Plugin.FixScreenSize);
 		Switch("Camera viewport fix", Plugin.FixCameraRect);
 		Switch("Disable camera confiners", Plugin.DisableConfiners);
