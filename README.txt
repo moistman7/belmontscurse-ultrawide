@@ -103,6 +103,7 @@ game closed. The defaults are meant to just work. The useful ones:
   Dialogue.AutoAdvanceDelay   seconds to wait before advancing (default 0.4)
   Dialogue.AutoAdvanceUnvoiced  true = also advance lines without voice after a reading-time delay (same as F6, default false)
   UI.ShowMessages             short on-screen message when you toggle auto-advance or the HUD (default true)
+  UI.DialogueDimOverscan      how far the dark bar under full-screen dialogue extends past the screen edges (default 300, 0 = off)
   Input.GamepadShortcuts  L3 + R3 toggles the bigger HUD (default true)
   UI.HUDScale             how much bigger BigHUD makes it (1.1 to 1.6 is sensible)
   UI.FixNarrowScreens     fixes menus on 16:10 screens such as the Steam Deck (default true)

@@ -70,6 +70,8 @@ public class Plugin : BasePlugin
 
 	internal static ConfigEntry<bool> ShowToasts;
 
+	internal static ConfigEntry<float> DialogueDimOverscan;
+
 	internal static ConfigEntry<Key> KeyCenterHud;
 
 	internal static ConfigEntry<Key> KeyBigHud;
@@ -118,6 +120,7 @@ public class Plugin : BasePlugin
 		UnvoicedBaseSeconds = Config.Bind("Dialogue", "UnvoicedBaseSeconds", 1.0f, "Unvoiced lines: seconds to wait after the text is fully shown, before the per-character time.");
 		UnvoicedSecondsPerCharacter = Config.Bind("Dialogue", "UnvoicedSecondsPerCharacter", 0.05f, "Unvoiced lines: extra seconds per character of the line (0.05 is roughly 20 characters per second).");
 		ShowToasts = Config.Bind("UI", "ShowMessages", defaultValue: true, "Show a short on-screen message when you toggle auto-advance, the bigger HUD or the centered HUD.");
+		DialogueDimOverscan = Config.Bind("UI", "DialogueDimOverscan", 300f, "Full-screen dialogue: how far (in UI units) the dark gradient along the bottom extends past each screen edge, so it reaches the sides on ultrawide. 0 = leave as the game made it.");
 		KeyCenterHud = Config.Bind("Hotkeys", "CenterHUD", Key.F8, "Key that toggles the HUD between the centered 16:9 area and the screen edges. Use a key name such as F10, Home, Backquote or Numpad5.");
 		KeyBigHud = Config.Bind("Hotkeys", "BigHUD", Key.F7, "Key that toggles the bigger HUD.");
 		KeyAutoAdvance = Config.Bind("Hotkeys", "AutoAdvanceVoiced", Key.F5, "Key that toggles auto-advance for voiced dialogue.");

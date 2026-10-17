@@ -5,6 +5,7 @@
 - On-screen message when you toggle auto-advance, the bigger HUD or the centered HUD (and when a diagnostic dump is written). Setting: `UI.ShowMessages`.
 - Optional auto-advance for lines without voice, after a reading-time delay (`Dialogue.AutoAdvanceUnvoiced`, off by default; tune with `UnvoicedBaseSeconds` and `UnvoicedSecondsPerCharacter`).
 - New key layout, grouped by purpose: F5 / F6 auto-advance (voiced / no voice), F7 bigger HUD, F8 centered HUD, F9 diagnostic dump. Controller: Select + R3 / Right Shoulder / L3 / Start (bigger HUD stays L3 + R3). Settings that still have the 0.7.0 keys are moved to the new ones.
+- Full-screen dialogue: the dark bar along the bottom now reaches the left edge of ultrawide screens (`UI.DialogueDimOverscan`).
 - Windows all-in-one zip (BepInEx included) is published again.
 
 ## 0.7.0

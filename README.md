@@ -101,6 +101,7 @@ game is closed. The defaults are meant to just work.
 | `Dialogue.AutoAdvanceUnvoiced` | `false` | Also advance lines without voice, after a reading-time delay (same as F6). |
 | `Dialogue.UnvoicedBaseSeconds` / `Dialogue.UnvoicedSecondsPerCharacter` | `1.0` / `0.05` | Delay for unvoiced lines: base seconds plus this per character. |
 | `UI.ShowMessages` | `true` | Short on-screen message when you toggle auto-advance or the HUD options. |
+| `UI.DialogueDimOverscan` | `300` | Full-screen dialogue: the dark bar along the bottom is stretched this far past each screen edge so it reaches the sides on ultrawide. `0` = off. |
 | `Input.GamepadShortcuts` | `true` | L3 + R3 toggles the bigger HUD. |
 | `UI.HUDScale` | `1.25` | How much bigger BigHUD makes it (1.1 to 1.6 is sensible). |
 | `Resolution.ForceResolution` | `true` | Use the monitor's resolution at startup. |

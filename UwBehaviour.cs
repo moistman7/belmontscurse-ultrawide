@@ -390,6 +390,7 @@ public class UwBehaviour : MonoBehaviour
 			Guard("auto big hud", AutoHudAction);
 				Guard("auto advance", VoiceAdvance.Tick);
 				Guard("toast", Toast.Tick);
+				Guard("dialogue dim", DialogueDim.Tick);
 			RunOneJob();
 		}
 		catch (Exception ex)
