@@ -66,7 +66,7 @@ Plain zip (mod only), if you don't have BepInEx yet:
    Run the game once; the first launch can sit on a black screen for a few minutes.
 2. Extract this zip into the game folder (the BepInEx/plugins folder gets the mod DLL). You can
    ignore the "steamdeck" folder on Windows.
-3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.1 loaded".
+3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.2 loaded".
 
 To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 
@@ -102,6 +102,7 @@ game closed. The defaults are meant to just work. The useful ones:
 
   UI.CenterHUD            true = HUD in the centered 16:9 area (same as F8)
   UI.HUDSafeAreaHorizontal / HUDSafeAreaVertical  inset each HUD edge by this percent (0-20, default 0)
+  Graphics.EnableTAAOption   adds Temporal Anti-Aliasing to the Video menu anti-aliasing choices (default true)
   Dialogue.HistoryEnabled    record dialogue for this session (default true; turning off clears history)
   Dialogue.HistoryLimit      number of lines to keep (20-1000, default 200)
   UI.BigHUD               true = bigger HUD (same as F7)

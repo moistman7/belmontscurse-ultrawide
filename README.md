@@ -35,7 +35,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.1 loaded`.
+   `Belmont's Curse Ultrawide 0.8.2 loaded`.
 
 To uninstall, delete the DLL.
 
@@ -125,6 +125,7 @@ game is closed. The defaults are meant to just work.
 | `UI.FixNarrowScreens` | `true` | On screens narrower than 16:9 (16:10, e.g. the Steam Deck) the UI matches the screen width so menus are not cropped. |
 | `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F8). |
 | `UI.HUDSafeAreaHorizontal` / `HUDSafeAreaVertical` | `0` / `0` | Margin at each HUD edge, in percent (0–20). |
+| `Graphics.EnableTAAOption` | `true` | Adds Temporal Anti-Aliasing (the game's own TAA mode) to the Video menu's anti-aliasing choices. |
 | `Dialogue.HistoryEnabled` | `true` | Record session dialogue history (F10 / Select + North). Turning it off clears recorded lines. |
 | `Dialogue.HistoryLimit` | `200` | Number of dialogue lines to keep (20–1000). |
 | `UI.BigHUD` | `false` | Bigger HUD (same as F7). |

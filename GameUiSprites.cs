@@ -27,7 +27,7 @@ internal static class GameUiSprites
             if (source.packed && source.packingRotation != SpritePackingRotation.None) return source;
             var texture = source.texture;
             Rect area = source.textureRect;
-            float scale = Math.Min(1f, 1024f / Math.Max(area.width, area.height));
+            float scale = Math.Min(1f, 512f / Math.Max(area.width, area.height));
             int w = Math.Max(1, (int)(area.width * scale)), h = Math.Max(1, (int)(area.height * scale));
             target = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
             Graphics.Blit(texture, target, new Vector2(area.width / texture.width, area.height / texture.height), new Vector2(area.x / texture.width, area.y / texture.height));
@@ -75,14 +75,16 @@ internal static class GameUiSprites
                     bottom = Math.Min(bottom, uv.y * texture.height);
                     top = Math.Max(top, uv.y * texture.height);
                 }
+                int step = 1;
                 if (texture.isReadable)
                 {
                     var pixels = texture.GetPixels32();
                     int x0 = (int)area.xMin, x1 = (int)area.xMax;
                     int y0 = (int)area.yMin, y1 = (int)area.yMax;
+                    step = Math.Max(1, Math.Max(x1 - x0, y1 - y0) / 192);
                     left = x1; right = x0; bottom = y1; top = y0;
-                    for (int y = y0; y < y1; y++)
-                        for (int x = x0; x < x1; x++)
+                    for (int y = y0; y < y1; y += step)
+                        for (int x = x0; x < x1; x += step)
                             if (pixels[y * texture.width + x].a > 12)
                             {
                                 left = Math.Min(left, x); right = Math.Max(right, x + 1);
@@ -91,8 +93,8 @@ internal static class GameUiSprites
                 }
                 if (right > left && top > bottom)
                 {
-                    left = Math.Max(area.xMin, left - 2); right = Math.Min(area.xMax, right + 2);
-                    bottom = Math.Max(area.yMin, bottom - 2); top = Math.Min(area.yMax, top + 2);
+                    left = Math.Max(area.xMin, left - 2 - step); right = Math.Min(area.xMax, right + 2 + step);
+                    bottom = Math.Max(area.yMin, bottom - 2 - step); top = Math.Min(area.yMax, top + 2 + step);
                     var crop = new Rect(left, bottom, right - left, top - bottom);
                     display = Sprite.Create(texture, crop, new Vector2(0.5f, 0.5f), source.pixelsPerUnit);
                     display.name = "UwUiSprite_" + source.name;

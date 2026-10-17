@@ -19,6 +19,8 @@ internal static class DialogueHistory
 		internal string Text = "";
 		internal string Speaker = "";
 		internal TMPro.TMP_Text NameSource;
+		internal UILocalizedString Label;
+		internal string Raw;
 		internal Sprite Portrait;
 		internal bool PortraitRight;
 		internal bool PortraitFlipped;
@@ -59,10 +61,9 @@ internal static class DialogueHistory
 	{
 		try
 		{
+			if (!Plugin.HistoryEnabled.Value) { Plugin.Instance.Log.LogInfo("Dialogue history is disabled in the config: no game hooks installed."); return; }
 			_harmony = new Harmony("local.belmontscurse.ultrawide.history");
 			Patch(typeof(CutsceneLineReader), "Begin", nameof(BeforeBegin), nameof(AfterBegin));
-			Patch(typeof(UILocalizedString), "UpdateString", null, nameof(AfterString));
-			Patch(typeof(CutsceneLineReader), "HandleUserSkipped", nameof(AllowSkip), null);
 			Patch(typeof(CutsceneLineReader), "Deactivate", null, nameof(AfterDeactivate));
 			Patch(typeof(CutsceneDialogueBoxUI), "Begin", null, nameof(AfterBoxBegin));
 			Patch(typeof(CutscenePortraitUI), "SetPortrait", null, nameof(AfterPortrait));
@@ -84,6 +85,22 @@ internal static class DialogueHistory
 	}
 
 	private static bool AllowSkip() => !IsOpen;
+
+	// Suppress the game's own line-skip only while history is open; normal play and cutscene skipping run unhooked.
+	private static bool _skipHooked;
+	private static void HookSkip(bool on)
+	{
+		if (_harmony == null || _skipHooked == on) return;
+		try
+		{
+			var target = AccessTools.Method(typeof(CutsceneLineReader), "HandleUserSkipped");
+			var prefix = typeof(DialogueHistory).GetMethod(nameof(AllowSkip), BindingFlags.NonPublic | BindingFlags.Static);
+			if (on) _harmony.Patch(target, new HarmonyMethod(prefix));
+			else _harmony.Unpatch(target, prefix);
+			_skipHooked = on;
+		}
+		catch (Exception ex) { Plugin.Instance.Log.LogWarning("History skip hook: " + ex.Message); }
+	}
 
 	// The line the game is showing right now: its reader has not deactivated yet.
 	internal static bool IsLive(Entry entry) => Labels.ContainsValue(entry);
@@ -147,7 +164,7 @@ internal static class DialogueHistory
 		{
 			if (__instance._dialogueLabel != null && Labels.Remove(__instance._dialogueLabel.GetInstanceID(), out var entry))
 			{
-				FillSpeaker(entry); var stale = new List<int>();
+				ReadText(entry); FillSpeaker(entry); var stale = new List<int>();
 				foreach (var pair in NameLabels) if (ReferenceEquals(pair.Value, entry)) stale.Add(pair.Key);
 				foreach (int id in stale) NameLabels.Remove(id);
 			}
@@ -199,7 +216,7 @@ internal static class DialogueHistory
 			if (!Plugin.HistoryEnabled.Value || __instance._dialogueLabel == null) return;
 			int scene = SceneManager.GetActiveScene().handle;
 			if (_sceneHandle != scene) { Labels.Clear(); NameLabels.Clear(); _sceneHandle = scene; }
-			var entry = new Entry();
+			var entry = new Entry { Label = __instance._dialogueLabel };
 			Entries.Add(entry);
 			Labels[__instance._dialogueLabel.GetInstanceID()] = entry;
 			Trim();
@@ -214,16 +231,8 @@ internal static class DialogueHistory
 			VoiceAdvance.Track(__instance);
 			var label = __instance._dialogueLabel;
 			if (Plugin.HistoryEnabled.Value && label != null && label.textDisplay != null)
-				{ Capture(label, label.textDisplay.text); if (Labels.TryGetValue(label.GetInstanceID(), out var begun)) begun.NameSource = BoxName(label.textDisplay); }
+				{ if (Labels.TryGetValue(label.GetInstanceID(), out var begun)) { begun.NameSource = BoxName(label.textDisplay); ReadText(begun); } }
 		}
-		catch (Exception ex) { FailCapture(ex); }
-	}
-
-	private static void AfterString(UILocalizedString __instance, string value)
-	{
-		// Runs for every localized string the game updates: bail out at once unless a dialogue line is being tracked.
-		if (Labels.Count == 0 && NameLabels.Count == 0) return;
-		try { if (Plugin.HistoryEnabled.Value) Capture(__instance, value); }
 		catch (Exception ex) { FailCapture(ex); }
 	}
 
@@ -233,13 +242,26 @@ internal static class DialogueHistory
 		Plugin.Instance.Log.LogWarning("Dialogue history capture disabled: " + ex.Message);
 	}
 
-	private static void Capture(UILocalizedString label, string text)
+	// The game's text label holds the full localized string; read it for the lines being shown, only when it changed.
+	private static void ReadText(Entry entry)
 	{
-		if (NameLabels.TryGetValue(label.GetInstanceID(), out var named) && !string.IsNullOrWhiteSpace(text))
-			named.Speaker = Regex.Replace(text, "<[^>]*>", "").Trim();
-		if (!Labels.TryGetValue(label.GetInstanceID(), out var entry)) return;
-		// Keep the localized full string, not the number of currently visible typewriter characters.
-		entry.Text = Regex.Replace(Regex.Replace(text ?? "", @"<br\s*/?>", "\n", RegexOptions.IgnoreCase), "<[^>]*>", "").Trim();
+		var display = entry.Label?.textDisplay;
+		string raw = display?.text;
+		if (raw == null || raw == entry.Raw) return;
+		entry.Raw = raw;
+		entry.Text = Regex.Replace(Regex.Replace(raw, @"<br\s*/?>", "\n", RegexOptions.IgnoreCase), "<[^>]*>", "").Trim();
+	}
+
+	// A few times a second instead of hooking every localized-string update in the game.
+	private static float _nextPoll, _nextPrewarm;
+	private static int _prewarm;
+	private static void Poll()
+	{
+		if (Labels.Count == 0) return;
+		float now = Time.unscaledTime;
+		if (now < _nextPoll) return;
+		_nextPoll = now + 0.1f;
+		foreach (var entry in Labels.Values) ReadText(entry);
 	}
 
 	private static void Trim()
@@ -278,6 +300,7 @@ internal static class DialogueHistory
 			_selected = Pages.Count - 1;
 			Focus = Card;
 			IsOpen = true;
+			HookSkip(true);
 			HistoryView.Show(Pages, _selected, true);
 		}
 		catch (Exception ex) { Close(); Plugin.Instance.Log.LogWarning("Could not open dialogue history: " + ex.Message); }
@@ -289,6 +312,8 @@ internal static class DialogueHistory
 		{
 			Close(); Entries.Clear(); Labels.Clear(); NameLabels.Clear(); Pages.Clear(); return;
 		}
+		if (!IsOpen && _prewarm < 5 && _available && Labels.Count == 0 && Time.unscaledTime > 6f && Time.unscaledTime >= _nextPrewarm) { _nextPrewarm = Time.unscaledTime + 0.6f; HistoryView.Prewarm(_prewarm++); }
+		Poll();
 		if (!IsOpen) return;
 		HistoryVoice.Tick();
 		HistoryView.Tick();
@@ -352,6 +377,7 @@ internal static class DialogueHistory
 	private static void Close()
 	{
 		IsOpen = false;
+		HookSkip(false);
 		HistoryVoice.Stop();
 		HistoryView.Close();
 	}

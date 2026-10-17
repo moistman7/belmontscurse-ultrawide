@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.2
+
+- **TAA** now appears in the Video menu's anti-aliasing choices (`Graphics.EnableTAAOption`, on by default). It is the game's own TAA mode, added to the menu; the game applies it.
+- Fixed a frame-time cost: the history feature no longer hooks every localized text update in the game, and its window is built ahead of time instead of the first time you open it. Portrait handling is cheaper.
+- The dialogue-skip suppression now only exists while history is open, so cutscene and dialogue skipping run unhooked in normal play. Setting `Dialogue.HistoryEnabled = false` installs no history hooks at all.
+- Auto-advance picks up each line as it starts (fixes it stopping after the dialogue alternated between the left and right boxes).
+- History: the "Current" button's contents are centered; scroll is smoother; speaker names have a fallback source.
+- F9 dump now lists the slowest single run of each per-frame feature, to help find stutters.
+
 ## 0.8.1
 
 - Dialogue history: the "Current" button's glyph and label are now centered in its panel.

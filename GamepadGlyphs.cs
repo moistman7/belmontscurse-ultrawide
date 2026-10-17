@@ -9,7 +9,6 @@ namespace BelmontsCurseUltrawide;
 // The game's own controller button sprites (GamepadDescriptor assets), picked to match the connected pad.
 internal static class GamepadGlyphs
 {
-	private static readonly List<GamepadDescriptor> All = new();
 	private static bool _scanned;
 	private static string _layout = "";
 	private static GamepadDescriptor _current;
@@ -53,38 +52,34 @@ internal static class GamepadGlyphs
 	private static GamepadDescriptor Descriptor(Gamepad pad)
 	{
 		string layout = pad.layout ?? "";
-		if (_current != null && layout == _layout) return _current;
+		if (layout == _layout) return _current;
 		_layout = layout;
-		if (!_scanned)
-		{
-			// Only retry the scan while nothing has been found.
-			try
-			{
-				foreach (var d in Resources.LoadAll<GamepadDescriptor>("SpriteAssets")) if (d != null) All.Add(d);
-				if (All.Count == 0) foreach (var d in Resources.FindObjectsOfTypeAll<GamepadDescriptor>()) if (d != null) All.Add(d);
-			}
-			catch (Exception ex) { Plugin.Instance.Log.LogWarning("Gamepad glyph scan failed: " + ex.Message); }
-			_scanned = All.Count > 0;
-			var names = new List<string>();
-			foreach (var d in All) names.Add(d.name + "/" + d.platformName);
-			Plugin.Instance.Log.LogInfo("Gamepad glyph sets: " + string.Join(", ", names) + " (pad layout " + layout + ")");
-		}
-		string[] keys = Family(layout.ToLowerInvariant());
 		_current = null;
-		foreach (var key in keys)
+		// Load only the set that matches this pad instead of every glyph set under SpriteAssets.
+		try
 		{
-			foreach (var d in All)
-				if ((d.name + " " + d.platformName).ToLowerInvariant().Contains(key)) { _current = d; break; }
-			if (_current != null) break;
+			foreach (string name in Candidates(layout.ToLowerInvariant()))
+			{
+				_current = Resources.Load<GamepadDescriptor>("SpriteAssets/" + name);
+				if (_current != null) break;
+			}
+			if (_current == null && !_scanned)
+			{
+				_scanned = true;
+				foreach (var d in Resources.LoadAll<GamepadDescriptor>("SpriteAssets")) if (d != null) { _current = d; break; }
+			}
 		}
-		if (_current == null && All.Count > 0) _current = All[0];
+		catch (Exception ex) { Plugin.Instance.Log.LogWarning("Gamepad glyph load failed: " + ex.Message); }
+		Plugin.Instance.Log.LogInfo("Gamepad glyphs: " + (_current != null ? _current.name : "none found") + " (pad layout " + layout + ")");
 		return _current;
 	}
 
-	private static string[] Family(string layout)
+	private static string[] Candidates(string layout)
 	{
-		if (layout.Contains("dual") || layout.Contains("playstation") || layout.Contains("ps4") || layout.Contains("ps5")) return new[] { "dual", "playstation", "ps" };
-		if (layout.Contains("switch") || layout.Contains("nintendo")) return new[] { "switch", "nintendo" };
-		return new[] { "xbox", "xinput", "steam" };
+		if (layout.Contains("dualsense") || layout.Contains("ps5")) return new[] { "GamepadPS5", "GamepadPS4", "GamepadXbox" };
+		if (layout.Contains("dual") || layout.Contains("playstation") || layout.Contains("ps4")) return new[] { "GamepadPS4", "GamepadXbox" };
+		if (layout.Contains("switch") || layout.Contains("nintendo")) return new[] { "GamepadSwitch", "GamepadXbox" };
+		if (layout.Contains("steam")) return new[] { "GamepadSteamdeck", "GamepadXbox" };
+		return new[] { "GamepadXbox" };
 	}
 }

@@ -72,6 +72,8 @@ public class UwBehaviour : MonoBehaviour
 	private static int _jobIndex;
 
 	private static readonly Stopwatch JobWatch = new Stopwatch();
+	// Slowest single run of each per-frame feature since the last dump; shows what a frame spike came from.
+	private static readonly System.Collections.Generic.Dictionary<string, double> ActionMaxMs = new System.Collections.Generic.Dictionary<string, double>();
 
 	private static readonly Stopwatch FrameWatch = new Stopwatch();
 
@@ -318,7 +320,11 @@ public class UwBehaviour : MonoBehaviour
 		}
 		try
 		{
+			long started = Stopwatch.GetTimestamp();
 			a();
+			double took = (Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency;
+			ActionMaxMs.TryGetValue(name, out var worst);
+			if (took > worst) ActionMaxMs[name] = took;
 		}
 		catch (Exception t)
 		{
@@ -2025,7 +2031,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.1 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.2 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2080,6 +2086,8 @@ public class UwBehaviour : MonoBehaviour
 				handler.AppendLiteral("ms");
 				stringBuilder5.AppendLine(ref handler);
 			}
+			foreach (var pair in ActionMaxMs) if (pair.Value >= 1.0) stringBuilder.AppendLine("    feature '" + pair.Key + "' slowest run " + pair.Value.ToString("F1") + "ms");
+			ActionMaxMs.Clear();
 			_updateMaxMs = 0.0;
 			_renderMaxMs = 0.0;
 			foreach (Job job2 in Jobs)

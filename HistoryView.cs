@@ -121,6 +121,27 @@ internal static class HistoryView
 		image.enabled = _panel != null;
 	}
 
+	// Builds the window in small steps while idle, so opening history for the first time does not hitch the frame.
+	internal static void Prewarm(int stage)
+	{
+		try
+		{
+			switch (stage)
+			{
+				case 0:
+					if (_root == null) { Build(); _root.SetActive(false); }
+					break;
+				case 1: case 2: case 3:
+					if (_root != null) while (Rows.Count < stage * 2) Rows.Add(BuildRow());
+					break;
+				default:
+					if (Plugin.PadShortcuts.Value && Gamepad.current != null) GamepadGlyphs.Get(GamepadButton.South);
+					break;
+			}
+		}
+		catch (Exception ex) { Plugin.Instance.Log.LogWarning("History prewarm: " + ex.Message); }
+	}
+
 	internal static void Close() { if (_root != null) _root.SetActive(false); }
 
 	// Selection moved or content changed: retarget the scroll. The scroll itself eases in Tick.
@@ -167,9 +188,25 @@ internal static class HistoryView
 		row.Speaker.color = cursor ? Bright : Gold;
 		Place(row.Speaker.rectTransform, new Vector2(textLeft, -_cardHeight * 0.1f), new Vector2(textWidth, _cardHeight * 0.22f));
 		float bodyTop = _cardHeight * (named ? 0.34f : 0.14f);
-		Place(row.Body.rectTransform, new Vector2(textLeft, -bodyTop), new Vector2(textWidth, _cardHeight * 0.84f - bodyTop));
+		float bodyHeight = _cardHeight * 0.84f - bodyTop;
+		Place(row.Body.rectTransform, new Vector2(textLeft, -bodyTop), new Vector2(textWidth, bodyHeight));
+		row.Body.fontSize = FitSize(_pages[i].Text, textWidth, bodyHeight);
 		row.Body.color = cursor ? Bright : Dim;
 		SetText(row.Body, _pages[i].Text);
+	}
+
+	// Cheap size estimate (no text layout pass): the largest size whose estimated line count fits the card body.
+	private static float FitSize(string text, float width, float height)
+	{
+		int breaks = 0;
+		foreach (char c in text) if (c == (char)10) breaks++;
+		for (float size = 32; size > 16; size -= 2)
+		{
+			float perLine = Math.Max(1, width / (size * 0.5f));
+			int lines = (int)Math.Ceiling(text.Length / perLine) + breaks;
+			if (lines * size * 1.2f <= height) return size;
+		}
+		return 16;
 	}
 
 	// Eases the scroll and positions only the few cards near the viewport; idle frames do nothing.
@@ -296,7 +333,7 @@ internal static class HistoryView
 		row.Speaker = Label(root, "Speaker", 30, TextAlignmentOptions.TopLeft);
 		row.Speaker.overflowMode = TextOverflowModes.Overflow;
 		row.Body = Label(root, "Dialogue", 32, TextAlignmentOptions.TopLeft);
-		row.Body.enableAutoSizing = true; row.Body.fontSizeMin = 16; row.Body.fontSizeMax = 32;
+		row.Body.enableAutoSizing = false; row.Body.fontSize = 32;
 		row.Body.enableWordWrapping = true;
 		return row;
 	}
