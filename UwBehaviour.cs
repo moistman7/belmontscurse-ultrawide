@@ -1544,7 +1544,19 @@ public class UwBehaviour : MonoBehaviour
 				Max = rt.anchorMax
 			};
 		}
+		// The game moved this panel since the mod placed it (an animation, a layout change): what it has now is the real original.
+		if (value.Applied != null && rt != null && MovedByGame(value, rt))
+		{
+			value.Orig = new AnchorState { Min = rt.anchorMin, Max = rt.anchorMax };
+			value.Applied = null;
+		}
 		return value.Orig;
+	}
+
+	private static bool MovedByGame(StoredAnchors stored, RectTransform rt)
+	{
+		var a = stored.Applied;
+		return Logic.Drifted(rt.anchorMin.x, rt.anchorMax.x, rt.anchorMin.y, rt.anchorMax.y, a.Min.x, a.Max.x, a.Min.y, a.Max.y);
 	}
 
 	private static bool SpansWidth(AnchorState a, RectTransform rt)
@@ -1634,6 +1646,7 @@ public class UwBehaviour : MonoBehaviour
 				SetAnchorsX(rectTransform, num2 + anchorState.Min.x * (1f - 2f * num2), num2 + anchorState.Max.x * (1f - 2f * num2), anchorState);
 				rectTransform.anchorMin = new Vector2(rectTransform.anchorMin.x, vertical + anchorState.Min.y * (1f - 2f * vertical));
 				rectTransform.anchorMax = new Vector2(rectTransform.anchorMax.x, vertical + anchorState.Max.y * (1f - 2f * vertical));
+				if (UiOrig.TryGetValue(instanceID, out var placed)) placed.Applied = new AnchorState { Min = rectTransform.anchorMin, Max = rectTransform.anchorMax };
 				if (e.Extended.Add(instanceID) || (activeInHierarchy && (!value | fullPass)))
 				{
 					ExtendBackdrops(rectTransform, k, e.Id);
@@ -1659,7 +1672,8 @@ public class UwBehaviour : MonoBehaviour
 		foreach (int tmpId in TmpIds)
 		{
 			StoredAnchors storedAnchors = store[tmpId];
-			if (storedAnchors.Rt != null)
+			// If the game has moved it since the mod placed it, the game's position stands; do not overwrite it.
+			if (storedAnchors.Rt != null && !(storedAnchors.Applied != null && MovedByGame(storedAnchors, storedAnchors.Rt)))
 			{
 				storedAnchors.Rt.anchorMin = storedAnchors.Orig.Min;
 				storedAnchors.Rt.anchorMax = storedAnchors.Orig.Max;
@@ -2045,7 +2059,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.3 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.4 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);

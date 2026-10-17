@@ -10,16 +10,19 @@ using UnityEngine.UI;
 
 namespace BelmontsCurseUltrawide;
 
-// The panel behind the "Mod settings" row in the game's Settings menu: every on/off option of the mod, in the game's panel style.
+// The panel behind the "Mod settings" row in the game's Settings menu (and F1): the mod's options, in the game's panel style.
+// Toggles switch on Enter / A / click; sliders move with Left / Right / click on either side of the value.
 internal static class ModMenu
 {
-	private enum Kind { Header, Toggle, Close }
+	private enum Kind { Header, Toggle, Slider, Reset, Close }
 
 	private sealed class Item
 	{
 		internal Kind Kind;
-		internal string Name, Note;
-		internal ConfigEntry<bool> Entry;
+		internal string Name, Note, Unit = "";
+		internal ConfigEntry<bool> Toggle;
+		internal ConfigEntry<float> Slider;
+		internal float Min, Max, Step;
 	}
 
 	private sealed class Row
@@ -38,10 +41,9 @@ internal static class ModMenu
 	private static TextMeshProUGUI _title;
 	private static readonly Image[] Icons = new Image[3];
 	private static readonly TextMeshProUGUI[] FooterLabels = new TextMeshProUGUI[3];
-	private static int _sel, _top, _visible;
-	private static float _repeatAt, _previousScale = 1;
-	private static bool _global;
-	private static int _fontVersion = -1;
+	private static int _sel, _top, _visible, _fontVersion = -1;
+	private static float _repeatAt, _previousScale = 1, _panelLeft, _panelTop;
+	private static bool _global, _confirmReset, _cursorWasVisible;
 	private static EventSystem _events;
 	private static bool _eventsWere;
 	private static readonly Color Gold = new(0.85f, 0.729f, 0.508f, 1);
@@ -62,34 +64,45 @@ internal static class ModMenu
 	}
 
 	private static void Header(string name) => Items.Add(new Item { Kind = Kind.Header, Name = name });
-	private static void Toggle(string name, ConfigEntry<bool> entry, string note = null) => Items.Add(new Item { Kind = Kind.Toggle, Name = name, Entry = entry, Note = note });
+	private static void Switch(string name, ConfigEntry<bool> entry, string note = null) => Items.Add(new Item { Kind = Kind.Toggle, Name = name, Toggle = entry, Note = note });
+	private static void Slide(string name, ConfigEntry<float> entry, float min, float max, float step, string unit = "") =>
+		Items.Add(new Item { Kind = Kind.Slider, Name = name, Slider = entry, Min = min, Max = max, Step = step, Unit = unit });
 
 	private static void BuildItems()
 	{
 		if (Items.Count > 0) return;
 		Header("Ultrawide fixes");
-		Toggle("Camera aspect limit", Plugin.Camera16x9Logic);
-		Toggle("Camera zoom fix", Plugin.FixScreenSize);
-		Toggle("Camera viewport fix", Plugin.FixCameraRect);
-		Toggle("Disable camera confiners", Plugin.DisableConfiners);
-		Toggle("Fit videos", Plugin.FixVideos);
-		Toggle("Hide cutscene bars", Plugin.RemoveLetterbox);
-		Toggle("Center menus", Plugin.CenterMenus, "next launch");
-		Toggle("Fit narrow screens", Plugin.FixNarrow, "next launch");
+		Switch("Camera aspect limit", Plugin.Camera16x9Logic);
+		Switch("Camera zoom fix", Plugin.FixScreenSize);
+		Switch("Camera viewport fix", Plugin.FixCameraRect);
+		Switch("Disable camera confiners", Plugin.DisableConfiners);
+		Switch("Fit videos", Plugin.FixVideos);
+		Switch("Hide cutscene bars", Plugin.RemoveLetterbox);
+		Switch("Center menus", Plugin.CenterMenus, "next launch");
+		Switch("Fit narrow screens", Plugin.FixNarrow, "next launch");
 		Header("HUD");
-		Toggle("Centered HUD", Plugin.CenterHud);
-		Toggle("Bigger HUD", Plugin.BigHud);
+		Switch("Centered HUD", Plugin.CenterHud);
+		Switch("Bigger HUD", Plugin.BigHud);
+		Slide("Bigger HUD size", Plugin.HudScale, 1f, 1.6f, 0.05f, "x");
+		Slide("HUD margin, sides", Plugin.HudSafeHorizontal, 0f, 20f, 1f, "%");
+		Slide("HUD margin, top and bottom", Plugin.HudSafeVertical, 0f, 20f, 1f, "%");
 		Header("Dialogue");
-		Toggle("Auto-advance (voiced)", Plugin.AutoAdvance);
-		Toggle("Auto-advance (no voice)", Plugin.AutoAdvanceUnvoiced);
-		Toggle("Dialogue history", Plugin.HistoryEnabled, "restart to enable");
+		Switch("Auto-advance (voiced)", Plugin.AutoAdvance);
+		Switch("Auto-advance (no voice)", Plugin.AutoAdvanceUnvoiced);
+		Slide("Wait after voice", Plugin.AutoAdvanceDelay, 0f, 3f, 0.1f, " s");
+		Slide("Wait before no-voice line ends", Plugin.UnvoicedBaseSeconds, 0f, 5f, 0.5f, " s");
+		Slide("Reading time per letter", Plugin.UnvoicedSecondsPerCharacter, 0.02f, 0.15f, 0.01f, " s");
+		Switch("Dialogue history", Plugin.HistoryEnabled, "restart to enable");
+		Switch("Save history to disk", Plugin.SaveHistory, "next launch");
 		Header("Other");
-		Toggle("On-screen messages", Plugin.ShowToasts);
-		Toggle("Controller shortcuts", Plugin.PadShortcuts);
-		Toggle("Hide mouse when idle", Plugin.HideMouse);
-		Toggle("TAA in Video menu", Plugin.EnableTaaOption, "reopen Settings");
-		Toggle("Skip intros", Plugin.SkipIntros, "next launch");
-		Toggle("Force resolution", Plugin.ForceResolution, "next launch");
+		Switch("On-screen messages", Plugin.ShowToasts);
+		Switch("Controller shortcuts", Plugin.PadShortcuts);
+		Switch("Hide mouse when idle", Plugin.HideMouse);
+		Slide("Mouse idle time", Plugin.MouseIdleSeconds, 0.5f, 15f, 0.5f, " s");
+		Switch("TAA in Video menu", Plugin.EnableTaaOption, "reopen Settings");
+		Switch("Skip intros", Plugin.SkipIntros, "next launch");
+		Switch("Force resolution", Plugin.ForceResolution, "next launch");
+		Items.Add(new Item { Kind = Kind.Reset, Name = "Reset to defaults" });
 		Items.Add(new Item { Kind = Kind.Close, Name = "Close" });
 	}
 
@@ -105,7 +118,9 @@ internal static class ModMenu
 			_visible = Math.Max(5, (int)Math.Floor((height - TitleHeight - FooterHeight) / RowHeight));
 			height = TitleHeight + FooterHeight + _visible * RowHeight;
 			_scaler.matchWidthOrHeight = Screen.width / (float)Math.Max(1, Screen.height) < 16f / 9f ? 0 : 1;
-			HistoryView.Place(_panel, new Vector2((HistoryView.UiWidth - PanelWidth) * 0.5f, -(HistoryView.UiHeight - height) * 0.5f), new Vector2(PanelWidth, height));
+			_panelLeft = (HistoryView.UiWidth - PanelWidth) * 0.5f;
+			_panelTop = (HistoryView.UiHeight - height) * 0.5f;
+			HistoryView.Place(_panel, new Vector2(_panelLeft, -_panelTop), new Vector2(PanelWidth, height));
 			HistoryView.Skin(_frame, HistoryView.CardHeight);
 			HistoryView.Inflate(_frame.rectTransform, HistoryView.CardHeight);
 			_frame.color = Color.white;
@@ -115,8 +130,8 @@ internal static class ModMenu
 			{
 				HistoryView.Place(Rows[i].Root.GetComponent<RectTransform>(), new Vector2(30, -(TitleHeight + i * RowHeight)), new Vector2(PanelWidth - 60, RowHeight - 4));
 				HistoryView.Stretch(Rows[i].Back.rectTransform);
-				HistoryView.Place(Rows[i].Name.rectTransform, new Vector2(18, 0), new Vector2(PanelWidth - 360, RowHeight - 4));
-				HistoryView.Place(Rows[i].Value.rectTransform, new Vector2(PanelWidth - 60 - 160, 0), new Vector2(140, RowHeight - 4));
+				HistoryView.Place(Rows[i].Name.rectTransform, new Vector2(18, 0), new Vector2(PanelWidth - 400, RowHeight - 4));
+				HistoryView.Place(Rows[i].Value.rectTransform, new Vector2(PanelWidth - 60 - 260, 0), new Vector2(240, RowHeight - 4));
 			}
 			if (_fontVersion != GameUiFont.Version) { ApplyFont(); _fontVersion = GameUiFont.Version; }
 			_anchor = anchor;
@@ -127,7 +142,9 @@ internal static class ModMenu
 				Time.timeScale = 0f;
 				DialogueHistory.HookSkip(true);
 			}
-			_sel = 1; _top = 0;
+			_cursorWasVisible = Cursor.visible;
+			Cursor.visible = true;
+			_sel = FirstSelectable(); _top = 0; _confirmReset = false;
 			_events = EventSystem.current;
 			// The game's own menu would also react to these keys; hold its input while this panel is open.
 			if (_events != null) { _eventsWere = _events.enabled; _events.enabled = false; }
@@ -144,6 +161,7 @@ internal static class ModMenu
 
 	internal static void Close()
 	{
+		bool wasOpen = IsOpen;
 		IsOpen = false;
 		if (_global)
 		{
@@ -152,6 +170,7 @@ internal static class ModMenu
 			if (Time.timeScale == 0f) Time.timeScale = _previousScale > 0f ? _previousScale : 1f;
 			if (!DialogueHistory.IsOpen) DialogueHistory.HookSkip(false);
 		}
+		if (wasOpen) Cursor.visible = _cursorWasVisible;
 		if (_root != null) _root.SetActive(false);
 		if (_events != null && _eventsWere) _events.enabled = true;
 		_events = null;
@@ -164,6 +183,12 @@ internal static class ModMenu
 		foreach (var r in Rows) { GameUiFont.Apply(r.Name); GameUiFont.Apply(r.Value); }
 	}
 
+	private static int FirstSelectable()
+	{
+		for (int i = 0; i < Items.Count; i++) if (Items[i].Kind != Kind.Header) return i;
+		return 0;
+	}
+
 	internal static void Tick()
 	{
 		if (!IsOpen) return;
@@ -171,38 +196,110 @@ internal static class ModMenu
 		if (!_global && (_anchor == null || !_anchor.activeInHierarchy)) { Close(); return; }
 		var kb = Keyboard.current;
 		var pad = Gamepad.current;
-		int dir = 0;
+		float now = Time.unscaledTime;
+
+		// Direction keys with hold-to-repeat.
+		int dx = 0, dy = 0;
+		bool left = (kb != null && kb.leftArrowKey.isPressed) || (pad != null && pad.dpad.left.isPressed);
+		bool right = (kb != null && kb.rightArrowKey.isPressed) || (pad != null && pad.dpad.right.isPressed);
 		bool up = (kb != null && kb.upArrowKey.isPressed) || (pad != null && pad.dpad.up.isPressed);
 		bool down = (kb != null && kb.downArrowKey.isPressed) || (pad != null && pad.dpad.down.isPressed);
-		bool fresh = (kb != null && (kb.upArrowKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame)) ||
-			(pad != null && (pad.dpad.up.wasPressedThisFrame || pad.dpad.down.wasPressedThisFrame));
-		float now = Time.unscaledTime;
-		if (up != down)
+		bool fresh = (kb != null && (kb.leftArrowKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame || kb.upArrowKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame)) ||
+			(pad != null && (pad.dpad.left.wasPressedThisFrame || pad.dpad.right.wasPressedThisFrame || pad.dpad.up.wasPressedThisFrame || pad.dpad.down.wasPressedThisFrame));
+		bool step = false;
+		if ((left != right) || (up != down))
 		{
-			if (fresh) { dir = up ? -1 : 1; _repeatAt = now + 0.4f; }
-			else if (now >= _repeatAt) { dir = up ? -1 : 1; _repeatAt = now + 0.07f; }
+			if (fresh) { step = true; _repeatAt = now + 0.4f; }
+			else if (now >= _repeatAt) { step = true; _repeatAt = now + 0.07f; }
 		}
-		if (dir != 0) Move(dir);
+		if (step) { dx = left ? -1 : right ? 1 : 0; dy = up ? -1 : down ? 1 : 0; }
+		if (dy != 0) Move(dy);
+		if (dx != 0) Adjust(Items[_sel], dx);
+
 		bool activate = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) || (pad != null && pad.buttonSouth.wasPressedThisFrame);
 		bool back = (kb != null && kb.backspaceKey.wasPressedThisFrame) || (pad != null && pad.buttonEast.wasPressedThisFrame);
 		if (back) { Close(); return; }
-		if (activate)
+
+		// Mouse: hover selects a row, a click acts on it, the wheel moves the selection.
+		var mouse = Mouse.current;
+		bool click = false;
+		int clickSide = 0;
+		if (mouse != null)
+		{
+			var pos = mouse.position.ReadValue();
+			float ours = Math.Max(0.01f, HistoryView.Ours);
+			float ux = pos.x / ours - _panelLeft, uy = (Screen.height - pos.y) / ours - _panelTop;
+			int hovered = (int)Math.Floor((uy - TitleHeight) / RowHeight);
+			bool inside = ux >= 30 && ux <= PanelWidth - 30 && hovered >= 0 && hovered < _visible && uy >= TitleHeight;
+			if (inside && mouse.delta.ReadValue().sqrMagnitude > 0.01f)
+			{
+				int index = _top + hovered;
+				if (index < Items.Count && Items[index].Kind != Kind.Header && index != _sel) { _sel = index; _confirmReset = false; Refresh(); }
+			}
+			if (inside && mouse.leftButton.wasPressedThisFrame && _top + hovered == _sel)
+			{
+				click = true;
+				clickSide = ux > PanelWidth - 30 - 130 ? 1 : ux > PanelWidth - 30 - 260 ? -1 : 0;
+			}
+			float wheel = mouse.scroll.ReadValue().y;
+			if (Math.Abs(wheel) > 0.01f) Move(wheel > 0 ? -1 : 1);
+		}
+
+		if (activate || click)
 		{
 			var item = Items[_sel];
-			if (item.Kind == Kind.Close) { Close(); return; }
-			if (item.Kind == Kind.Toggle)
+			if (item.Kind == Kind.Slider)
 			{
-				// The master switch is not saved, so it cannot be left off by accident for the next launch.
-				if (item.Entry == Plugin.Enabled) Plugin.On = !Plugin.On; else item.Entry.Value = !item.Entry.Value;
-				UwBehaviour.ApplyFixToggles();
-				Plugin.Instance.Log.LogInfo("Mod menu: " + item.Name + " = " + ValueOf(item));
-				Refresh();
+				if (click && clickSide != 0) Adjust(item, clickSide);
 			}
+			else Activate(item);
 		}
 		UpdateFooter();
 	}
 
-	private static bool ValueOf(Item item) => item.Entry == Plugin.Enabled ? Plugin.On : item.Entry.Value;
+	private static void Activate(Item item)
+	{
+		switch (item.Kind)
+		{
+			case Kind.Close:
+				Close();
+				return;
+			case Kind.Toggle:
+				item.Toggle.Value = !item.Toggle.Value;
+				UwBehaviour.ApplyFixToggles();
+				Plugin.Instance.Log.LogInfo("Mod menu: " + item.Name + " = " + item.Toggle.Value);
+				break;
+			case Kind.Reset:
+				// Two steps, so a stray press cannot wipe the settings.
+				if (!_confirmReset) { _confirmReset = true; break; }
+				ResetAll();
+				_confirmReset = false;
+				break;
+		}
+		Refresh();
+	}
+
+	private static void Adjust(Item item, int direction)
+	{
+		if (item.Kind == Kind.Toggle && direction != 0) { Activate(item); return; }
+		if (item.Kind != Kind.Slider) return;
+		float next = Logic.Step(item.Slider.Value, direction, item.Min, item.Max, item.Step);
+		if (next == item.Slider.Value) return;
+		item.Slider.Value = next;
+		UwBehaviour.ApplyFixToggles();
+		Refresh();
+	}
+
+	private static void ResetAll()
+	{
+		foreach (var item in Items)
+		{
+			if (item.Kind == Kind.Toggle) item.Toggle.Value = (bool)item.Toggle.DefaultValue;
+			else if (item.Kind == Kind.Slider) item.Slider.Value = (float)item.Slider.DefaultValue;
+		}
+		UwBehaviour.ApplyFixToggles();
+		Plugin.Instance.Log.LogInfo("Mod menu: all options reset to their defaults");
+	}
 
 	private static void Move(int dir)
 	{
@@ -210,6 +307,7 @@ internal static class ModMenu
 		do { next += dir; } while (next >= 0 && next < Items.Count && Items[next].Kind == Kind.Header);
 		if (next < 0 || next >= Items.Count) return;
 		_sel = next;
+		_confirmReset = false;
 		Refresh();
 	}
 
@@ -236,9 +334,16 @@ internal static class ModMenu
 					row.Name.text = "<size=75%>" + item.Name.ToUpperInvariant() + "</size>"; row.Name.color = Dim; row.Value.text = ""; break;
 				case Kind.Close:
 					row.Name.text = item.Name; row.Name.color = selected ? Bright : Gold; row.Value.text = ""; break;
+				case Kind.Reset:
+					row.Name.text = _confirmReset && selected ? "Press again to reset everything" : item.Name;
+					row.Name.color = selected ? Bright : Gold; row.Value.text = ""; break;
+				case Kind.Slider:
+					row.Name.text = item.Name; row.Name.color = selected ? Bright : Gold;
+					row.Value.text = (selected ? "<  " : "") + Logic.FormatValue(item.Slider.Value, item.Step) + item.Unit + (selected ? "  >" : "");
+					row.Value.color = selected ? Bright : Dim; break;
 				default:
 					row.Name.text = item.Name + note; row.Name.color = selected ? Bright : Gold;
-					row.Value.text = ValueOf(item) ? "On" : "Off"; row.Value.color = ValueOf(item) ? Bright : Dim; break;
+					row.Value.text = item.Toggle.Value ? "On" : "Off"; row.Value.color = item.Toggle.Value ? Bright : Dim; break;
 			}
 		}
 		UpdateFooter();
@@ -247,8 +352,10 @@ internal static class ModMenu
 	private static void UpdateFooter()
 	{
 		bool pad = Gamepad.current != null;
+		bool slider = Items.Count > _sel && Items[_sel].Kind == Kind.Slider;
 		SetFooter(0, pad ? GamepadGlyphs.Dpad() : null, "Up/Down", "Select", pad);
-		SetFooter(1, pad ? GamepadGlyphs.Get(GamepadButton.South) : null, "Enter", "Change", pad);
+		if (slider) SetFooter(1, pad ? GamepadGlyphs.Dpad() : null, "Left/Right", "Adjust", pad);
+		else SetFooter(1, pad ? GamepadGlyphs.Get(GamepadButton.South) : null, "Enter", "Change", pad);
 		SetFooter(2, pad ? GamepadGlyphs.Get(GamepadButton.East) : null, "Backspace", "Back", pad);
 	}
 

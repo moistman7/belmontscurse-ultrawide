@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.4 (unreleased)
+
+- **Controller button sprites in the history window** are repaired. 0.8.3 loaded only the matching glyph descriptor, which could leave the shoulder and face-button sprites empty so only the D-pad showed; it now falls back to loading the full glyph folder and logs when it has to.
+- **Mod menu**: sliders (bigger-HUD size, HUD margins, auto-advance timing, mouse idle time), a two-step "Reset to defaults", and mouse support (hover, click, wheel).
+- **History** can be scrolled and selected with the mouse; clicking the selected card replays its voice.
+- **Optional history across sessions** (`Dialogue.SaveHistoryToDisk`, off by default): text and speaker names only, in `BepInEx/BelmontsCurseUltrawide_history.txt`.
+- **Menu positions** the mod has recorded are re-read if the game moves them in the meantime, instead of being restored to a stale position.
+- The log now says when the dialogue-skip hook is switched on or off, and where a line without a speaker label (a speech bubble) lives.
+- Unit tests for the pure helpers (`tests/Logic.Tests`, `dotnet test`).
+
+### Known issues
+- Speech-bubble lines are recorded without a speaker; saved history has no portraits or voice.
+- Changing "Center menus" or "Fit narrow screens" needs a restart to take effect.
+- Untested: Steam Deck, 16:10, 32:9, PlayStation / Switch controller sprites, and the F1 / controller shortcut for the mod menu.
+
 ## 0.8.3
 
 - **Mod settings menu**: a "Mod settings" row at the bottom of Settings > Graphics opens a panel (in the game's own style, with its controller button sprites) where you can switch the mod's options on and off. Most apply immediately; each option that doesn't says when it takes effect. **F1** (controller: Select + Left Shoulder) opens the same panel from anywhere and pauses the game while it is open. Remappable under `ModMenu`.

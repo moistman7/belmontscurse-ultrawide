@@ -51,6 +51,7 @@ internal static class HistoryView
 
 	internal static int Capacity { get; private set; } = 2;
 	internal static float UiWidth => _uiWidth;
+	internal static float Ours => _ours;
 	internal static float UiHeight { get; private set; } = 1080;
 	internal static float CardHeight => _cardHeight;
 
@@ -150,7 +151,11 @@ internal static class HistoryView
 					if (_root != null) while (Rows.Count < stage * 2) Rows.Add(BuildRow());
 					break;
 				case 4:
-					if (Plugin.PadShortcuts.Value && Gamepad.current != null) GamepadGlyphs.Get(GamepadButton.South);
+					if (Plugin.PadShortcuts.Value && Gamepad.current != null)
+					{
+						// Touch the sprites the windows use, so a missing one is noticed (and repaired) at idle.
+						GamepadGlyphs.Get(GamepadButton.South); GamepadGlyphs.Get(GamepadButton.East); GamepadGlyphs.Get(GamepadButton.LeftShoulder); GamepadGlyphs.Get(GamepadButton.RightShoulder); GamepadGlyphs.Get(Plugin.PadReplay.Value);
+					}
 					break;
 				default:
 					// Show the window once with placeholder text, so the first real open finds fonts, meshes and canvas already warmed.
@@ -167,6 +172,21 @@ internal static class HistoryView
 			}
 		}
 		catch (Exception ex) { Plugin.Instance.Log.LogWarning("History prewarm: " + ex.Message); }
+	}
+
+	// Which history entry is under a screen pixel (origin bottom-left), or -1. Used for mouse selection.
+	internal static int CardAt(Vector2 pixel)
+	{
+		if (_root == null || !_root.activeSelf || _pages == null) return -1;
+		float ours = Math.Max(0.01f, _ours);
+		float ux = pixel.x / ours, uy = (Screen.height - pixel.y) / ours;
+		float left = (_uiWidth - _width) * 0.5f, stride = _cardHeight + Gap;
+		float view = Capacity * stride - Gap;
+		if (ux < left || ux > left + _width || uy < HeaderHeight || uy > HeaderHeight + view) return -1;
+		float relative = (uy - HeaderHeight) / stride + _scroll;
+		int index = (int)Math.Floor(relative);
+		if (index < 0 || index >= _pages.Count) return -1;
+		return (relative - index) * stride <= _cardHeight ? index : -1;
 	}
 
 	internal static void Close() { if (_root != null) _root.SetActive(false); }
@@ -217,24 +237,11 @@ internal static class HistoryView
 		float bodyTop = _cardHeight * (named ? 0.34f : 0.14f);
 		float bodyHeight = _cardHeight * 0.84f - bodyTop;
 		Place(row.Body.rectTransform, new Vector2(textLeft, -bodyTop), new Vector2(textWidth, bodyHeight));
-		row.Body.fontSize = FitSize(_pages[i].Text, textWidth, bodyHeight);
+		row.Body.fontSize = Logic.FitSize(_pages[i].Text, textWidth, bodyHeight);
 		row.Body.color = cursor ? Bright : Dim;
 		SetText(row.Body, _pages[i].Text);
 	}
 
-	// Cheap size estimate (no text layout pass): the largest size whose estimated line count fits the card body.
-	private static float FitSize(string text, float width, float height)
-	{
-		int breaks = 0;
-		foreach (char c in text) if (c == (char)10) breaks++;
-		for (float size = 32; size > 16; size -= 2)
-		{
-			float perLine = Math.Max(1, width / (size * 0.5f));
-			int lines = (int)Math.Ceiling(text.Length / perLine) + breaks;
-			if (lines * size * 1.2f <= height) return size;
-		}
-		return 16;
-	}
 
 	// Eases the scroll and positions only the few cards near the viewport; idle frames do nothing.
 	private static void Scroll()

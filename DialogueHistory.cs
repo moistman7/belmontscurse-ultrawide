@@ -21,6 +21,7 @@ internal static class DialogueHistory
 		internal TMPro.TMP_Text NameSource;
 		internal UILocalizedString Label;
 		internal string Raw;
+		internal bool Persisted;
 		internal Sprite Portrait;
 		internal bool PortraitRight;
 		internal bool PortraitFlipped;
@@ -69,6 +70,7 @@ internal static class DialogueHistory
 			Patch(typeof(CutscenePortraitUI), "SetPortrait", null, nameof(AfterPortrait));
 			Patch(typeof(CutscenePortraitUI), "Begin", nameof(BeforePortraitBegin), nameof(AfterPortraitBegin));
 			_available = true;
+			LoadSaved();
 		}
 		catch (Exception ex)
 		{
@@ -95,6 +97,7 @@ internal static class DialogueHistory
 		{
 			var target = AccessTools.Method(typeof(CutsceneLineReader), "HandleUserSkipped");
 			var prefix = typeof(DialogueHistory).GetMethod(nameof(AllowSkip), BindingFlags.NonPublic | BindingFlags.Static);
+			Plugin.Instance.Log.LogInfo("Dialogue skip hook " + (on ? "on" : "off") + " (history or mod menu " + (on ? "opened" : "closed") + ")");
 			if (on) _harmony.Patch(target, new HarmonyMethod(prefix));
 			else _harmony.Unpatch(target, prefix);
 			_skipHooked = on;
@@ -123,7 +126,7 @@ internal static class DialogueHistory
 			{
 				NameLabels[name.GetInstanceID()] = entry;
 				if (name.textDisplay != null && !string.IsNullOrWhiteSpace(name.textDisplay.text))
-					entry.Speaker = Regex.Replace(name.textDisplay.text, "<[^>]*>", "").Trim();
+					entry.Speaker = Logic.StripTags(name.textDisplay.text);
 			}
 			RecordPortrait(entry, __instance, __instance._foregroundImage != null ? __instance._foregroundImage.sprite : null);
 			RecordVoice(entry, characterData, voiceOverData);
@@ -164,7 +167,7 @@ internal static class DialogueHistory
 		{
 			if (__instance._dialogueLabel != null && Labels.Remove(__instance._dialogueLabel.GetInstanceID(), out var entry))
 			{
-				ReadText(entry); FillSpeaker(entry); var stale = new List<int>();
+				ReadText(entry); FillSpeaker(entry); SaveEntry(entry); var stale = new List<int>();
 				foreach (var pair in NameLabels) if (ReferenceEquals(pair.Value, entry)) stale.Add(pair.Key);
 				foreach (int id in stale) NameLabels.Remove(id);
 			}
@@ -204,7 +207,7 @@ internal static class DialogueHistory
 		try
 		{
 			if (entry.Speaker.Length > 0 || entry.NameSource == null) return;
-			entry.Speaker = Regex.Replace(entry.NameSource.text ?? "", "<[^>]*>", "").Trim();
+			entry.Speaker = Logic.StripTags(entry.NameSource.text);
 		}
 		catch { }
 	}
@@ -231,7 +234,7 @@ internal static class DialogueHistory
 			VoiceAdvance.Track(__instance);
 			var label = __instance._dialogueLabel;
 			if (Plugin.HistoryEnabled.Value && label != null && label.textDisplay != null)
-				{ if (Labels.TryGetValue(label.GetInstanceID(), out var begun)) { begun.NameSource = BoxName(label.textDisplay); ReadText(begun); } }
+				{ if (Labels.TryGetValue(label.GetInstanceID(), out var begun)) { begun.NameSource = BoxName(label.textDisplay); ReadText(begun); if (begun.NameSource == null) LogNameless(label.textDisplay); } }
 		}
 		catch (Exception ex) { FailCapture(ex); }
 	}
@@ -249,11 +252,12 @@ internal static class DialogueHistory
 		string raw = display?.text;
 		if (raw == null || raw == entry.Raw) return;
 		entry.Raw = raw;
-		entry.Text = Regex.Replace(Regex.Replace(raw, @"<br\s*/?>", "\n", RegexOptions.IgnoreCase), "<[^>]*>", "").Trim();
+		entry.Text = Logic.CleanText(raw);
 	}
 
 	// A few times a second instead of hooking every localized-string update in the game.
 	private static float _nextPoll, _nextPrewarm;
+	private static bool _cursorWas;
 	private static int _prewarm;
 	private static void Poll()
 	{
@@ -262,6 +266,58 @@ internal static class DialogueHistory
 		if (now < _nextPoll) return;
 		_nextPoll = now + 0.1f;
 		foreach (var entry in Labels.Values) ReadText(entry);
+	}
+
+	// Optional history across sessions (Dialogue.SaveHistoryToDisk): text and speaker only, one line per dialogue line.
+	private static bool _saveToDisk;
+	private static string _savePath;
+
+	private static void LoadSaved()
+	{
+		try
+		{
+			if (!Plugin.SaveHistory.Value) return;
+			_saveToDisk = true;
+			_savePath = System.IO.Path.Combine(BepInEx.Paths.BepInExRootPath, "BelmontsCurseUltrawide_history.txt");
+			if (!System.IO.File.Exists(_savePath)) return;
+			var lines = System.IO.File.ReadAllLines(_savePath);
+			int limit = Math.Clamp(Plugin.HistoryLimit.Value, 20, 1000);
+			int start = Math.Max(0, lines.Length - limit);
+			int loaded = 0;
+			for (int i = start; i < lines.Length; i++)
+				if (Logic.TryDecodeEntry(lines[i], out var speaker, out var text)) { Entries.Add(new Entry { Speaker = speaker, Text = text, Persisted = true }); loaded++; }
+			// Keep the file from growing without end.
+			if (lines.Length > limit * 2)
+			{
+				var keep = new string[lines.Length - start];
+				Array.Copy(lines, start, keep, 0, keep.Length);
+				System.IO.File.WriteAllLines(_savePath, keep);
+			}
+			Plugin.Instance.Log.LogInfo("Dialogue history: loaded " + loaded + " saved lines from " + _savePath);
+		}
+		catch (Exception ex) { _saveToDisk = false; Plugin.Instance.Log.LogWarning("Saved dialogue history unavailable: " + ex.Message); }
+	}
+
+	private static void SaveEntry(Entry entry)
+	{
+		if (!_saveToDisk || entry.Persisted || entry.Text.Length == 0) return;
+		try
+		{
+			System.IO.File.AppendAllText(_savePath, Logic.EncodeEntry(entry.Speaker, entry.Text) + Environment.NewLine);
+			entry.Persisted = true;
+		}
+		catch (Exception ex) { _saveToDisk = false; Plugin.Instance.Log.LogWarning("Could not save dialogue history: " + ex.Message); }
+	}
+
+	// Lines without a name label (speech bubbles) get no speaker today; log where the first few live so a source for the name can be found.
+	private static int _namelessLogged;
+	private static void LogNameless(TMPro.TMP_Text line)
+	{
+		if (_namelessLogged++ >= 3) return;
+		var parts = new List<string>();
+		for (var t = line.transform; t != null && parts.Count < 7; t = t.parent) parts.Add(t.name);
+		parts.Reverse();
+		Plugin.Instance.Log.LogInfo("Dialogue history: line without a speaker label at " + string.Join("/", parts));
 	}
 
 	private static void Trim()
@@ -302,6 +358,8 @@ internal static class DialogueHistory
 			if (Pages.Count == 0) Pages.Add(new Page { Entry = new Entry(), Text = "No dialogue recorded yet. History starts when this mod is loaded." });
 			_selected = Pages.Count - 1;
 			Focus = Card;
+			_cursorWas = Cursor.visible;
+			Cursor.visible = true;
 			IsOpen = true;
 			HookSkip(true);
 			clock.Restart();
@@ -355,6 +413,22 @@ internal static class DialogueHistory
 			}
 		}
 		if (horizontal != 0 || vertical != 0) Refresh();
+		// Mouse: the wheel scrolls, a click selects a card, a second click on the selected card replays its voice.
+		var mouse = Mouse.current;
+		if (mouse != null)
+		{
+			float wheel = mouse.scroll.ReadValue().y;
+			if (Math.Abs(wheel) > 0.01f) SelectCard(Math.Clamp(_selected + (wheel > 0 ? -1 : 1), 0, Pages.Count - 1));
+			if (mouse.leftButton.wasPressedThisFrame)
+			{
+				int clicked = HistoryView.CardAt(mouse.position.ReadValue());
+				if (clicked >= 0 && clicked < Pages.Count)
+				{
+					if (clicked == _selected && Focus == Card) HistoryVoice.Toggle(SelectedEntry);
+					else SelectCard(clicked);
+				}
+			}
+		}
 		bool activate = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) ||
 			(pad != null && pad.buttonSouth.wasPressedThisFrame);
 		if (activate)
@@ -366,6 +440,15 @@ internal static class DialogueHistory
 		}
 		if (!activate && ((kb != null && kb[Plugin.KeyReplay.Value].wasPressedThisFrame) || (pad != null && pad[Plugin.PadReplay.Value].wasPressedThisFrame)))
 			HistoryVoice.Toggle(Focus == Current ? LiveEntry : SelectedEntry);
+	}
+
+	private static void SelectCard(int index)
+	{
+		if (index == _selected && Focus == Card) return;
+		if (index != _selected) HistoryVoice.Stop();
+		_selected = index;
+		Focus = Card;
+		Refresh();
 	}
 
 	// Older/Newer move the selection by one screenful; the view scrolls to follow.
@@ -381,6 +464,7 @@ internal static class DialogueHistory
 
 	private static void Close()
 	{
+		if (IsOpen) Cursor.visible = _cursorWas;
 		IsOpen = false;
 		if (!ModMenu.IsOpen) HookSkip(false);
 		HistoryVoice.Stop();

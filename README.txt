@@ -66,7 +66,7 @@ Plain zip (mod only), if you don't have BepInEx yet:
    Run the game once; the first launch can sit on a black screen for a few minutes.
 2. Extract this zip into the game folder (the BepInEx/plugins folder gets the mod DLL). You can
    ignore the "steamdeck" folder on Windows.
-3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.3 loaded".
+3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.4 loaded".
 
 To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 
@@ -106,6 +106,7 @@ game closed. The defaults are meant to just work. The useful ones:
   Input.HideMouseOnIdle / MouseIdleSeconds  hide the mouse cursor after it has been still (default off, 3 s)
   Graphics.EnableTAAOption   adds Temporal Anti-Aliasing to the Video menu anti-aliasing choices (default true)
   Dialogue.HistoryEnabled    record dialogue for this session (default true; turning off clears history)
+  Dialogue.SaveHistoryToDisk keep history between sessions in BepInEx/BelmontsCurseUltrawide_history.txt (text and speakers only, default false)
   Dialogue.HistoryLimit      number of lines to keep (20-1000, default 200)
   UI.BigHUD               true = bigger HUD (same as F7)
   UI.AutoBigHUD           turns the bigger HUD on once on small screens such as the Deck (default true)
@@ -129,6 +130,8 @@ button selects the line the game is showing now. Wait until the current live voi
 replaying. Replay stops when history closes, the selection changes, or another live voice starts.
 Replay shortcuts are remappable under ReplayHistoryVoice in [Hotkeys] and [Controller].
 Auto-advance and the dialogue skip action are suspended while it is open; gameplay and scripted
+With a mouse: the wheel scrolls history, click a card to select it, click it again to replay its voice.
+The mod menu also takes the mouse and has sliders (Left/Right) and a two-step Reset to defaults.
 cutscenes continue. Close and reopen history to see newer lines.
 
 For safe-area margins, try HUDSafeAreaHorizontal = 3 and HUDSafeAreaVertical = 3 under [UI].

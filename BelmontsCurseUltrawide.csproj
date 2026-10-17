@@ -14,6 +14,9 @@
     <BepInExCoreDir>$(GameDir)\BepInEx\core</BepInExCoreDir>
     <InteropDir>$(GameDir)\BepInEx\interop</InteropDir>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="tests/**" />
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="0Harmony" HintPath="$(BepInExCoreDir)\0Harmony.dll" Private="false" />

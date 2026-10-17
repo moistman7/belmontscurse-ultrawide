@@ -35,7 +35,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.3 loaded`.
+   `Belmont's Curse Ultrawide 0.8.4 loaded`.
 
 To uninstall, delete the DLL.
 
@@ -107,6 +107,8 @@ selection, or the game starts another live voice line. Change the replay shortcu
 real button sprites; keyboard key names appear otherwise.
 Auto-advance and the dialogue skip action are suspended while history is open, but gameplay and
 scripted cutscenes continue. History is a snapshot when opened; close and reopen it to see newer lines.
+With a mouse: the wheel scrolls history, click a card to select it, click the selected card to replay its voice.
+The mod menu also takes the mouse and has sliders (Left/Right) and a two-step "Reset to defaults".
 
 For HUD margins, try `HUDSafeAreaHorizontal = 3` and `HUDSafeAreaVertical = 3` under `[UI]`.
 Each edge moves inward by 3% of the available HUD width or screen height. With `CenterHUD = true`,
@@ -130,6 +132,7 @@ game is closed. The defaults are meant to just work.
 | `Hotkeys.ModMenu` / `Controller.ModMenu` | `F1` / `LeftShoulder` | Open the mod settings menu from anywhere (controller: modifier + this button). |
 | `Graphics.EnableTAAOption` | `true` | Adds Temporal Anti-Aliasing (the game's own TAA mode) to the Video menu's anti-aliasing choices. |
 | `Dialogue.HistoryEnabled` | `true` | Record session dialogue history (F10 / Select + North). Turning it off clears recorded lines. |
+| `Dialogue.SaveHistoryToDisk` | `false` | Keep history between sessions in `BepInEx/BelmontsCurseUltrawide_history.txt` (text and speaker names only; read at startup). |
 | `Dialogue.HistoryLimit` | `200` | Number of dialogue lines to keep (20–1000). |
 | `UI.BigHUD` | `false` | Bigger HUD (same as F7). |
 | `UI.AutoBigHUD` | `true` | On small screens (height 900 or less, e.g. the Steam Deck) turns the bigger HUD on once, the first time. Your choice is kept afterwards. |
@@ -157,6 +160,12 @@ Other settings in the file are for troubleshooting and can be left alone.
   what's beside the room, which the game never expected to be on screen.
 - A game update can change the classes the mod relies on. Each fix switches itself off if it keeps
   failing, and the others keep running.
+- Dialogue history records full-screen dialogue boxes with speaker names and portraits. Speech-bubble
+  lines are recorded as text, without a speaker.
+- Changing "Center menus" or "Fit narrow screens" takes effect at the next launch (they re-scale menus,
+  which cannot be done safely while they are open).
+- Only 3440x1440 (21:9) on Windows has been tested by the author. Steam Deck, 16:10, 32:9 and
+  PlayStation / Switch controllers are untested.
 
 ## Troubleshooting
 
@@ -182,6 +191,10 @@ generated `BepInEx/interop`).
 
 or set the `BELMONTS_CURSE_DIR` environment variable. Add `-p:SkipDeploy=true` to skip copying the
 DLL into `BepInEx/plugins`. The output is `bin/Release/BelmontsCurseUltrawide.dll`.
+
+Tests: the pure helpers (slider stepping, text fitting, saved-history format, menu-position drift
+check) live in `Logic.cs` and are covered by `tests/Logic.Tests`. Run them with
+`dotnet test tests/Logic.Tests` (no game needed).
 
 ## How it works
 

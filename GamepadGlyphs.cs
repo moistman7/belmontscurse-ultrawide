@@ -9,11 +9,25 @@ namespace BelmontsCurseUltrawide;
 // The game's own controller button sprites (GamepadDescriptor assets), picked to match the connected pad.
 internal static class GamepadGlyphs
 {
-	private static bool _scanned;
+	private static bool _scanned, _fullLoad;
 	private static string _layout = "";
 	private static GamepadDescriptor _current;
 
 	internal static Sprite Get(GamepadButton button)
+	{
+		var sprite = Lookup(button);
+		if (sprite == null && !_fullLoad && Gamepad.current != null && _current != null)
+		{
+			// Loading only the matching descriptor can leave its button sprites unresolved; load the whole folder once, as the game does.
+			_fullLoad = true;
+			try { Resources.LoadAll<GamepadDescriptor>("SpriteAssets"); } catch { }
+			sprite = Lookup(button);
+			Plugin.Instance.Log.LogInfo("Gamepad glyphs: " + button + " was empty after loading the descriptor alone; after loading the folder it is " + (sprite != null ? "available" : "still missing"));
+		}
+		return sprite;
+	}
+
+	private static Sprite Lookup(GamepadButton button)
 	{
 		var pad = Gamepad.current;
 		if (pad == null) return null;
