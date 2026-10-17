@@ -1,7 +1,7 @@
 # Belmont's Curse ultrawide plugin: handoff
 
-Status as of 2026-10-17: **v0.8.3 is the latest published release.** **0.8.4 is unreleased local work** (committed, not
-tagged or published). Tested on 3440x1440 (21:9) Windows only. Not tested: Steam Deck hardware, 16:10, 32:9,
+Status as of 2026-10-17: **v0.8.4 is the latest published release** (the
+dialogue-capture change in `Poll` was released without an in-game dialogue test). Tested on 3440x1440 (21:9) Windows only. Not tested: Steam Deck hardware, 16:10, 32:9,
 PlayStation / Switch controller sprites, the F1 / controller shortcut for the mod menu, hide-mouse.
 
 A BepInEx 6 (be.788) IL2CPP plugin for *Castlevania: Belmont's Curse* (Unity 2022.3.62f2, game 1.1.3) that makes the game
@@ -71,9 +71,9 @@ Separate from the Spirit of the Samurai plugin.
 5. Which change fixed the earlier cutscene-skip report was never proven (removed always-on skip hook, removed the `UpdateString` hook).
    The log now prints "Dialogue skip hook on/off".
 6. Panel-art padding factors at other aspect ratios.
-7. 0.8.4 is committed but not published; 0.8.3's glyph regression is listed as a known issue in its release notes.
+7. The `DialogueHistory.Poll` stale-entry handling (0.8.4) has not been run against real dialogue: the test session captured no lines (`lines=0`).
 
 ## Releases
 
 0.4.9, 0.5.0, 0.5.1, 0.6.0, 0.7.0 (auto-advance, remappable keys), 0.7.1, 0.8.0 (pre-release, history), 0.8.1, 0.8.2 (TAA, frame-time fixes),
-0.8.3 (mod settings menu, F1, hide mouse). See `CHANGELOG.md`.
+0.8.3 (mod settings menu, F1, hide mouse), 0.8.4 (mod menu sliders/mouse, history mouse, glyph fallback). See `CHANGELOG.md`.

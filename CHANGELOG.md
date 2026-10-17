@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.4 (unreleased)
+## 0.8.4
 
 - **Controller button sprites in the history window** are repaired. 0.8.3 loaded only the matching glyph descriptor, which could leave the shoulder and face-button sprites empty so only the D-pad showed; it now falls back to loading the full glyph folder and logs when it has to.
 - **Mod menu**: sliders (bigger-HUD size, HUD margins, auto-advance timing, mouse idle time), a two-step "Reset to defaults", and mouse support (hover, click, wheel).
@@ -9,7 +9,7 @@
 - **Menu positions** the mod has recorded are re-read if the game moves them in the meantime, instead of being restored to a stale position.
 - The log now says when the dialogue-skip hook is switched on or off, and where a line without a speaker label (a speech bubble) lives.
 - Unit tests for the pure helpers (`tests/Logic.Tests`, `dotnet test`).
-- Small efficiency and robustness fixes: hotkey controls are looked up once instead of every frame, and a dialogue-history entry whose label has been destroyed is dropped instead of raising an error on every poll.
+- Hotkey controls are looked up only when the keyboard or a key setting changes, and a dialogue-history entry whose label has been destroyed is dropped instead of raising an error on every poll.
 
 ### Known issues
 - Speech-bubble lines are recorded without a speaker; saved history has no portraits or voice.
