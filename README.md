@@ -35,7 +35,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.4 loaded`.
+   `Belmont's Curse Ultrawide 0.8.5 loaded`.
 
 To uninstall, delete the DLL.
 

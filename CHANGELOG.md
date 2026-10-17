@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.5 (unreleased)
+## 0.8.5
 
 - **Keep mouse always hidden** (`Input.HideMouseAlways`, off by default; also in the mod menu): the cursor stays hidden instead of returning on movement; works on its own, without hide-on-idle. It still shows in the history window and the mod menu.
 

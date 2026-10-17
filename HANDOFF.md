@@ -1,6 +1,6 @@
 # Belmont's Curse ultrawide plugin: handoff
 
-Status as of 2026-10-17: **v0.8.4 is the latest published release** (the
+Status as of 2026-10-17: **v0.8.5 is the latest published release** (the
 dialogue-capture change in `Poll` was released without an in-game dialogue test). Tested on 3440x1440 (21:9) Windows only. Not tested: Steam Deck hardware, 16:10, 32:9,
 PlayStation / Switch controller sprites, the F1 / controller shortcut for the mod menu, hide-mouse.
 
@@ -76,4 +76,4 @@ Separate from the Spirit of the Samurai plugin.
 ## Releases
 
 0.4.9, 0.5.0, 0.5.1, 0.6.0, 0.7.0 (auto-advance, remappable keys), 0.7.1, 0.8.0 (pre-release, history), 0.8.1, 0.8.2 (TAA, frame-time fixes),
-0.8.3 (mod settings menu, F1, hide mouse), 0.8.4 (mod menu sliders/mouse, history mouse, glyph fallback). See `CHANGELOG.md`.
+0.8.3 (mod settings menu, F1, hide mouse), 0.8.4 (mod menu sliders/mouse, history mouse, glyph fallback), 0.8.5 (keep mouse always hidden). See `CHANGELOG.md`.
