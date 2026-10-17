@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.8.0 (test build)
+## 0.8.1
+
+- Dialogue history: the "Current" button's glyph and label are now centered in its panel.
+- Tested on 3440x1440 (21:9) Windows only. Steam Deck, 16:10 and 32:9 are untested.
+
+## 0.8.0
 
 - **Dialogue history** (F10, or Select + North). Records each dialogue line for the session with the speaker's name, portrait and voice. Drawn with the game's own panel art, font and controller button sprites. Smooth scrolling, opens at the newest line; PageUp/PageDown or the shoulders move a screenful. A header lists Select / Older / Newer / Voice / Close; a "Current" button under the cards selects the line on screen now. Auto-advance and dialogue skipping pause while it is open. `Dialogue.HistoryEnabled`, `Dialogue.HistoryLimit` (default 200); nothing is written to disk.
 - **Voice replay** for recorded lines: R, or X/Square. Uses its own audio player and the game's voice data; stops when you move, close, or a live voice starts. Remappable (`ReplayHistoryVoice`).

@@ -46,7 +46,7 @@ internal static class HistoryView
 	private static readonly Color Glow = new(1f, 0.72f, 0.3f, 0.3f);
 	private static readonly Color Idle = new(0.8f, 0.78f, 0.75f, 1);
 
-	private const float HeaderHeight = 118, BarHeight = 84, BarPadY = 20, PadX = 90, PadY = 14, Gap = 12, LiveFraction = 0.36f, CardAspect = 5.4f;
+	private const float HeaderHeight = 118, BarHeight = 84, BarPadY = 20, PadX = 90, PadY = 14, CurrentW = 340, CurrentH = 70, Gap = 12, LiveFraction = 0.36f, CardAspect = 5.4f;
 
 	internal static int Capacity { get; private set; } = 2;
 
@@ -85,14 +85,12 @@ internal static class HistoryView
 		_scroll = _target = 0; _pages = null; foreach (var r in Rows) { r.Index = -1; r.Root.SetActive(false); }
 		Place(_content, new Vector2(left - PadX, -(HeaderHeight - PadY)), new Vector2(_width + PadX * 2, view + PadY * 2));
 		// "Current" sits under the cards, above the game's own dialogue box.
-		float cw = 340, ch = 70;
+		float cw = CurrentW, ch = CurrentH;
 		Place(_currentBox.rectTransform, new Vector2(left + (_width - cw) * 0.5f, -(HeaderHeight + view + 8)), new Vector2(cw, ch));
 		Skin(_currentFrame, ch); _currentFrame.color = Color.white; Inflate(_currentFrame.rectTransform, ch);
 		// Selection looks like the cards: the same panel art as a warm glow.
 		Skin(_current.Back, ch); Inflate(_current.Back.rectTransform, ch); _current.Back.color = Glow;
 		Stretch(_current.Root.GetComponent<RectTransform>());
-		Place(_current.Icon.rectTransform, new Vector2(cw * 0.2f, -(ch - 36) * 0.5f), new Vector2(36, 36));
-		Place(_current.Label.rectTransform, new Vector2(cw * 0.2f + 48, -10), new Vector2(cw * 0.5f, ch - 20));
 	}
 
 	// The game's panel sprite and slicing, so cards share its frame art and corner size.
@@ -223,7 +221,18 @@ internal static class HistoryView
 		var live = DialogueHistory.LiveEntry;
 		_currentBox.gameObject.SetActive(live != null);
 		if (live != null) Set(_current, pad, GamepadGlyphs.Get(GamepadButton.South), "Enter", live.HasVoice ? (HistoryVoice.Playing ? "Stop" : "Current") : "Current", DialogueHistory.Current);
+		if (liveNow != null) CenterCurrent();
 		Set(_close, pad, GamepadGlyphs.Get(GamepadButton.East), "Esc", "Close", DialogueHistory.Exit);
+	}
+
+	// Glyph + label are centered as a group inside the Current panel.
+	private static void CenterCurrent()
+	{
+		bool icon = _current.Icon.gameObject.activeSelf;
+		float w = _current.Label.GetPreferredValues(_current.Label.text).x + 4, size = 36, gap = 10;
+		float total = (icon ? size + gap : 0) + w, start = (CurrentW - total) * 0.5f;
+		if (icon) Place(_current.Icon.rectTransform, new Vector2(start, -(CurrentH - size) * 0.5f), new Vector2(size, size));
+		Place(_current.Label.rectTransform, new Vector2(start + (icon ? size + gap : 0), -10), new Vector2(w, CurrentH - 20));
 	}
 
 	private static void Set(Slot slot, bool pad, Sprite glyph, string key, string text, int focus)
