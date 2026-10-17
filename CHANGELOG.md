@@ -9,6 +9,7 @@
 - **Menu positions** the mod has recorded are re-read if the game moves them in the meantime, instead of being restored to a stale position.
 - The log now says when the dialogue-skip hook is switched on or off, and where a line without a speaker label (a speech bubble) lives.
 - Unit tests for the pure helpers (`tests/Logic.Tests`, `dotnet test`).
+- Small efficiency and robustness fixes: hotkey controls are looked up once instead of every frame, and a dialogue-history entry whose label has been destroyed is dropped instead of raising an error on every poll.
 
 ### Known issues
 - Speech-bubble lines are recorded without a speaker; saved history has no portraits or voice.

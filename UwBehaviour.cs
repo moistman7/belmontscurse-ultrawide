@@ -567,27 +567,44 @@ public class UwBehaviour : MonoBehaviour
 		return value ? "ON" : "OFF";
 	}
 
+	private static readonly Key[] _keyOf = new Key[7];
+
+	private static readonly KeyControl[] _keyCtl = new KeyControl[7];
+
+	private static KeyControl KeyCtl(Keyboard keyboard, int slot, Key key)
+	{
+		KeyControl control = _keyCtl[slot];
+		if (control == null || _keyOf[slot] != key)
+		{
+			control = _keyCtl[slot] = keyboard[key];
+			_keyOf[slot] = key;
+		}
+		return control;
+	}
+
 	private static void ReadKeys()
 	{
 		Keyboard current = Keyboard.current;
 		if (current == null)
 		{
+			_kbPtr = IntPtr.Zero;
 			return;
 		}
-		// Re-resolved every frame so edits to the key settings apply without a restart.
-		if (current[Plugin.KeyMenu.Value].wasPressedThisFrame)
-			ModMenu.Toggle();
-		if (current[Plugin.KeyHistory.Value].wasPressedThisFrame)
-			DialogueHistory.Toggle();
-		if (true)
+		// Controls are looked up again only when the keyboard changes or a key setting is edited, not every frame.
+		if (_kbPtr != current.Pointer)
 		{
 			_kbPtr = current.Pointer;
-			_kF7 = current[Plugin.KeyDump.Value];
-			_kF10 = current[Plugin.KeyCenterHud.Value];
-			_kF6 = current[Plugin.KeyBigHud.Value];
-			_kF9 = current[Plugin.KeyAutoAdvance.Value];
-			_kUnvoiced = current[Plugin.KeyAutoAdvanceUnvoiced.Value];
+			Array.Clear(_keyCtl, 0, _keyCtl.Length);
 		}
+		if (KeyCtl(current, 0, Plugin.KeyMenu.Value).wasPressedThisFrame)
+			ModMenu.Toggle();
+		if (KeyCtl(current, 1, Plugin.KeyHistory.Value).wasPressedThisFrame)
+			DialogueHistory.Toggle();
+		_kF7 = KeyCtl(current, 2, Plugin.KeyDump.Value);
+		_kF10 = KeyCtl(current, 3, Plugin.KeyCenterHud.Value);
+		_kF6 = KeyCtl(current, 4, Plugin.KeyBigHud.Value);
+		_kF9 = KeyCtl(current, 5, Plugin.KeyAutoAdvance.Value);
+		_kUnvoiced = KeyCtl(current, 6, Plugin.KeyAutoAdvanceUnvoiced.Value);
 		if (_kF9.wasPressedThisFrame)
 		{
 			Plugin.AutoAdvance.Value = !Plugin.AutoAdvance.Value;

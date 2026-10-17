@@ -265,8 +265,29 @@ internal static class DialogueHistory
 		float now = Time.unscaledTime;
 		if (now < _nextPoll) return;
 		_nextPoll = now + 0.1f;
-		foreach (var entry in Labels.Values) ReadText(entry);
+		// One entry whose label was destroyed without AfterDeactivate must not throw every poll and count against the whole feature.
+		foreach (var pair in Labels)
+		{
+			try
+			{
+				if (pair.Value.Label == null) StaleKeys.Add(pair.Key);
+				else ReadText(pair.Value);
+			}
+			catch { StaleKeys.Add(pair.Key); }
+		}
+		if (StaleKeys.Count == 0) return;
+		foreach (int key in StaleKeys)
+		{
+			if (!Labels.Remove(key, out var entry)) continue;
+			FillSpeaker(entry); SaveEntry(entry);
+			var names = new List<int>();
+			foreach (var pair in NameLabels) if (ReferenceEquals(pair.Value, entry)) names.Add(pair.Key);
+			foreach (int id in names) NameLabels.Remove(id);
+		}
+		StaleKeys.Clear();
 	}
+
+	private static readonly List<int> StaleKeys = new();
 
 	// Optional history across sessions (Dialogue.SaveHistoryToDisk): text and speaker only, one line per dialogue line.
 	private static bool _saveToDisk;
