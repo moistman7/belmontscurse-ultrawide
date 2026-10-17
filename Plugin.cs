@@ -12,12 +12,14 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace BelmontsCurseUltrawide;
 
-[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.8.2")]
+[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.8.3")]
 public class Plugin : BasePlugin
 {
 	internal static Plugin Instance;
 
 	internal static bool On;
+	// Menu layout switches are read once at startup: changing them while menus exist leaves their scaling half-applied.
+	internal static bool MenusOn, NarrowOn;
 
 	internal static bool CamOn;
 
@@ -26,6 +28,8 @@ public class Plugin : BasePlugin
 	internal static ConfigEntry<float> MatchValue;
 	internal static ConfigEntry<bool> FixNarrow;
 	internal static ConfigEntry<bool> PadShortcuts;
+	internal static ConfigEntry<bool> HideMouse;
+	internal static ConfigEntry<float> MouseIdleSeconds;
 	internal static ConfigEntry<bool> AutoBigHud;
 	internal static ConfigEntry<bool> AutoBigHudDone;
 	internal static ConfigEntry<string> LastGameVersion;
@@ -62,6 +66,8 @@ public class Plugin : BasePlugin
 	internal static ConfigEntry<int> HistoryLimit;
 	internal static ConfigEntry<Key> KeyHistory;
 	internal static ConfigEntry<GamepadButton> PadHistory;
+	internal static ConfigEntry<Key> KeyMenu;
+	internal static ConfigEntry<GamepadButton> PadMenu;
 	internal static ConfigEntry<Key> KeyReplay;
 	internal static ConfigEntry<GamepadButton> PadReplay;
 
@@ -125,6 +131,8 @@ public class Plugin : BasePlugin
 		HistoryLimit = Config.Bind("Dialogue", "HistoryLimit", 200, new ConfigDescription("Maximum dialogue lines kept for this session.", new AcceptableValueRange<int>(20, 1000)));
 		KeyHistory = Config.Bind("Hotkeys", "DialogueHistory", Key.F10, "Open/close dialogue history. PageUp/PageDown browse; Escape closes.");
 		PadHistory = Config.Bind("Controller", "DialogueHistory", GamepadButton.North, "Modifier + this button opens/closes dialogue history. D-pad navigates the whole history menu; A/Cross selects, shoulders change pages.");
+		KeyMenu = Config.Bind("Hotkeys", "ModMenu", Key.F1, "Open/close the mod settings menu from anywhere (the same panel as Settings > Graphics > Mod settings).");
+		PadMenu = Config.Bind("Controller", "ModMenu", GamepadButton.LeftShoulder, "Modifier + this button opens/closes the mod settings menu.");
 		KeyReplay = Config.Bind("Hotkeys", "ReplayHistoryVoice", Key.R, "Replay/stop the selected history line's voice while history is open. Arrows navigate the history menu; Enter selects.");
 		PadReplay = Config.Bind("Controller", "ReplayHistoryVoice", GamepadButton.West, "Replay/stop selected history voice (no modifier) while history is open. D-pad navigates the history menu; A/Cross selects; shoulders change pages.");
 		HudSafeHorizontal = Config.Bind("UI", "HUDSafeAreaHorizontal", 0f, new ConfigDescription("Inset each horizontal edge of HUD_Canvas by this percent of the available HUD width. Applied inside the centered 16:9 area when CenterHUD is on. 0 = original positions.", new AcceptableValueRange<float>(0f, 20f)));
@@ -158,6 +166,8 @@ public class Plugin : BasePlugin
 		MatchValue = Config.Bind("General", "CanvasMatch", 1f, "CanvasScaler match value used on ultrawide. 0 = match width (zoomed), 1 = match height (no zoom).");
 		FixVideos = Config.Bind("General", "FixVideos", defaultValue: true, "Stop pre-rendered videos from being stretched/zoomed on ultrawide (fits them inside the screen instead).");
 		FixNarrow = Config.Bind("UI", "FixNarrowScreens", defaultValue: true, "On screens narrower than 16:9 (16:10 such as the Steam Deck), match the UI to the screen width so menus are not cropped/zoomed.");
+		HideMouse = Config.Bind("Input", "HideMouseOnIdle", false, "Hide the mouse cursor after it has been still for MouseIdleSeconds, and show it again when you move or click it.");
+		MouseIdleSeconds = Config.Bind("Input", "MouseIdleSeconds", 3f, "Seconds of mouse stillness before the cursor is hidden (0.5 or more).");
 		PadShortcuts = Config.Bind("Input", "GamepadShortcuts", defaultValue: true, "Controller shortcut for players without a keyboard (Steam Deck): press the left and right stick buttons (L3 + R3) together to toggle the bigger HUD.");
 		AutoBigHud = Config.Bind("UI", "AutoBigHUD", defaultValue: true, "On small screens (height 900 or less, such as the Steam Deck) turn the bigger HUD on once, the first time the game runs there. After that your own choice (F6 / L3+R3 / BigHUD) is kept.");
 		AutoBigHudDone = Config.Bind("UI", "AutoBigHUDApplied", defaultValue: false, "Set automatically once AutoBigHUD has been applied. Set to false to apply it again.");
@@ -188,6 +198,8 @@ public class Plugin : BasePlugin
 		ForceWindow = Config.Bind("Resolution", "RetrySeconds", 15f, "Keep re-applying for this many seconds if the game changes it back. After that the in-game settings are left alone.");
 		On = Enabled.Value;
 		CamOn = Camera16x9Logic.Value;
+		MenusOn = CenterMenus.Value;
+		NarrowOn = FixNarrow.Value;
 		bool isEnabled;
 		BepInExInfoLogInterpolatedStringHandler bepInExInfoLogInterpolatedStringHandler;
 		try
@@ -216,6 +228,7 @@ public class Plugin : BasePlugin
 		ClassInjector.RegisterTypeInIl2Cpp<UwBehaviour>();
 		DialogueHistory.Init();
 		AntiAliasing.Init();
+		ModSettingsRow.Init();
 		AddComponent<UwBehaviour>();
 		UwBehaviour.Init();
 		try
@@ -226,7 +239,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.8.2 loaded. F5 = auto-advance voiced dialogue, F6 = auto-advance unvoiced dialogue, F7 = big HUD (controller: L3 + R3), F8 = HUD centered / at screen edges, F9 = diagnostic dump, F10 = dialogue history (controller: Select + North). Controller: hold Select, then R3 / Right Shoulder / L3 / Start for the other functions in that order.");
+		Log.LogInfo("Belmont's Curse Ultrawide 0.8.3 loaded. F5 = auto-advance voiced dialogue, F6 = auto-advance unvoiced dialogue, F7 = big HUD (controller: L3 + R3), F8 = HUD centered / at screen edges, F9 = diagnostic dump, F10 = dialogue history (controller: Select + North). Controller: hold Select, then R3 / Right Shoulder / L3 / Start for the other functions in that order.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;

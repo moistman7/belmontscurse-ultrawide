@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.3
+
+- **Mod settings menu**: a "Mod settings" row at the bottom of Settings > Graphics opens a panel (in the game's own style, with its controller button sprites) where you can switch the mod's options on and off. Most apply immediately; each option that doesn't says when it takes effect. **F1** (controller: Select + Left Shoulder) opens the same panel from anywhere and pauses the game while it is open. Remappable under `ModMenu`.
+- **Hide mouse when idle** (`Input.HideMouseOnIdle`, `Input.MouseIdleSeconds`, off by default): the cursor hides after it has been still and returns on movement or click.
+- **Menu layout switches** (`CenterMenus`, `FixNarrowScreens`) are read at startup. Changing them while menus were open could leave a menu half re-scaled.
+- History opens instantly: the window and its fonts are warmed up in the background after launch. The history now also shows each line's size without a layout pass. The log prints `History opened: open=… show=…` and the F9 dump lists the slowest run of each feature.
+- Dialogue-skip handling is only touched while history or the mod menu is open.
+
 ## 0.8.2
 
 - **TAA** now appears in the Video menu's anti-aliasing choices (`Graphics.EnableTAAOption`, on by default). It is the game's own TAA mode, added to the menu; the game applies it.

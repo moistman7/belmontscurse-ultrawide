@@ -8,6 +8,8 @@ internal static class GameUiFont
 {
 	private static readonly Dictionary<int, Material> Materials = new();
 	// The dialogue label once found; reused so toasts do not scan every text object in the scene.
+	// Bumps when the real dialogue font source is found, so overlays only restyle their labels when it matters.
+	internal static int Version;
 	private static TMP_Text _source, _anyLabel;
 	private static float _nextScan;
 	private static UnityEngine.UI.Image _panel;
@@ -62,7 +64,7 @@ internal static class GameUiFont
 			fallback ??= label;
 			if (label.name == "Line" && label.transform.parent != null &&
 				(label.transform.parent.name == "DialogueBoxLeft" || label.transform.parent.name == "DialogueBoxRight"))
-			{ fallback = _source = label; break; }
+			{ fallback = _source = label; Version++; break; }
 		}
 		_anyLabel = fallback ?? _anyLabel;
 		target.font = fallback != null ? fallback.font : TMP_Settings.defaultFontAsset;

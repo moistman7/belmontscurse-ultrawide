@@ -35,7 +35,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.2 loaded`.
+   `Belmont's Curse Ultrawide 0.8.3 loaded`.
 
 To uninstall, delete the DLL.
 
@@ -73,6 +73,7 @@ the mod, double-click **Uninstall from Steam Deck** in the `steamdeck` folder.
 | F8 | HUD in the centered 16:9 area, or at the screen edges (remembered) |
 | F9 | Write a diagnostic dump to the log and to `BepInEx/BelmontsCurseUltrawide_dump.txt` |
 | F10 | Open/close dialogue history; PageUp/PageDown browse, Escape closes |
+| F1 | Open/close the mod settings menu (also Settings > Graphics > Mod settings). Up/Down and Enter change options; Backspace or B goes back. Pauses the game while open. |
 | Up/Down arrows, R (history open) | Navigate with arrows; Enter selects; R replays/stops the selected voice |
 | Select + R3 (controller) | Auto-advance voiced dialogue, same as F5 |
 | Select + Right Shoulder (controller) | Auto-advance dialogue without voice, same as F6 |
@@ -125,6 +126,8 @@ game is closed. The defaults are meant to just work.
 | `UI.FixNarrowScreens` | `true` | On screens narrower than 16:9 (16:10, e.g. the Steam Deck) the UI matches the screen width so menus are not cropped. |
 | `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F8). |
 | `UI.HUDSafeAreaHorizontal` / `HUDSafeAreaVertical` | `0` / `0` | Margin at each HUD edge, in percent (0–20). |
+| `Input.HideMouseOnIdle` / `MouseIdleSeconds` | `false` / `3` | Hide the mouse cursor after it has been still for this many seconds; it returns when you move or click. |
+| `Hotkeys.ModMenu` / `Controller.ModMenu` | `F1` / `LeftShoulder` | Open the mod settings menu from anywhere (controller: modifier + this button). |
 | `Graphics.EnableTAAOption` | `true` | Adds Temporal Anti-Aliasing (the game's own TAA mode) to the Video menu's anti-aliasing choices. |
 | `Dialogue.HistoryEnabled` | `true` | Record session dialogue history (F10 / Select + North). Turning it off clears recorded lines. |
 | `Dialogue.HistoryLimit` | `200` | Number of dialogue lines to keep (20–1000). |

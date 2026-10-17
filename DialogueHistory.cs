@@ -84,11 +84,11 @@ internal static class DialogueHistory
 			postfix == null ? null : new HarmonyMethod(typeof(DialogueHistory).GetMethod(postfix, BindingFlags.NonPublic | BindingFlags.Static)));
 	}
 
-	private static bool AllowSkip() => !IsOpen;
+	private static bool AllowSkip() => !IsOpen && !ModMenu.IsOpen;
 
 	// Suppress the game's own line-skip only while history is open; normal play and cutscene skipping run unhooked.
 	private static bool _skipHooked;
-	private static void HookSkip(bool on)
+	internal static void HookSkip(bool on)
 	{
 		if (_harmony == null || _skipHooked == on) return;
 		try
@@ -280,13 +280,16 @@ internal static class DialogueHistory
 	internal static void Toggle()
 	{
 		if (IsOpen) { Close(); return; }
+		if (ModMenu.IsOpen) return;
 		if (!_available || !Plugin.HistoryEnabled.Value) { Toast.Show("Dialogue history is disabled"); return; }
 		try
 		{
 			LiveEntry = null;
 			for (int i = Entries.Count - 1; i >= 0; i--) if (IsLive(Entries[i])) { LiveEntry = Entries[i]; break; }
 			if (LiveEntry != null) FillSpeaker(LiveEntry);
+			var clock = System.Diagnostics.Stopwatch.StartNew();
 			HistoryView.Open();
+			double openMs = clock.Elapsed.TotalMilliseconds;
 			Trim();
 			Pages.Clear();
 			foreach (var entry in Entries)
@@ -301,7 +304,9 @@ internal static class DialogueHistory
 			Focus = Card;
 			IsOpen = true;
 			HookSkip(true);
+			clock.Restart();
 			HistoryView.Show(Pages, _selected, true);
+			Plugin.Instance.Log.LogInfo("History opened: open=" + openMs.ToString("F1") + "ms show=" + clock.Elapsed.TotalMilliseconds.ToString("F1") + "ms lines=" + Pages.Count);
 		}
 		catch (Exception ex) { Close(); Plugin.Instance.Log.LogWarning("Could not open dialogue history: " + ex.Message); }
 	}
@@ -312,7 +317,7 @@ internal static class DialogueHistory
 		{
 			Close(); Entries.Clear(); Labels.Clear(); NameLabels.Clear(); Pages.Clear(); return;
 		}
-		if (!IsOpen && _prewarm < 5 && _available && Labels.Count == 0 && Time.unscaledTime > 6f && Time.unscaledTime >= _nextPrewarm) { _nextPrewarm = Time.unscaledTime + 0.6f; HistoryView.Prewarm(_prewarm++); }
+		if (!IsOpen && _prewarm < 6 && _available && Time.unscaledTime > 6f && Time.unscaledTime >= _nextPrewarm) { _nextPrewarm = Time.unscaledTime + 0.6f; HistoryView.Prewarm(_prewarm++); }
 		Poll();
 		if (!IsOpen) return;
 		HistoryVoice.Tick();
@@ -377,7 +382,7 @@ internal static class DialogueHistory
 	private static void Close()
 	{
 		IsOpen = false;
-		HookSkip(false);
+		if (!ModMenu.IsOpen) HookSkip(false);
 		HistoryVoice.Stop();
 		HistoryView.Close();
 	}

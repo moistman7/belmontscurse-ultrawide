@@ -298,6 +298,14 @@ public class UwBehaviour : MonoBehaviour
 		});
 	}
 
+	// Called after the mod menu flips a setting: refresh the cached switches the fixes read, and re-run the scans.
+	internal static void ApplyFixToggles()
+	{
+
+		Plugin.CamOn = Plugin.Camera16x9Logic.Value;
+		Kick();
+	}
+
 	private static void Kick()
 	{
 		foreach (Job job in Jobs)
@@ -310,6 +318,7 @@ public class UwBehaviour : MonoBehaviour
 	private void LateUpdate()
 	{
 		Guard("camera picture", ProjAction);
+		Guard("mouse hide", MouseHide.Tick);
 	}
 
 	private static void Guard(string name, Action a)
@@ -387,6 +396,7 @@ public class UwBehaviour : MonoBehaviour
 			_wide = Screen.height > 0 && (float)Screen.width / (float)Screen.height > 1.7877778f;
 			Guard("keys", KeysAction);
 			Guard("dialogue history", DialogueHistory.Tick);
+			Guard("mod menu", ModMenu.Tick);
 			Guard("resolution", ResAction);
 			Guard("camera", CamAction);
 			Guard("zone camera size", SizeAction);
@@ -492,6 +502,8 @@ public class UwBehaviour : MonoBehaviour
 		}
 		if (current[Plugin.PadModifier.Value].isPressed)
 		{
+			if (current[Plugin.PadMenu.Value].wasPressedThisFrame)
+				ModMenu.Toggle();
 			if (current[Plugin.PadHistory.Value].wasPressedThisFrame)
 				DialogueHistory.Toggle();
 			// Modifier held: each feature has its own button.
@@ -563,6 +575,8 @@ public class UwBehaviour : MonoBehaviour
 			return;
 		}
 		// Re-resolved every frame so edits to the key settings apply without a restart.
+		if (current[Plugin.KeyMenu.Value].wasPressedThisFrame)
+			ModMenu.Toggle();
 		if (current[Plugin.KeyHistory.Value].wasPressedThisFrame)
 			DialogueHistory.Toggle();
 		if (true)
@@ -1241,7 +1255,7 @@ public class UwBehaviour : MonoBehaviour
 
 	private static void RenderTextureCameraJob()
 	{
-		if (!Plugin.On || (!Plugin.CenterMenus.Value && !Plugin.CenterHud.Value) || !_wide)
+		if (!Plugin.On || (!Plugin.MenusOn && !Plugin.CenterHud.Value) || !_wide)
 		{
 			if (RtAspectSet.Count <= 0)
 			{
@@ -1341,7 +1355,7 @@ public class UwBehaviour : MonoBehaviour
 
 	private static bool NarrowScreen()
 	{
-		if (Plugin.On && Plugin.FixNarrow.Value && Screen.height > 0)
+		if (Plugin.On && Plugin.NarrowOn && Screen.height > 0)
 		{
 			return (float)Screen.width / (float)Screen.height < 1.7677778f;
 		}
@@ -1469,7 +1483,7 @@ public class UwBehaviour : MonoBehaviour
 				bool num3 = Plugin.On && num > num2 + 0.01f;
 				float matchWidthOrHeight = scaler.matchWidthOrHeight;
 				float value;
-				bool narrow = Plugin.On && Plugin.FixNarrow.Value && num < num2 - 0.01f;
+				bool narrow = Plugin.On && Plugin.NarrowOn && num < num2 - 0.01f;
 				if (num3 || narrow)
 				{
 					if (!OrigMatch.ContainsKey(scaler2.Id))
@@ -1514,7 +1528,7 @@ public class UwBehaviour : MonoBehaviour
 			}
 			if (scaler2.IsMenu || scaler2.IsHud || scaler2.Name == "HUD_Canvas")
 			{
-				bool flag = Plugin.On && (scaler2.IsMenu ? Plugin.CenterMenus.Value : Plugin.CenterHud.Value);
+				bool flag = Plugin.On && (scaler2.IsMenu ? Plugin.MenusOn : Plugin.CenterHud.Value);
 				CenterCanvas(scaler2, flag, fullPass);
 			}
 		}
@@ -2031,7 +2045,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.2 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.3 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);

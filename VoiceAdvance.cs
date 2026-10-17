@@ -29,7 +29,7 @@ internal static class VoiceAdvance
 
 	internal static void Tick()
 	{
-		if (DialogueHistory.IsOpen)
+		if (DialogueHistory.IsOpen || ModMenu.IsOpen)
 		{
 			_readyAt = 0f;
 			return;

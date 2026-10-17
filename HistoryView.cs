@@ -34,6 +34,7 @@ internal static class HistoryView
 	private static int _sel;
 	private static float _scroll, _target;
 	private static bool _dirty;
+	private static int _fontVersion = -1;
 	private static int _sig;
 	private static float _width, _height, _cardHeight, _cardWidth, _uiWidth;
 	private static Sprite _panel;
@@ -49,11 +50,25 @@ internal static class HistoryView
 	private const float HeaderHeight = 118, BarHeight = 84, BarPadY = 20, PadX = 90, PadY = 14, CurrentW = 340, CurrentH = 70, Gap = 12, LiveFraction = 0.36f, CardAspect = 5.4f;
 
 	internal static int Capacity { get; private set; } = 2;
+	internal static float UiWidth => _uiWidth;
+	internal static float UiHeight { get; private set; } = 1080;
+	internal static float CardHeight => _cardHeight;
+
+	// Style values other overlays (the mod menu) share: the game panel art and the canvas-to-pixel ratio.
+	internal static void PrepareStyle()
+	{
+		ReadPanel();
+		float aspect = Screen.width / (float)Math.Max(1, Screen.height);
+		_uiWidth = aspect < 16f / 9f ? 1920 : 1080 * aspect;
+		UiHeight = aspect < 16f / 9f ? 1920 / aspect : 1080;
+		_ours = Screen.height / UiHeight;
+		if (_cardHeight <= 0) _cardHeight = UiHeight * 0.197f;
+	}
 
 	internal static void Open()
 	{
 		if (_root == null) Build();
-		foreach (var label in Labels) GameUiFont.Apply(label);
+		if (_fontVersion != GameUiFont.Version) { foreach (var label in Labels) GameUiFont.Apply(label); _fontVersion = GameUiFont.Version; }
 		ReadPanel();
 		_root.SetActive(true);
 		float aspect = Screen.width / (float)Math.Max(1, Screen.height);
@@ -103,7 +118,7 @@ internal static class HistoryView
 	}
 
 	// The panel sprite has transparent padding around its visible frame; grow the art so the frame matches the card rectangle.
-	private static void Inflate(RectTransform rect, float height)
+	internal static void Inflate(RectTransform rect, float height)
 	{
 		float x = height * 0.35f, y = height * 0.045f;
 		rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
@@ -111,7 +126,7 @@ internal static class HistoryView
 	}
 
 	// height = the panel's own height; short panels get proportionally smaller corners, like a miniature card.
-	private static void Skin(Image image, float height)
+	internal static void Skin(Image image, float height)
 	{
 		image.sprite = _panel;
 		image.type = _panel != null && (_panelType == UnityEngine.UI.Image.Type.Sliced || _panelType == UnityEngine.UI.Image.Type.Tiled) ? UnityEngine.UI.Image.Type.Sliced : UnityEngine.UI.Image.Type.Simple;
@@ -134,8 +149,20 @@ internal static class HistoryView
 				case 1: case 2: case 3:
 					if (_root != null) while (Rows.Count < stage * 2) Rows.Add(BuildRow());
 					break;
-				default:
+				case 4:
 					if (Plugin.PadShortcuts.Value && Gamepad.current != null) GamepadGlyphs.Get(GamepadButton.South);
+					break;
+				default:
+					// Show the window once with placeholder text, so the first real open finds fonts, meshes and canvas already warmed.
+					if (_root != null && !_root.activeSelf)
+					{
+						Open();
+						var warm = new List<DialogueHistory.Page>();
+						for (int i = 0; i < Capacity; i++) warm.Add(new DialogueHistory.Page { Entry = new DialogueHistory.Entry { Speaker = "Warm-up" }, Text = "Warm-up text for the history window." });
+						Show(warm, 0, true);
+						Close();
+						_pages = null;
+					}
 					break;
 			}
 		}
@@ -222,8 +249,8 @@ internal static class HistoryView
 		}
 		else if (_scroll != _target) { _scroll = _target; moving = true; }
 		if (!moving && !_dirty) return;
-		int n = _pages.Count, pool = Capacity + 3;
-		int first = Math.Max(0, (int)Math.Floor(_scroll) - 1), last = Math.Min(n - 1, (int)Math.Ceiling(_scroll) + Capacity);
+		int n = _pages.Count, pool = Capacity + 2;
+		int first = Math.Max(0, (int)Math.Floor(_scroll)), last = Math.Min(n - 1, (int)Math.Ceiling(_scroll) + Capacity - 1);
 		while (Rows.Count < pool) Rows.Add(BuildRow());
 		foreach (var r in Rows)
 			if (r.Index < first || r.Index > last) { if (r.Root.activeSelf) r.Root.SetActive(false); r.Index = -1; }
@@ -338,7 +365,7 @@ internal static class HistoryView
 		return row;
 	}
 
-	private static TextMeshProUGUI Label(GameObject parent, string name, float size, TextAlignmentOptions align)
+	internal static TextMeshProUGUI Label(GameObject parent, string name, float size, TextAlignmentOptions align)
 	{
 		var go = new GameObject(name);
 		go.AddComponent<RectTransform>().SetParent(parent.transform, false);
@@ -353,20 +380,20 @@ internal static class HistoryView
 		return text;
 	}
 
-	private static Image NewImage(GameObject parent, string name)
+	internal static Image NewImage(GameObject parent, string name)
 	{
 		var go = new GameObject(name);
 		go.AddComponent<RectTransform>().SetParent(parent.transform, false);
 		var image = go.AddComponent<Image>(); image.raycastTarget = false; return image;
 	}
 
-	private static void Place(RectTransform rect, Vector2 position, Vector2 size)
+	internal static void Place(RectTransform rect, Vector2 position, Vector2 size)
 	{
 		rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0, 1);
 		rect.anchoredPosition = position; rect.sizeDelta = size;
 	}
 
-	private static void Stretch(RectTransform rect)
+	internal static void Stretch(RectTransform rect)
 	{
 		rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
 		rect.offsetMin = rect.offsetMax = Vector2.zero;
