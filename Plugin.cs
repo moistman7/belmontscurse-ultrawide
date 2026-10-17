@@ -76,6 +76,8 @@ public class Plugin : BasePlugin
 
 	internal static ConfigEntry<Key> KeyAutoAdvance;
 
+	internal static ConfigEntry<Key> KeyAutoAdvanceUnvoiced;
+
 	internal static ConfigEntry<Key> KeyDump;
 
 	internal static ConfigEntry<GamepadButton> PadModifier;
@@ -83,6 +85,8 @@ public class Plugin : BasePlugin
 	internal static ConfigEntry<GamepadButton> PadCenterHud;
 
 	internal static ConfigEntry<GamepadButton> PadAutoAdvance;
+
+	internal static ConfigEntry<GamepadButton> PadAutoAdvanceUnvoiced;
 
 	internal static ConfigEntry<GamepadButton> PadDump;
 
@@ -110,18 +114,26 @@ public class Plugin : BasePlugin
 		StartupFpsCap = Config.Bind("General", "StartupFpsCap", 60, "Limit the frame rate to this while the game starts up (logos, loading, until the title screen), which avoids the occasional black screen at startup. After that your in-game frame rate and V-Sync settings are put back. 0 = off.");
 		AutoAdvance = Config.Bind("Dialogue", "AutoAdvanceVoiced", defaultValue: false, "Advance voiced dialogue automatically once the voice line has finished and the text is fully shown. Lines without voice still wait for you. F5 toggles it in game (saved).");
 		AutoAdvanceDelay = Config.Bind("Dialogue", "AutoAdvanceDelay", 0.4f, "Seconds to wait after the voice and text are done before advancing.");
-		AutoAdvanceUnvoiced = Config.Bind("Dialogue", "AutoAdvanceUnvoiced", defaultValue: false, "Also advance lines that have no voice, after a reading-time delay (UnvoicedBaseSeconds + UnvoicedSecondsPerCharacter per character).");
+		AutoAdvanceUnvoiced = Config.Bind("Dialogue", "AutoAdvanceUnvoiced", defaultValue: false, "Also advance lines that have no voice, after a reading-time delay. F6 toggles it in game (saved) (UnvoicedBaseSeconds + UnvoicedSecondsPerCharacter per character).");
 		UnvoicedBaseSeconds = Config.Bind("Dialogue", "UnvoicedBaseSeconds", 1.0f, "Unvoiced lines: seconds to wait after the text is fully shown, before the per-character time.");
 		UnvoicedSecondsPerCharacter = Config.Bind("Dialogue", "UnvoicedSecondsPerCharacter", 0.05f, "Unvoiced lines: extra seconds per character of the line (0.05 is roughly 20 characters per second).");
 		ShowToasts = Config.Bind("UI", "ShowMessages", defaultValue: true, "Show a short on-screen message when you toggle auto-advance, the bigger HUD or the centered HUD.");
-		KeyCenterHud = Config.Bind("Hotkeys", "CenterHUD", Key.F7, "Key that toggles the HUD between the centered 16:9 area and the screen edges. Use a key name such as F10, Home, Backquote or Numpad5.");
-		KeyBigHud = Config.Bind("Hotkeys", "BigHUD", Key.F6, "Key that toggles the bigger HUD.");
+		KeyCenterHud = Config.Bind("Hotkeys", "CenterHUD", Key.F8, "Key that toggles the HUD between the centered 16:9 area and the screen edges. Use a key name such as F10, Home, Backquote or Numpad5.");
+		KeyBigHud = Config.Bind("Hotkeys", "BigHUD", Key.F7, "Key that toggles the bigger HUD.");
 		KeyAutoAdvance = Config.Bind("Hotkeys", "AutoAdvanceVoiced", Key.F5, "Key that toggles auto-advance for voiced dialogue.");
+		KeyAutoAdvanceUnvoiced = Config.Bind("Hotkeys", "AutoAdvanceUnvoiced", Key.F6, "Key that toggles auto-advance for lines without voice.");
 		KeyDump = Config.Bind("Hotkeys", "DiagnosticDump", Key.F9, "Key that writes the diagnostic dump to the log.");
 		PadModifier = Config.Bind("Controller", "Modifier", GamepadButton.Select, "Hold this controller button and press one of the buttons below. (L3 + R3 together always toggles the bigger HUD.) Needs Input.GamepadShortcuts. Button names: Select, Start, North, South, East, West, LeftShoulder, RightShoulder, LeftStick, RightStick, DpadUp, DpadDown, DpadLeft, DpadRight.");
 		PadCenterHud = Config.Bind("Controller", "CenterHUD", GamepadButton.LeftStick, "Modifier + this button toggles the centered HUD.");
 		PadAutoAdvance = Config.Bind("Controller", "AutoAdvanceVoiced", GamepadButton.RightStick, "Modifier + this button toggles auto-advance for voiced dialogue.");
+		PadAutoAdvanceUnvoiced = Config.Bind("Controller", "AutoAdvanceUnvoiced", GamepadButton.RightShoulder, "Modifier + this button toggles auto-advance for lines without voice.");
 		PadDump = Config.Bind("Controller", "DiagnosticDump", GamepadButton.Start, "Modifier + this button writes the diagnostic dump to the log.");
+		if (KeyAutoAdvance.Value == Key.F5 && KeyBigHud.Value == Key.F6 && KeyCenterHud.Value == Key.F7 && KeyDump.Value == Key.F9)
+		{
+			// Settings saved with the 0.7.0 default keys: move to the grouped layout (F6 is now unvoiced auto-advance).
+			KeyBigHud.Value = Key.F7;
+			KeyCenterHud.Value = Key.F8;
+		}
 		MatchValue = Config.Bind("General", "CanvasMatch", 1f, "CanvasScaler match value used on ultrawide. 0 = match width (zoomed), 1 = match height (no zoom).");
 		FixVideos = Config.Bind("General", "FixVideos", defaultValue: true, "Stop pre-rendered videos from being stretched/zoomed on ultrawide (fits them inside the screen instead).");
 		FixNarrow = Config.Bind("UI", "FixNarrowScreens", defaultValue: true, "On screens narrower than 16:9 (16:10 such as the Steam Deck), match the UI to the screen width so menus are not cropped/zoomed.");
@@ -142,9 +154,9 @@ public class Plugin : BasePlugin
 			// Old default: add the title and save screens.
 			MenuCanvases.Value = "GameMenu,Canvas_ConfirmPopup,StartMenuView";
 		}
-		CenterHud = Config.Bind("UI", "CenterHUD", defaultValue: false, "Keep the HUD and full-screen dialogue inside a centered 16:9 area instead of the screen edges. F7 toggles it in game (saved).");
+		CenterHud = Config.Bind("UI", "CenterHUD", defaultValue: false, "Keep the HUD and full-screen dialogue inside a centered 16:9 area instead of the screen edges. F8 toggles it in game (saved).");
 		HudCanvases = Config.Bind("UI", "HudCanvases", "HUD_Canvas,DialogueBoxFullScreen", "Canvas names CenterHUD applies to.");
-		BigHud = Config.Bind("UI", "BigHUD", defaultValue: false, "Draw the HUD (health, magic, notifications) bigger. F6 toggles it in game (saved).");
+		BigHud = Config.Bind("UI", "BigHUD", defaultValue: false, "Draw the HUD (health, magic, notifications) bigger. F7 toggles it in game (saved).");
 		HudScale = Config.Bind("UI", "HUDScale", 1.25f, "How much bigger the HUD is when BigHUD is on. 1.25 = 25% bigger. Sensible range 1.1 to 1.6.");
 		HudScaleCanvases = Config.Bind("UI", "HUDScaleCanvases", "HUD_Canvas", "Canvas names BigHUD applies to.");
 		ForceResolution = Config.Bind("Resolution", "ForceResolution", defaultValue: true, "Set the resolution at startup (replaces the -screen-width/-screen-height launch options).");
@@ -191,7 +203,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.7.1 loaded. F7 = HUD centered / at screen edges, F6 = big HUD (controller: L3 + R3), F5 = auto-advance voiced dialogue (controller: Select + R3), F9 = diagnostic dump. Controller: hold Select + L3 for the centered HUD.");
+		Log.LogInfo("Belmont's Curse Ultrawide 0.7.1 loaded. F5 = auto-advance voiced dialogue, F6 = auto-advance unvoiced dialogue, F7 = big HUD (controller: L3 + R3), F8 = HUD centered / at screen edges, F9 = diagnostic dump. Controller: hold Select, then R3 / Right Shoulder / L3 / Start for the same functions in that order.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;

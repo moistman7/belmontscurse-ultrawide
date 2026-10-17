@@ -99,6 +99,8 @@ public class UwBehaviour : MonoBehaviour
 
 	private static KeyControl _kF6;
 
+	private static KeyControl _kUnvoiced;
+
 	private static KeyControl _kF9;
 
 	private static float _nextForce;
@@ -494,7 +496,13 @@ public class UwBehaviour : MonoBehaviour
 			{
 				Plugin.AutoAdvance.Value = !Plugin.AutoAdvance.Value;
 				Plugin.Instance.Log.LogInfo("Auto-advance voiced dialogue = " + Plugin.AutoAdvance.Value + " (controller shortcut)");
-				Toast.Show("Auto-advance: " + OnOff(Plugin.AutoAdvance.Value));
+				Toast.Show("Auto-advance (voiced): " + OnOff(Plugin.AutoAdvance.Value));
+			}
+			if (current[Plugin.PadAutoAdvanceUnvoiced.Value].wasPressedThisFrame)
+			{
+				Plugin.AutoAdvanceUnvoiced.Value = !Plugin.AutoAdvanceUnvoiced.Value;
+				Plugin.Instance.Log.LogInfo("Auto-advance unvoiced dialogue = " + Plugin.AutoAdvanceUnvoiced.Value + " (controller shortcut)");
+				Toast.Show("Auto-advance (no voice): " + OnOff(Plugin.AutoAdvanceUnvoiced.Value));
 			}
 			if (current[Plugin.PadDump.Value].wasPressedThisFrame)
 			{
@@ -552,12 +560,19 @@ public class UwBehaviour : MonoBehaviour
 			_kF10 = current[Plugin.KeyCenterHud.Value];
 			_kF6 = current[Plugin.KeyBigHud.Value];
 			_kF9 = current[Plugin.KeyAutoAdvance.Value];
+			_kUnvoiced = current[Plugin.KeyAutoAdvanceUnvoiced.Value];
 		}
 		if (_kF9.wasPressedThisFrame)
 		{
 			Plugin.AutoAdvance.Value = !Plugin.AutoAdvance.Value;
 			Plugin.Instance.Log.LogInfo("Auto-advance voiced dialogue = " + Plugin.AutoAdvance.Value);
-			Toast.Show("Auto-advance: " + OnOff(Plugin.AutoAdvance.Value));
+			Toast.Show("Auto-advance (voiced): " + OnOff(Plugin.AutoAdvance.Value));
+		}
+		if (_kUnvoiced.wasPressedThisFrame)
+		{
+			Plugin.AutoAdvanceUnvoiced.Value = !Plugin.AutoAdvanceUnvoiced.Value;
+			Plugin.Instance.Log.LogInfo("Auto-advance unvoiced dialogue = " + Plugin.AutoAdvanceUnvoiced.Value);
+			Toast.Show("Auto-advance (no voice): " + OnOff(Plugin.AutoAdvanceUnvoiced.Value));
 		}
 		if (_kF7.wasPressedThisFrame)
 		{

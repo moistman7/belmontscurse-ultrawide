@@ -66,14 +66,16 @@ the mod, double-click **Uninstall from Steam Deck** in the `steamdeck` folder.
 
 | Key | Action |
 |---|---|
-| F7 | HUD in the centered 16:9 area, or at the screen edges (remembered) |
-| F6 | Bigger HUD on/off (remembered) |
 | F5 | Auto-advance voiced dialogue on/off (remembered) |
-| L3 + R3 (controller) | Bigger HUD on/off, same as F6 (press both stick buttons together) |
-| Select + L3 (controller) | Centered HUD on/off, same as F7 |
-| Select + R3 (controller) | Auto-advance voiced dialogue on/off, same as F5 |
-| Select + Start (controller) | Diagnostic dump, same as F9 |
+| F6 | Auto-advance dialogue without voice on/off (remembered) |
+| F7 | Bigger HUD on/off (remembered) |
+| F8 | HUD in the centered 16:9 area, or at the screen edges (remembered) |
 | F9 | Write a diagnostic dump to the log and to `BepInEx/BelmontsCurseUltrawide_dump.txt` |
+| Select + R3 (controller) | Auto-advance voiced dialogue, same as F5 |
+| Select + Right Shoulder (controller) | Auto-advance dialogue without voice, same as F6 |
+| L3 + R3 (controller) | Bigger HUD on/off, same as F7 (press both stick buttons together) |
+| Select + L3 (controller) | Centered HUD on/off, same as F8 |
+| Select + Start (controller) | Diagnostic dump, same as F9 |
 
 Keyboard keys can be changed in the `[Hotkeys]` section of the settings file, and the controller buttons in
 `[Controller]` (see below). Use a key name such as
@@ -91,12 +93,12 @@ game is closed. The defaults are meant to just work.
 | `Camera.CameraLogicAspect` | `auto` | Recommended. `2.4` lets the camera use 21:9 framing (wider view, but it may misbehave in some rooms). |
 | `UI.CenterMenus` | `true` | Pause menu, journal and popups in the centered 16:9 area. |
 | `UI.FixNarrowScreens` | `true` | On screens narrower than 16:9 (16:10, e.g. the Steam Deck) the UI matches the screen width so menus are not cropped. |
-| `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F7). |
-| `UI.BigHUD` | `false` | Bigger HUD (same as F6). |
+| `UI.CenterHUD` | `false` | HUD in the centered 16:9 area (same as F8). |
+| `UI.BigHUD` | `false` | Bigger HUD (same as F7). |
 | `UI.AutoBigHUD` | `true` | On small screens (height 900 or less, e.g. the Steam Deck) turns the bigger HUD on once, the first time. Your choice is kept afterwards. |
-| `Dialogue.AutoAdvanceVoiced` | `false` | Advances voiced dialogue once the voice and text are done (same as F5). Unvoiced lines still wait for you. |
+| `Dialogue.AutoAdvanceVoiced` | `false` | Advances voiced dialogue once the voice and text are done (same as F5). Lines without voice wait for you unless `AutoAdvanceUnvoiced` is on. |
 | `Dialogue.AutoAdvanceDelay` | `0.4` | Seconds to wait before advancing. |
-| `Dialogue.AutoAdvanceUnvoiced` | `false` | Also advance lines without voice, after a reading-time delay. |
+| `Dialogue.AutoAdvanceUnvoiced` | `false` | Also advance lines without voice, after a reading-time delay (same as F6). |
 | `Dialogue.UnvoicedBaseSeconds` / `Dialogue.UnvoicedSecondsPerCharacter` | `1.0` / `0.05` | Delay for unvoiced lines: base seconds plus this per character. |
 | `UI.ShowMessages` | `true` | Short on-screen message when you toggle auto-advance or the HUD options. |
 | `Input.GamepadShortcuts` | `true` | L3 + R3 toggles the bigger HUD. |
