@@ -66,7 +66,7 @@ Plain zip (mod only), if you don't have BepInEx yet:
    Run the game once; the first launch can sit on a black screen for a few minutes.
 2. Extract this zip into the game folder (the BepInEx/plugins folder gets the mod DLL). You can
    ignore the "steamdeck" folder on Windows.
-3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.7.1 loaded".
+3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.0 loaded".
 
 To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 
@@ -78,6 +78,8 @@ F6    Auto-advance dialogue without voice on / off (remembered)
 F7    Bigger HUD on / off (remembered)
 F8    HUD in the centered 16:9 area, or at the screen edges (remembered)
 F9    Write a diagnostic dump to BepInEx/BelmontsCurseUltrawide_dump.txt
+F10   Open / close dialogue history (PageUp/PageDown browse; Escape closes)
+Arrows / Enter     Navigate and activate history cards and menu actions; R replays voice
 
 Controller:
 Select+R3             Auto-advance voiced dialogue
@@ -85,6 +87,8 @@ Select+Right Shoulder Auto-advance dialogue without voice
 L3+R3                 Bigger HUD (both stick buttons together)
 Select+L3             Centered HUD
 Select+Start          Diagnostic dump
+Select+North          Dialogue history (Y on Xbox / Triangle on PlayStation; D-pad navigates; A/Cross selects; shoulders change pages)
+D-pad / A or Cross   Navigate and activate history cards and menu actions; X/Square replays voice
 (Controller buttons can be changed in the [Controller] section of the settings file.)
 
 Every key can be changed in the [Hotkeys] section of the settings file, using a key name such as
@@ -97,6 +101,9 @@ BepInEx/config/local.belmontscurse.ultrawide.cfg is created on the first launch.
 game closed. The defaults are meant to just work. The useful ones:
 
   UI.CenterHUD            true = HUD in the centered 16:9 area (same as F8)
+  UI.HUDSafeAreaHorizontal / HUDSafeAreaVertical  inset each HUD edge by this percent (0-20, default 0)
+  Dialogue.HistoryEnabled    record dialogue for this session (default true; turning off clears history)
+  Dialogue.HistoryLimit      number of lines to keep (20-1000, default 200)
   UI.BigHUD               true = bigger HUD (same as F7)
   UI.AutoBigHUD           turns the bigger HUD on once on small screens such as the Deck (default true)
   Dialogue.AutoAdvanceVoiced  true = voiced dialogue advances when the voice ends (same as F5, default false)
@@ -108,6 +115,23 @@ game closed. The defaults are meant to just work. The useful ones:
   UI.HUDScale             how much bigger BigHUD makes it (1.1 to 1.6 is sensible)
   UI.FixNarrowScreens     fixes menus on 16:10 screens such as the Steam Deck (default true)
   General.SkipIntros      false keeps the startup logos
+
+History is drawn with the game's own dialogue panel art, font and controller button sprites: one
+card per dialogue line, with the speaker's name and portrait. It stays in the upper part of the
+screen so the game's current dialogue remains readable. The list scrolls smoothly and opens at the
+newest lines; PageUp/PageDown or the shoulder buttons move a screenful.
+History keeps text in memory for this session only. No conversation files are written to disk.
+The highlighted card is selected for replay; lines without voice show "No voice". The "Current"
+button selects the line the game is showing now. Wait until the current live voice finishes before
+replaying. Replay stops when history closes, the selection changes, or another live voice starts.
+Replay shortcuts are remappable under ReplayHistoryVoice in [Hotkeys] and [Controller].
+Auto-advance and the dialogue skip action are suspended while it is open; gameplay and scripted
+cutscenes continue. Close and reopen history to see newer lines.
+
+For safe-area margins, try HUDSafeAreaHorizontal = 3 and HUDSafeAreaVertical = 3 under [UI].
+This insets each edge by 3%. When CenterHUD is on, the horizontal margin sits inside its centered
+16:9 region. Only HUD_Canvas is affected; menus and full-screen dialogue stay in place. Set both
+values to 0 to restore the original positions. Bigger HUD works independently.
   General.StartupFpsCap   60 by default; still getting a black screen at launch? Try 30
   Resolution.Width/Height 0 = your screen's native resolution
 
@@ -140,3 +164,7 @@ CREDITS
 -------
 The all-in-one zip bundles BepInEx 6 (be.788, Unity IL2CPP x64), which is a separate open-source
 project (LGPL-2.1): https://github.com/BepInEx/BepInEx. It is included unmodified.
+
+History menu navigation: arrows / D-pad move the selection. Left enters the header buttons and right
+returns to the cards. Enter / A (Cross) activates. PageUp/PageDown or shoulders move a screenful.
+R / X (Square) replays the selected voice; Esc / B (Circle) closes history.

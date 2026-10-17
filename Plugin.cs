@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace BelmontsCurseUltrawide;
 
-[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.7.1")]
+[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.8.0")]
 public class Plugin : BasePlugin
 {
 	internal static Plugin Instance;
@@ -55,6 +55,15 @@ public class Plugin : BasePlugin
 	internal static ConfigEntry<bool> BigHud;
 
 	internal static ConfigEntry<float> HudScale;
+	internal static ConfigEntry<float> HudSafeHorizontal;
+	internal static ConfigEntry<float> HudSafeVertical;
+	internal static ConfigEntry<bool> HistoryEnabled;
+	internal static ConfigEntry<bool> EnableTaaOption;
+	internal static ConfigEntry<int> HistoryLimit;
+	internal static ConfigEntry<Key> KeyHistory;
+	internal static ConfigEntry<GamepadButton> PadHistory;
+	internal static ConfigEntry<Key> KeyReplay;
+	internal static ConfigEntry<GamepadButton> PadReplay;
 
 	internal static ConfigEntry<string> HudScaleCanvases;
 
@@ -111,6 +120,15 @@ public class Plugin : BasePlugin
 	public override void Load()
 	{
 		Instance = this;
+		EnableTaaOption = Config.Bind("Graphics", "EnableTAAOption", true, "Add Temporal Anti-Aliasing to the Video menu's anti-aliasing choices (the game's own TAA mode).");
+		HistoryEnabled = Config.Bind("Dialogue", "HistoryEnabled", true, "Keep dialogue text in memory for this game session. F10 opens history; nothing is written to disk.");
+		HistoryLimit = Config.Bind("Dialogue", "HistoryLimit", 200, new ConfigDescription("Maximum dialogue lines kept for this session.", new AcceptableValueRange<int>(20, 1000)));
+		KeyHistory = Config.Bind("Hotkeys", "DialogueHistory", Key.F10, "Open/close dialogue history. PageUp/PageDown browse; Escape closes.");
+		PadHistory = Config.Bind("Controller", "DialogueHistory", GamepadButton.North, "Modifier + this button opens/closes dialogue history. D-pad navigates the whole history menu; A/Cross selects, shoulders change pages.");
+		KeyReplay = Config.Bind("Hotkeys", "ReplayHistoryVoice", Key.R, "Replay/stop the selected history line's voice while history is open. Arrows navigate the history menu; Enter selects.");
+		PadReplay = Config.Bind("Controller", "ReplayHistoryVoice", GamepadButton.West, "Replay/stop selected history voice (no modifier) while history is open. D-pad navigates the history menu; A/Cross selects; shoulders change pages.");
+		HudSafeHorizontal = Config.Bind("UI", "HUDSafeAreaHorizontal", 0f, new ConfigDescription("Inset each horizontal edge of HUD_Canvas by this percent of the available HUD width. Applied inside the centered 16:9 area when CenterHUD is on. 0 = original positions.", new AcceptableValueRange<float>(0f, 20f)));
+		HudSafeVertical = Config.Bind("UI", "HUDSafeAreaVertical", 0f, new ConfigDescription("Inset each vertical edge of HUD_Canvas by this percent of screen height. 0 = original positions. Does not move menus or full-screen dialogue.", new AcceptableValueRange<float>(0f, 20f)));
 		Enabled = Config.Bind("General", "EnableFix", defaultValue: true, "Apply the ultrawide fix.");
 		SkipIntros = Config.Bind("General", "SkipIntros", defaultValue: true, "Skip the company logos at startup (first-launch settings screens like brightness and language are still shown).");
 		StartupFpsCap = Config.Bind("General", "StartupFpsCap", 60, "Limit the frame rate to this while the game starts up (logos, loading, until the title screen), which avoids the occasional black screen at startup. After that your in-game frame rate and V-Sync settings are put back. 0 = off.");
@@ -196,6 +214,8 @@ public class Plugin : BasePlugin
 			Log.LogWarning("Could not tidy the config file: " + ex.Message);
 		}
 		ClassInjector.RegisterTypeInIl2Cpp<UwBehaviour>();
+		DialogueHistory.Init();
+		AntiAliasing.Init();
 		AddComponent<UwBehaviour>();
 		UwBehaviour.Init();
 		try
@@ -206,7 +226,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.7.1 loaded. F5 = auto-advance voiced dialogue, F6 = auto-advance unvoiced dialogue, F7 = big HUD (controller: L3 + R3), F8 = HUD centered / at screen edges, F9 = diagnostic dump. Controller: hold Select, then R3 / Right Shoulder / L3 / Start for the same functions in that order.");
+		Log.LogInfo("Belmont's Curse Ultrawide 0.8.0 loaded. F5 = auto-advance voiced dialogue, F6 = auto-advance unvoiced dialogue, F7 = big HUD (controller: L3 + R3), F8 = HUD centered / at screen edges, F9 = diagnostic dump, F10 = dialogue history (controller: Select + North). Controller: hold Select, then R3 / Right Shoulder / L3 / Start for the other functions in that order.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;

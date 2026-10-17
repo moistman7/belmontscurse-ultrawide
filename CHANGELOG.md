@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0 (test build)
+
+- **Dialogue history** (F10, or Select + North). Records each dialogue line for the session with the speaker's name, portrait and voice. Drawn with the game's own panel art, font and controller button sprites. Smooth scrolling, opens at the newest line; PageUp/PageDown or the shoulders move a screenful. A header lists Select / Older / Newer / Voice / Close; a "Current" button under the cards selects the line on screen now. Auto-advance and dialogue skipping pause while it is open. `Dialogue.HistoryEnabled`, `Dialogue.HistoryLimit` (default 200); nothing is written to disk.
+- **Voice replay** for recorded lines: R, or X/Square. Uses its own audio player and the game's voice data; stops when you move, close, or a live voice starts. Remappable (`ReplayHistoryVoice`).
+- **Controller glyphs**: prompts use the game's real Xbox / PlayStation / Switch button sprites, with key names on keyboard.
+- **HUD safe area**: `UI.HUDSafeAreaHorizontal` and `UI.HUDSafeAreaVertical` inset the HUD by 0-20% per edge (default 0).
+- **TAA option** in the Video menu's anti-aliasing choices (`Graphics.EnableTAAOption`). Untested in game; please report how it behaves.
+- **Auto-advance** fix: it could stop working after the dialogue box alternated between left and right portraits. It now picks up the active line as it starts.
+- Toast messages use the game's font and panel. Small performance trims (fewer scene scans, less per-frame text work).
+- Tested on 3440x1440 (21:9) Windows only. Steam Deck, 16:10 and 32:9 are untested.
+
 ## 0.7.1
 
 - On-screen message when you toggle auto-advance, the bigger HUD or the centered HUD (and when a diagnostic dump is written). Setting: `UI.ShowMessages`.

@@ -21,8 +21,19 @@ internal static class VoiceAdvance
 
 	private static float _readyAt;
 
+	// Called when the game starts a line, so the reader that is actually active is used at once (left/right boxes alternate).
+	internal static void Track(CutsceneLineReader reader)
+	{
+		if (reader != null) { _reader = reader; _nextSearch = 0f; }
+	}
+
 	internal static void Tick()
 	{
+		if (DialogueHistory.IsOpen)
+		{
+			_readyAt = 0f;
+			return;
+		}
 		bool voiced = Plugin.AutoAdvance.Value;
 		bool unvoiced = Plugin.AutoAdvanceUnvoiced.Value;
 		if (!voiced && !unvoiced)
@@ -31,9 +42,9 @@ internal static class VoiceAdvance
 			return;
 		}
 		float now = Time.unscaledTime;
-		if ((_reader == null || !_reader.isActiveAndEnabled) && now >= _nextSearch)
+		if ((_reader == null || !_reader.isActiveAndEnabled || !_reader._isActive) && now >= _nextSearch)
 		{
-			_nextSearch = now + 0.25f;
+			_nextSearch = now + 0.1f;
 			_reader = FindActiveReader();
 		}
 		if (_reader == null || !_reader.isActiveAndEnabled || !_reader._isActive)
@@ -113,7 +124,7 @@ internal static class VoiceAdvance
 		_readyAt = 0f;
 	}
 
-	private static bool AnyVoiceActive()
+	internal static bool AnyVoiceActive()
 	{
 		var players = VoiceOverManager._voiceOverPlayers;
 		if (players == null)

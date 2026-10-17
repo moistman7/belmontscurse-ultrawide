@@ -380,6 +380,7 @@ public class UwBehaviour : MonoBehaviour
 		{
 			_wide = Screen.height > 0 && (float)Screen.width / (float)Screen.height > 1.7877778f;
 			Guard("keys", KeysAction);
+			Guard("dialogue history", DialogueHistory.Tick);
 			Guard("resolution", ResAction);
 			Guard("camera", CamAction);
 			Guard("zone camera size", SizeAction);
@@ -485,6 +486,8 @@ public class UwBehaviour : MonoBehaviour
 		}
 		if (current[Plugin.PadModifier.Value].isPressed)
 		{
+			if (current[Plugin.PadHistory.Value].wasPressedThisFrame)
+				DialogueHistory.Toggle();
 			// Modifier held: each feature has its own button.
 			if (current[Plugin.PadCenterHud.Value].wasPressedThisFrame)
 			{
@@ -554,6 +557,8 @@ public class UwBehaviour : MonoBehaviour
 			return;
 		}
 		// Re-resolved every frame so edits to the key settings apply without a restart.
+		if (current[Plugin.KeyHistory.Value].wasPressedThisFrame)
+			DialogueHistory.Toggle();
 		if (true)
 		{
 			_kbPtr = current.Pointer;
@@ -1501,7 +1506,7 @@ public class UwBehaviour : MonoBehaviour
 					OrigRef.Remove(scaler2.Id);
 				}
 			}
-			if (scaler2.IsMenu || scaler2.IsHud)
+			if (scaler2.IsMenu || scaler2.IsHud || scaler2.Name == "HUD_Canvas")
 			{
 				bool flag = Plugin.On && (scaler2.IsMenu ? Plugin.CenterMenus.Value : Plugin.CenterHud.Value);
 				CenterCanvas(scaler2, flag, fullPass);
@@ -1570,14 +1575,17 @@ public class UwBehaviour : MonoBehaviour
 			return;
 		}
 		float num = rect.width / rect.height;
-		if (!on || !(num > 1.7877778f))
+		float horizontal = Plugin.On && e.Name == "HUD_Canvas" ? Plugin.HudSafeHorizontal.Value / 100f : 0f;
+		float vertical = Plugin.On && e.Name == "HUD_Canvas" ? Plugin.HudSafeVertical.Value / 100f : 0f;
+		float centered = on && num > 1.7877778f ? (1f - Aspect16x9 / num) * 0.5f : 0f;
+		if (centered == 0f && horizontal == 0f && vertical == 0f)
 		{
 			RestoreAll(UiOrig, e.Id);
 			RestoreAll(BackdropOrig, e.Id);
 			e.Extended.Clear();
 			return;
 		}
-		float num2 = (1f - 1.7777778f / num) * 0.5f;
+		float num2 = centered + horizontal * (1f - 2f * centered);
 		float k = num2 / (1f - 2f * num2);
 		int childCount = root.childCount;
 		for (int i = 0; i < childCount; i++)
@@ -1604,6 +1612,8 @@ public class UwBehaviour : MonoBehaviour
 					};
 				}
 				SetAnchorsX(rectTransform, num2 + anchorState.Min.x * (1f - 2f * num2), num2 + anchorState.Max.x * (1f - 2f * num2), anchorState);
+				rectTransform.anchorMin = new Vector2(rectTransform.anchorMin.x, vertical + anchorState.Min.y * (1f - 2f * vertical));
+				rectTransform.anchorMax = new Vector2(rectTransform.anchorMax.x, vertical + anchorState.Max.y * (1f - 2f * vertical));
 				if (e.Extended.Add(instanceID) || (activeInHierarchy && (!value | fullPass)))
 				{
 					ExtendBackdrops(rectTransform, k, e.Id);
@@ -2015,7 +2025,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.7.1 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.0 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2035,6 +2045,9 @@ public class UwBehaviour : MonoBehaviour
 			handler.AppendLiteral(" centerHud=");
 			handler.AppendFormatted(Plugin.CenterHud.Value);
 			stringBuilder3.AppendLine(ref handler);
+			stringBuilder.AppendLine("HUD safe area: horizontal=" + Plugin.HudSafeHorizontal.Value + "% vertical=" + Plugin.HudSafeVertical.Value + "%");
+			stringBuilder.AppendLine("Dialogue history: hooks=" + DialogueHistory.Available + " enabled=" + Plugin.HistoryEnabled.Value + " lines=" + DialogueHistory.Count + " open=" + DialogueHistory.IsOpen);
+			stringBuilder.AppendLine("History voices: recorded=" + DialogueHistory.VoicedCount + " replaying=" + HistoryVoice.Playing);
 			stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder4 = stringBuilder2;
 			handler = new StringBuilder.AppendInterpolatedStringHandler(61, 4, stringBuilder2);

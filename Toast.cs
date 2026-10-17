@@ -1,5 +1,5 @@
 using System;
-using Il2CppInterop.Runtime;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,7 +14,8 @@ internal static class Toast
 
 	private static GameObject _root;
 
-	private static Text _text;
+	private static TextMeshProUGUI _text;
+	private static Image _background;
 
 	private static CanvasGroup _group;
 
@@ -34,6 +35,8 @@ internal static class Toast
 			{
 				Build();
 			}
+			GameUiFont.Apply(_text);
+			ApplyGamePanel();
 			_text.text = message;
 			_group.alpha = 1f;
 			_root.SetActive(true);
@@ -81,44 +84,42 @@ internal static class Toast
 
 		GameObject panel = new GameObject("Panel");
 		panel.transform.SetParent(_root.transform, false);
-		Image background = panel.AddComponent<Image>();
-		background.color = new Color(0f, 0f, 0f, 0.7f);
-		background.raycastTarget = false;
+		_background = panel.AddComponent<Image>();
+		_background.raycastTarget = false;
+		_background.preserveAspect = true;
 		RectTransform panelRect = panel.GetComponent<RectTransform>();
 		panelRect.anchorMin = new Vector2(0.5f, 1f);
 		panelRect.anchorMax = new Vector2(0.5f, 1f);
 		panelRect.pivot = new Vector2(0.5f, 1f);
-		panelRect.anchoredPosition = new Vector2(0f, -40f);
-		panelRect.sizeDelta = new Vector2(560f, 64f);
+		panelRect.anchoredPosition = new Vector2(0f, -20f);
+		panelRect.sizeDelta = new Vector2(600f, 160f);
 
 		GameObject label = new GameObject("Text");
 		label.transform.SetParent(panel.transform, false);
-		_text = label.AddComponent<Text>();
-		_text.font = LoadFont();
+		_text = label.AddComponent<TextMeshProUGUI>();
+		GameUiFont.Apply(_text);
 		_text.fontSize = 30;
-		_text.alignment = TextAnchor.MiddleCenter;
-		_text.color = new Color(1f, 0.9f, 0.6f, 1f);
+		_text.enableAutoSizing = true;
+		_text.fontSizeMin = 20;
+		_text.fontSizeMax = 30;
+		_text.richText = false;
+		_text.alignment = TextAlignmentOptions.Center;
 		_text.raycastTarget = false;
 		RectTransform labelRect = label.GetComponent<RectTransform>();
-		labelRect.anchorMin = Vector2.zero;
-		labelRect.anchorMax = Vector2.one;
-		labelRect.offsetMin = Vector2.zero;
-		labelRect.offsetMax = Vector2.zero;
+		labelRect.anchorMin = new Vector2(0.14f, 0.2f);
+		labelRect.anchorMax = new Vector2(0.86f, 0.8f);
+		labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
 	}
 
-	private static Font LoadFont()
+	private static void ApplyGamePanel()
 	{
-		try
-		{
-			Font builtin = Resources.GetBuiltinResource(Il2CppType.Of<Font>(), "LegacyRuntime.ttf")?.TryCast<Font>();
-			if (builtin != null)
-			{
-				return builtin;
-			}
-		}
-		catch (Exception)
-		{
-		}
-		return Font.CreateDynamicFontFromOSFont("Arial", 30);
+		var source = GameUiFont.FindDialoguePanel();
+		_background.sprite = GameUiSprites.Trim(source != null ? source.sprite : null);
+		_background.enabled = _background.sprite != null;
+		_background.type = Image.Type.Simple;
+		_background.color = Color.white;
+		float ratio = _background.sprite != null && _background.sprite.rect.height > 0
+			? _background.sprite.rect.width / _background.sprite.rect.height : 3.75f;
+		_background.rectTransform.sizeDelta = new Vector2(600, 600 / ratio);
 	}
 }
