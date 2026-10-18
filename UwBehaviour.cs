@@ -113,8 +113,12 @@ public class UwBehaviour : MonoBehaviour
 	private static float _nextCamSearch;
 
 	private static Camera _cam;
+	private static CinemachineBrain _camBrain;
 
 	private static bool _camSpoofed;
+	private static Camera _menuViewportCamera;
+	private static Rect _menuOriginalRect;
+	private static bool _menuViewportApplied;
 
 	private static bool _projectionErrorLogged;
 
@@ -195,6 +199,8 @@ public class UwBehaviour : MonoBehaviour
 		AddJob("ui", 0.25f, UiJob);
 		AddJob("scan cutscene", 5f, ScanCutscene);
 		AddJob("letterbox", 0.2f, LetterboxJob);
+		AddJob("scan save-room masks", 2f, SaveRoomMasks.Scan);
+		AddJob("save-room masks", 0.2f, SaveRoomMasks.Apply);
 		AddJob("scan video", 5f, ScanVideo);
 		AddJob("video", 0.25f, VideoJob);
 		AddJob("scan camera size", 2f, ScanScreenSizes);
@@ -760,6 +766,7 @@ public class UwBehaviour : MonoBehaviour
 			}
 			_camSpoofed = false;
 			_cam = camera;
+			_camBrain = camera == null ? null : camera.GetComponent<CinemachineBrain>();
 		}
 		return _cam;
 	}
@@ -776,6 +783,7 @@ public class UwBehaviour : MonoBehaviour
 	private static void CameraLogic()
 	{
 		Camera camera = GameplayCamera();
+		MainMenuViewport(camera);
 		if (camera == null)
 		{
 			return;
@@ -813,6 +821,35 @@ public class UwBehaviour : MonoBehaviour
 			_camSpoofed = false;
 			Plugin.Instance.Log.LogInfo("Camera logic aspect limit off");
 		}
+	}
+
+	private static void MainMenuViewport(Camera camera)
+	{
+		var brain = _camBrain;
+		var live = brain == null ? null : brain.ActiveVirtualCamera;
+		bool apply = Plugin.On && Screen.height > 0 && (float)Screen.width / Screen.height > Aspect16x9 + 0.01f
+			&& live != null && live.Name == "CamMainMenu";
+		if (_menuViewportApplied && (!apply || camera == null || _menuViewportCamera == null || camera.Pointer != _menuViewportCamera.Pointer))
+		{
+			if (_menuViewportCamera != null) _menuViewportCamera.rect = _menuOriginalRect;
+			_menuViewportApplied = false;
+			_menuViewportCamera = null;
+		}
+		if (!apply)
+		{
+			MainMenuBars.Set(false);
+			return;
+		}
+		if (!_menuViewportApplied)
+		{
+			_menuViewportCamera = camera;
+			_menuOriginalRect = camera.rect;
+			_menuViewportApplied = true;
+		}
+		float width = Aspect16x9 / ((float)Screen.width / Screen.height);
+		var viewport = new Rect((1f - width) * 0.5f, 0f, width, 1f);
+		if (camera.rect != viewport) camera.rect = viewport;
+		MainMenuBars.Set(true, width);
 	}
 
 	private static void UpdateProjection()
@@ -1008,6 +1045,7 @@ public class UwBehaviour : MonoBehaviour
 		}
 		foreach (Camera allCamera in Camera.allCameras)
 		{
+			if (_menuViewportApplied && _menuViewportCamera != null && allCamera != null && allCamera.Pointer == _menuViewportCamera.Pointer) continue;
 			if (!(allCamera == null) && !(allCamera.targetTexture != null))
 			{
 				Rect rect = allCamera.rect;
@@ -2106,7 +2144,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.7 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.8 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2126,6 +2164,9 @@ public class UwBehaviour : MonoBehaviour
 			handler.AppendLiteral(" centerHud=");
 			handler.AppendFormatted(Plugin.CenterHud.Value);
 			stringBuilder3.AppendLine(ref handler);
+			SaveRoomMasks.Dump(stringBuilder);
+			stringBuilder.AppendLine("Main-menu 16:9 viewport=" + _menuViewportApplied);
+			stringBuilder.AppendLine("Main-menu pure-black bars=" + MainMenuBars.Visible);
 			stringBuilder.AppendLine("HUD safe area: horizontal=" + Plugin.HudSafeHorizontal.Value + "% vertical=" + Plugin.HudSafeVertical.Value + "%");
 			stringBuilder.AppendLine("Dialogue history: hooks=" + DialogueHistory.Available + " enabled=" + Plugin.HistoryEnabled.Value + " lines=" + DialogueHistory.Count + " open=" + DialogueHistory.IsOpen);
 			stringBuilder.AppendLine("History voices: recorded=" + DialogueHistory.VoicedCount + " replaying=" + HistoryVoice.Playing);

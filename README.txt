@@ -6,7 +6,8 @@ of your saves.
 
 WHAT IT DOES
 ------------
-- Makes the game fill ultrawide monitors (21:9, 32:9 and wider) with no side bars.
+- Makes gameplay fill ultrawide monitors (21:9, 32:9 and wider), including save rooms.
+- Keeps main-menu artwork centered at 16:9 with pure-black side bars.
 - Keeps the camera framing rooms and bosses the way it does on 16:9.
 - Scales menus and the HUD correctly, and removes cutscene black bars.
 - Fixes menus that are zoomed in / cut off on 16:10 screens (the Steam Deck's own screen).
@@ -66,7 +67,7 @@ Plain zip (mod only), if you don't have BepInEx yet:
    Run the game once; the first launch can sit on a black screen for a few minutes.
 2. Extract this zip into the game folder (the BepInEx/plugins folder gets the mod DLL). You can
    ignore the "steamdeck" folder on Windows.
-3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.7 loaded".
+3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.8 loaded".
 
 To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 

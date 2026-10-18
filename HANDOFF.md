@@ -1,14 +1,19 @@
 # Belmont's Curse ultrawide plugin: handoff
 
-Updated 2026-10-17. A BepInEx 6 (be.788) IL2CPP plugin for *Castlevania: Belmont's Curse* (Unity 2022.3.62f2, game 1.1.3) that makes the game
+Updated 2026-10-18. A BepInEx 6 (be.788) IL2CPP plugin for *Castlevania: Belmont's Curse* (Unity 2022.3.62f2, game 1.1.3) that makes the game
 work on ultrawide and non-16:9 screens, plus quality-of-life features (dialogue history, voice replay, auto-advance, mod settings menu).
 Repo: https://github.com/moistman7/belmontscurse-ultrawide. Separate from the Spirit of the Samurai plugin.
 
 ## Current state
 
-- **v0.8.7 is published** and marked latest (plain + AllInOne zips, SHA-256 files):
-  https://github.com/moistman7/belmontscurse-ultrawide/releases/tag/v0.8.7. Release commit `614b9c4` on `main`. Build clean, 28 tests pass.
-- Tested on Windows, 3440x1440 (21:9), Xbox controller. 0.8.7 itself has **not been played** on 32:9.
+- **v0.8.8**: save-room opaque side-mask removal, centered 16:9 main-menu artwork with pure-black side bars, and F9 feature-state diagnostics. Plain + AllInOne ZIPs and SHA-256 files are the release assets.
+- User visually confirmed the save room and main menu on Windows at 3440x1440. New changes are unverified at 32:9 and on Steam Deck.
+- New files: `SaveRoomMasks.cs` caches exact-name, parent and material matches; disables only the black save-room mesh, restores owned changes, and excludes the active main menu. `MainMenuBars.cs` draws two non-interactive opaque UI bars above the game's tint but below mod windows/toasts.
+- `UwBehaviour.MainMenuViewport` limits only live camera `CamMainMenu` to a centered 16:9 viewport. Existing menu UI scaling and gameplay camera aspect logic remain intact. It restores the original viewport on leaving the menu. `MiscJob` must not expand this viewport.
+- Earlier attempts to exempt the main-menu camera and StartMenuView from all existing fixes worsened the menu; those changes were reverted. Do not repeat that broad exclusion.
+- Frametime review before release: latest gameplay/game-menu sample n=2048, average 6.377 ms, p99 10.074 ms, max 283.348 ms; plugin Update average 0.301 ms. A 21.2 ms dialogue-history maximum may include startup prewarming; no repeatable cause established. These are Unity Update intervals, not GPU timings. No measured performance gain is claimed.
+- Small optimizations: cache the main camera's CinemachineBrain, write the menu viewport only when changed, and avoid redundant mask visibility writes. Release build clean; 28 tests pass. Local validation captures are in ignored `dist/validation-0.8.8`.
+- The 0.8.7 camera follow fix still needs 32:9 verification; preserve the guidance below.
 
 ### What 0.8.7 changed (camera)
 

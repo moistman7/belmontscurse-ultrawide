@@ -9,7 +9,8 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 
 ## What it does
 
-- Uses your monitor's full resolution and removes the side bars; the picture fills the screen.
+- Uses your monitor's full resolution for gameplay and removes the save-room side masks.
+- Preserves the main-menu artwork in a centered 16:9 viewport with pure-black side bars.
 - Keeps the camera following and framing like it does on 16:9: no camera stopping, swinging off
   when you enter an area, or zoomed-in boss fights.
 - Scales the UI correctly. The pause menu, journal and map stay in a centered 16:9 area (their
@@ -35,7 +36,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.7 loaded`.
+   `Belmont's Curse Ultrawide 0.8.8 loaded`.
 
 To uninstall, delete the DLL.
 

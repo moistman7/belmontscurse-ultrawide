@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.8
+
+- Remove the opaque save-room side-mask meshes on ultrawide screens. Decorative columns and statues remain visible; masks are restored when the mod is disabled or the screen returns to 16:9.
+- Preserve the side masks while the main menu is active, including when it reuses save-room scenery.
+- Keep the existing main-menu UI layout and constrain CamMainMenu to a centered 16:9 viewport on ultrawide screens. Restore the previous viewport when returning to gameplay.
+- Draw opaque black side bars over the main-menu overlay to keep the margins consistently black. The bars do not intercept input and disappear during gameplay.
+- Cache the main camera's Cinemachine component and avoid redundant viewport and mask visibility writes. No measured performance improvement is claimed.
+- F9 reports save-room mask counts, menu viewport and black-bar state. Visual changes confirmed on Windows at 3440x1440; other aspect ratios remain unverified for this release.
+
 ## 0.8.7
 
 - The camera aspect limit is now always on (16:9 for the game's camera logic on wider screens) and the "Camera aspect limit" switch and `LimitCameraLogicAspect` setting are removed. `CameraLogicAspect` still controls the cap.
