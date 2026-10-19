@@ -30,6 +30,10 @@ public class UwBehaviour : MonoBehaviour
 
 	private static readonly System.Collections.Generic.List<VideoPlayer> VideoPlayers = new System.Collections.Generic.List<VideoPlayer>();
 
+	private static Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<Camera> CameraBuffer;
+
+	private static int CameraBufferCount;
+
 	private static readonly System.Collections.Generic.Dictionary<int, RawImage> VideoImages = new System.Collections.Generic.Dictionary<int, RawImage>();
 
 	private static readonly System.Collections.Generic.Dictionary<int, float> VideoImageNextSearch = new System.Collections.Generic.Dictionary<int, float>();
@@ -1043,8 +1047,10 @@ public class UwBehaviour : MonoBehaviour
 		{
 			return;
 		}
-		foreach (Camera allCamera in Camera.allCameras)
+		int cameraCount = FillCameraBuffer();
+		for (int i = 0; i < cameraCount; i++)
 		{
+			Camera allCamera = CameraBuffer[i];
 			if (_menuViewportApplied && _menuViewportCamera != null && allCamera != null && allCamera.Pointer == _menuViewportCamera.Pointer) continue;
 			if (!(allCamera == null) && !(allCamera.targetTexture != null))
 			{
@@ -1336,6 +1342,23 @@ public class UwBehaviour : MonoBehaviour
 		return null;
 	}
 
+	// Keep enumeration current without allocating Camera.allCameras on every poll.
+	// Both callers run synchronously on the Unity main thread.
+	private static int FillCameraBuffer()
+	{
+		int needed = Camera.allCamerasCount;
+		if (CameraBuffer == null || CameraBuffer.Length < needed)
+		{
+			CameraBuffer = new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<Camera>(Math.Max(4, needed));
+			CameraBufferCount = 0;
+		}
+		int count = needed == 0 ? 0 : Camera.GetAllCameras(CameraBuffer);
+		// Release references to cameras that disappeared since the previous poll.
+		for (int i = count; i < CameraBufferCount; i++) CameraBuffer[i] = null;
+		CameraBufferCount = count;
+		return count;
+	}
+
 	private static void RenderTextureCameraJob()
 	{
 		if (!Plugin.On || (!Plugin.MenusOn && !Plugin.CenterHud.Value) || !_wide)
@@ -1354,8 +1377,10 @@ public class UwBehaviour : MonoBehaviour
 			RtAspectSet.Clear();
 			return;
 		}
-		foreach (Camera allCamera in Camera.allCameras)
+		int cameraCount = FillCameraBuffer();
+		for (int i = 0; i < cameraCount; i++)
 		{
+			Camera allCamera = CameraBuffer[i];
 			if (allCamera == null)
 			{
 				continue;
@@ -1827,12 +1852,19 @@ public class UwBehaviour : MonoBehaviour
 			{
 				continue;
 			}
-			foreach (Graphic componentsInChild in item.GetComponentsInChildren<Graphic>(includeInactive: true))
+			CacheLetterboxGraphics(item);
+			// The controller can reference a view outside its own transform hierarchy.
+			if (item._uiView != null) CacheLetterboxGraphics(item._uiView);
+		}
+	}
+
+	private static void CacheLetterboxGraphics(Component root)
+	{
+		foreach (Graphic componentsInChild in root.GetComponentsInChildren<Graphic>(includeInactive: true))
+		{
+			if (componentsInChild != null && !LetterboxGraphics.Contains(componentsInChild))
 			{
-				if (componentsInChild != null)
-				{
-					LetterboxGraphics.Add(componentsInChild);
-				}
+				LetterboxGraphics.Add(componentsInChild);
 			}
 		}
 	}
@@ -2144,7 +2176,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.8 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.9 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2165,6 +2197,14 @@ public class UwBehaviour : MonoBehaviour
 			handler.AppendFormatted(Plugin.CenterHud.Value);
 			stringBuilder3.AppendLine(ref handler);
 			SaveRoomMasks.Dump(stringBuilder);
+			stringBuilder.AppendLine("Cutscene letterbox: enabled=" + Plugin.RemoveLetterbox.Value + " cached=" + LetterboxGraphics.Count);
+			foreach (var graphic in LetterboxGraphics)
+			{
+				if (graphic == null) continue;
+				stringBuilder.AppendLine("  letterbox '" + graphic.name + "' parent='" + (graphic.transform.parent != null ? graphic.transform.parent.name : "")
+					+ "' active=" + graphic.gameObject.activeInHierarchy + " enabled=" + graphic.enabled + " owned=" + Hidden.Contains(graphic.GetInstanceID())
+					+ " size=" + graphic.rectTransform.rect.size + " color=" + graphic.color);
+			}
 			stringBuilder.AppendLine("Main-menu 16:9 viewport=" + _menuViewportApplied);
 			stringBuilder.AppendLine("Main-menu pure-black bars=" + MainMenuBars.Visible);
 			stringBuilder.AppendLine("HUD safe area: horizontal=" + Plugin.HudSafeHorizontal.Value + "% vertical=" + Plugin.HudSafeVertical.Value + "%");

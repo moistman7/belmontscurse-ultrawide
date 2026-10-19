@@ -1,10 +1,12 @@
 # Belmont's Curse ultrawide plugin: handoff
 
-Updated 2026-10-18. A BepInEx 6 (be.788) IL2CPP plugin for *Castlevania: Belmont's Curse* (Unity 2022.3.62f2, game 1.1.3) that makes the game
+Updated 2026-10-19. A BepInEx 6 (be.788) IL2CPP plugin for *Castlevania: Belmont's Curse* (Unity 2022.3.62f2, game 1.1.3) that makes the game
 work on ultrawide and non-16:9 screens, plus quality-of-life features (dialogue history, voice replay, auto-advance, mod settings menu).
 Repo: https://github.com/moistman7/belmontscurse-ultrawide. Separate from the Spirit of the Samurai plugin.
 
 ## Current state
+
+- **v0.8.9 frametime review (2026-10-19):** camera polling now reuses an IL2CPP camera array via `GetAllCameras` in the 0.1-second render-camera job and 1-second misc job, growing only when necessary and clearing stale tail references. Auto-advance fallback reader lookup uses unsorted `FindObjectsByType` instead of sorted `FindObjectsOfType`; inactive readers remain excluded. Polling intervals and main-menu viewport exemption are preserved. Release build clean, 28 existing logic tests pass (these do not exercise Unity camera APIs). No new runtime timing capture; no measured frametime improvement claimed. Previous capture: plugin Update average 0.301 ms; scan jobs can peak around 3 ms. The 283 ms frame cannot be attributed to the mod from this data.
 
 - **v0.8.8**: save-room opaque side-mask removal, centered 16:9 main-menu artwork with pure-black side bars, and F9 feature-state diagnostics. Plain + AllInOne ZIPs and SHA-256 files are the release assets.
 - User visually confirmed the save room and main menu on Windows at 3440x1440. New changes are unverified at 32:9 and on Steam Deck.
@@ -89,6 +91,8 @@ Repo: https://github.com/moistman7/belmontscurse-ultrawide. Separate from the Sp
   (door light shafts and fullscreen quads need it). Width-based `CameraScreenSize` zooms are converted to height (`FixWidthBasedZoom`).
 
 ## Open items
+
+0. **Bad-ending final-boss in-game cutscene bars (reported 2026-10-19).** Reporter suspects left/right bars; user cannot replay because they have not reached that scene. No affected-scene dump is available. The v0.8.9 DLL also scans `CutsceneLetterBoxing._uiView` (the view can be outside the controller hierarchy), deduplicates graphics, and includes per-graphic letterbox diagnostics in F9. Release build/deploy succeeded and installed DLL hash matches. This is a candidate coverage fix, NOT a confirmed fix for this report. Existing `MiscJob` already expands full-height camera viewports, but excludes render textures and the owned main-menu viewport. Do not remove arbitrary black graphics/meshes without scene evidence. Need a screenshot or F9 dump from someone who can reach the cutscene to distinguish a viewport, UI mask, scene geometry, or video.
 
 1. **Verify the 0.8.7 camera fix on 32:9** (pool secret room and other event cameras). If it still stops, use the F9 `physical=` / `tracked=` data (see above).
 2. **Real dialogue capture and voice replay.** Every inspected dump had `lines=0`; `lines=1` after "History opened" is the placeholder. Trigger a real cutscene,

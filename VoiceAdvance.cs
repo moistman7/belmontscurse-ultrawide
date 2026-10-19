@@ -144,7 +144,7 @@ internal static class VoiceAdvance
 
 	private static CutsceneLineReader FindActiveReader()
 	{
-		var readers = UnityEngine.Object.FindObjectsOfType<CutsceneLineReader>();
+		var readers = UnityEngine.Object.FindObjectsByType<CutsceneLineReader>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 		for (int i = 0; i < readers.Length; i++)
 		{
 			CutsceneLineReader reader = readers[i];

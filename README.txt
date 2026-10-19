@@ -4,6 +4,12 @@ CASTLEVANIA: BELMONT'S CURSE - ULTRAWIDE & STEAM DECK FIX
 An unofficial community mod. It contains no game files. Use at your own risk and keep a backup
 of your saves.
 
+VERSION 0.8.9
+-------------
+Expanded cutscene-bar detection and reduced camera allocations/dialogue-search sorting.
+The reported bad-ending final-boss side bars remain unverified. No measured frametime
+improvement is claimed. A screenshot or F9 dump during that scene is needed.
+
 WHAT IT DOES
 ------------
 - Makes gameplay fill ultrawide monitors (21:9, 32:9 and wider), including save rooms.
@@ -67,7 +73,7 @@ Plain zip (mod only), if you don't have BepInEx yet:
    Run the game once; the first launch can sit on a black screen for a few minutes.
 2. Extract this zip into the game folder (the BepInEx/plugins folder gets the mod DLL). You can
    ignore the "steamdeck" folder on Windows.
-3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.8 loaded".
+3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.9 loaded".
 
 To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 

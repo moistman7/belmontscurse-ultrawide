@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.9
+
+- Scan the cutscene controller's referenced UI view as well as its own hierarchy when removing cinematic bars. Deduplicate graphics shared by both paths.
+- Add per-graphic cutscene-bar diagnostics to F9, including visibility, size, color and whether the mod disabled the graphic.
+- Reuse the camera enumeration buffer in recurring camera jobs and remove unnecessary sorting from the auto-advance reader search. Polling intervals and the main-menu viewport exemption are unchanged.
+- Release build passes with zero warnings/errors; all 28 existing logic tests pass. These tests do not exercise Unity camera APIs. No measured frametime improvement is claimed.
+- The reported bad-ending final-boss cutscene bars (suspected left/right) remain unverified: no affected-scene screenshot or diagnostic dump is available. The cutscene change is a candidate fix for that report.
+
 ## 0.8.8
 
 - Remove the opaque save-room side-mask meshes on ultrawide screens. Decorative columns and statues remain visible; masks are restored when the mod is disabled or the screen returns to 16:9.
