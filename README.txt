@@ -4,9 +4,10 @@ CASTLEVANIA: BELMONT'S CURSE - ULTRAWIDE & STEAM DECK FIX
 An unofficial community mod. It contains no game files. Use at your own risk and keep a backup
 of your saves.
 
-VERSION 0.8.10 (TEST BUILD)
-Loading-camera black side bars are a candidate fix for the post-ending art screen.
-This scene still needs visual verification. Existing room/menu fixes are retained.
+VERSION 0.8.11
+Screens that left Unity's default blue showing at the sides (such as the post-credits
+screen) now show black instead. Includes the 0.8.10 loading-camera side bars and
+Escape fix. These scenes still need visual verification.
 -------------
 Expanded cutscene-bar detection and reduced camera allocations/dialogue-search sorting.
 The reported bad-ending final-boss side bars remain unverified. No measured frametime
@@ -75,7 +76,7 @@ Plain zip (mod only), if you don't have BepInEx yet:
    Run the game once; the first launch can sit on a black screen for a few minutes.
 2. Extract this zip into the game folder (the BepInEx/plugins folder gets the mod DLL). You can
    ignore the "steamdeck" folder on Windows.
-3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.10 loaded".
+3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.11 loaded".
 
 To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 

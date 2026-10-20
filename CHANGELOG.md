@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.11
+
+- Turn Unity's untouched default camera background (49, 77, 121) black on solid-color screen cameras. On ultrawide this color showed as blue side bars wherever a narrower viewport left the screen uncovered, as reported on the post-credits "Credits end" screen. Checked in the once-per-second camera job whenever the mod is on, so a brief blue flash on scene entry is possible; not restored when the mod is disabled.
+- First GitHub release to include the 0.8.10 changes below.
+- Release build clean; 34 logic tests pass. The post-credits screen fix is not yet visually verified in game.
+
 ## 0.8.10 (test build)
 
 - Reduce repeated Unity API calls in per-frame paths: reuse the current auto-advance reader's validity result, cache narrow-screen world-canvas transforms during scanning, read each canvas camera once per pass, and skip loading render-target queries for inactive cameras. No polling intervals changed and no measured frametime gain is claimed.
