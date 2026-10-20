@@ -1046,7 +1046,7 @@ public class UwBehaviour : MonoBehaviour
 				SetConfiner(item2, flag, "CinemachineConfiner2DSimplified");
 			}
 		}
-		if (!Plugin.On || !Plugin.FixCameraRect.Value)
+		if (!Plugin.On)
 		{
 			return;
 		}
@@ -1054,6 +1054,8 @@ public class UwBehaviour : MonoBehaviour
 		for (int i = 0; i < cameraCount; i++)
 		{
 			Camera allCamera = CameraBuffer[i];
+			BlackenDefaultBackground(allCamera);
+			if (!Plugin.FixCameraRect.Value) continue;
 			if (LoadingScreenPresentation.Owns(allCamera)) continue;
 			if (_menuViewportApplied && _menuViewportCamera != null && allCamera != null && allCamera.Pointer == _menuViewportCamera.Pointer) continue;
 			if (!(allCamera == null) && !(allCamera.targetTexture != null))
@@ -1065,6 +1067,16 @@ public class UwBehaviour : MonoBehaviour
 				}
 			}
 		}
+	}
+
+	// Unity's untouched default camera background (49, 77, 121) shows as blue side bars wherever a
+	// narrower viewport leaves the screen uncovered, e.g. the post-credits screen. No scene picks it on purpose.
+	private static void BlackenDefaultBackground(Camera camera)
+	{
+		if (camera == null || camera.targetTexture != null || camera.clearFlags != CameraClearFlags.SolidColor) return;
+		Color bg = camera.backgroundColor;
+		if (Mathf.Abs(bg.r - 0.19215687f) < 0.004f && Mathf.Abs(bg.g - 0.3019608f) < 0.004f && Mathf.Abs(bg.b - 0.4745098f) < 0.004f)
+			camera.backgroundColor = new Color(0f, 0f, 0f, bg.a);
 	}
 
 	internal static void StartupCapFrame()
