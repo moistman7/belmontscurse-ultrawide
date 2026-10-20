@@ -6,6 +6,9 @@ Repo: https://github.com/moistman7/belmontscurse-ultrawide. Separate from the Sp
 
 ## Current state
 
+- **Nexus packaging correction (2026-10-19):** first uploads 255/256 were quarantined. User identified the past Steam Deck installer scan issue and requested removal. Repacked BOTH Nexus ZIPs without `steamdeck/`, `.desktop`, `.sh` or `.awk` files; plugin SHA-256 unchanged. Verified every archive entry and extracted DLL hash. Published replacements 257 (Main/Primary plugin) and 258 (Optional Full Install), archived 255/256 without deleting them. New uploads were still scanning when checked. Public page and package READMEs now provide manual Proton install instructions and explicitly state that Nexus packages omit installer scripts. Removed one-click installer/GitHub installer reference and corrected stale version check. Do not claim the scanner has approved these files or that scripts were the confirmed scanner trigger. Future Nexus packages MUST omit Steam Deck scripts/launchers; GitHub packaging may retain them. Final archives use `*-v0.8.10-nexus.zip` in chat outputs/nexus-0.8.10 with SHA-256 files. Public page screenshot: Nexus-manual-install.png.
+
+
 - **Nexus publication (2026-10-19):** published plugin-only and Full Install version 0.8.10 to https://www.nexusmods.com/castlevaniabelmontscurse/mods/21?tab=files (file IDs 255 and 256). Updated existing files, archived their predecessors, retained Main/Primary and Optional categories, and set listing version to 0.8.10. Both public file entries verified; virus scanning was pending at completion. Descriptions/changelogs explicitly call this a test build with candidate Escape/loading fixes, no measured frametime claim, and pending Unity/Harmony/scene verification. Archives contain DLL SHA-256 `8786F4252BDAA283FFCF0E4AB1F9004280A49E5380DABCFD2CFF323F87F79016`, extracted and verified from each ZIP. This DLL was installed and hash-verified after the user closed the game in the preceding turn. Packages, checksums, notes and publication screenshot are under the chat outputs/nexus-0.8.10 folder; staging is dist/nexus-plain-0.8.10 and dist/nexus-aio-0.8.10. No GitHub release was created. No translation feature has been implemented.
 
 
@@ -60,7 +63,8 @@ Repo: https://github.com/moistman7/belmontscurse-ultrawide. Separate from the Sp
   default Steam path and fails. Compare SHA-256 of `bin/Release` and the installed DLL.
 - Tests: `dotnet test tests/Logic.Tests` (28 cases: `Logic.cs` helpers and the frame-interval sampler; no game needed).
 - Version strings: `Plugin.cs` (attribute + startup log), `UwBehaviour.cs` (dump header), `README.md`, `README.txt`, `CHANGELOG.md`.
-- Zips: plain = `README.txt`, `BepInEx/plugins/*.dll`, `steamdeck/`; AllInOne also has `.doorstop_version`, `doorstop_config.ini`, `winhttp.dll`,
+- Nexus uploads: omit the entire `steamdeck/` folder and its scripts/desktop launchers from BOTH packages; use manual Proton instructions in the Nexus README. Prior Nexus uploads containing installers were quarantined; approval of repacks is not guaranteed.
+- GitHub zips: plain = `README.txt`, `BepInEx/plugins/*.dll`, `steamdeck/`; AllInOne also has `.doorstop_version`, `doorstop_config.ini`, `winhttp.dll`,
   `BepInEx/core`, `dotnet/` (copy the previous `dist/aio-<ver>` folder, replace the DLL and README). Use **Windows**
   `C:\Windows\System32\tar.exe -a -c -f out.zip *` from inside the staging folder (Git Bash tar writes broken zips). Extract and compare the DLL hash.
   Never package configs, logs, saved history or interop output. Checksum format `<sha256> *<file>`.

@@ -44,6 +44,8 @@ To uninstall, delete the DLL.
 
 ## Steam Deck / Linux (Proton)
 
+Nexus downloads omit the Steam Deck installer scripts and desktop launchers. Use the manual Proton instructions on the Nexus page for those packages; the installer steps below apply to GitHub release ZIPs.
+
 The Deck's own screen is 16:10 (the mod fixes the cropped menus there), and it also handles
 docking to an ultrawide monitor. Install takes a few clicks:
 
