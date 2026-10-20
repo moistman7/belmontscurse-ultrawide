@@ -22,7 +22,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 - Optional: HUD in the centered 16:9 area, and a bigger HUD (see Keys).
 - Optional HUD safe-area margins and a dialogue history for the current game session.
 
-Version 0.8.10 is an unreleased local test build adding centered 16:9 loading-camera presentation and black side bars. The post-ending loading-art screen and final-boss cinematic bars are separate reports and still need visual verification. The existing save-room and main-menu fixes are retained.
+Version 0.8.10 is a test build published on Nexus Mods adding centered 16:9 loading-camera presentation and black side bars. The post-ending loading-art screen and final-boss cinematic bars are separate reports and still need visual verification. The existing save-room and main-menu fixes are retained.
 
 ## Requirements
 

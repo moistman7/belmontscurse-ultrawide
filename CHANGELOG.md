@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.10 (local test build; unreleased)
+## 0.8.10 (test build)
 
 - Reduce repeated Unity API calls in per-frame paths: reuse the current auto-advance reader's validity result, cache narrow-screen world-canvas transforms during scanning, read each canvas camera once per pass, and skip loading render-target queries for inactive cameras. No polling intervals changed and no measured frametime gain is claimed.
 - Handle Escape inside the mod settings panel and suppress the game's separate InputActionsToUnityEvent callbacks while it is open. Restore EventSystem input and the previous selection after the closing controls have been released for a full frame, preventing the closing press from also navigating the underlying Graphics tab. Addresses the reported blank tab after Escape; in-game verification remains pending.

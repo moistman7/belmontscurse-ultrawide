@@ -4,7 +4,7 @@ CASTLEVANIA: BELMONT'S CURSE - ULTRAWIDE & STEAM DECK FIX
 An unofficial community mod. It contains no game files. Use at your own risk and keep a backup
 of your saves.
 
-VERSION 0.8.10 (UNRELEASED LOCAL TEST BUILD)
+VERSION 0.8.10 (TEST BUILD)
 Loading-camera black side bars are a candidate fix for the post-ending art screen.
 This scene still needs visual verification. Existing room/menu fixes are retained.
 -------------
