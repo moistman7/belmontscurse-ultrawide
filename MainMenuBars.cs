@@ -3,15 +3,18 @@ using UnityEngine.UI;
 
 namespace BelmontsCurseUltrawide;
 
-internal static class MainMenuBars
+internal sealed class ScreenSideBars
 {
-    private static GameObject Root;
-    private static RectTransform Left, Right;
-    private static float LastWidth = -1f;
+    private GameObject Root;
+    private RectTransform Left, Right;
+    private float LastWidth = -1f;
+    private readonly string Name;
 
-    internal static bool Visible => Root != null && Root.activeSelf;
+    internal ScreenSideBars(string name) => Name = name;
 
-    internal static void Set(bool visible, float viewportWidth = 1f)
+    internal bool Visible => Root != null && Root.activeSelf;
+
+    internal void Set(bool visible, float viewportWidth = 1f)
     {
         if (!visible)
         {
@@ -20,7 +23,7 @@ internal static class MainMenuBars
         }
         if (Root == null)
         {
-            Root = new GameObject("UwMainMenuBars");
+            Root = new GameObject(Name);
             Object.DontDestroyOnLoad(Root);
             var canvas = Root.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -40,7 +43,7 @@ internal static class MainMenuBars
         Right.anchorMax = Vector2.one;
     }
 
-    private static RectTransform Create(string name)
+    private RectTransform Create(string name)
     {
         var go = new GameObject(name);
         go.transform.SetParent(Root.transform, false);

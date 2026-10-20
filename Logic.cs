@@ -7,6 +7,10 @@ namespace BelmontsCurseUltrawide;
 // Pure helpers with no game types, so they can be unit-tested (tests/Logic.Tests links this file).
 internal static class Logic
 {
+	// Centered 16:9 presentation; narrower and invalid screen sizes need no side bars.
+	internal static float PresentationWidth(int width, int height)
+		=> width > 0 && height > 0 ? Math.Min(1f, (16f / 9f) * height / width) : 1f;
+
 	// One step of a slider: moves by `direction` steps on a grid that starts at `min`, never leaving [min, max].
 	internal static float Step(float value, int direction, float min, float max, float step)
 	{

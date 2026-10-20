@@ -22,6 +22,7 @@ namespace BelmontsCurseUltrawide;
 
 public class UwBehaviour : MonoBehaviour
 {
+	private static readonly ScreenSideBars MainMenuBars = new("UwMainMenuBars");
 	private const float Aspect16x9 = 1.7777778f;
 
 	private static readonly System.Collections.Generic.List<ScalerEntry> Scalers = new System.Collections.Generic.List<ScalerEntry>();
@@ -204,6 +205,7 @@ public class UwBehaviour : MonoBehaviour
 		AddJob("scan cutscene", 5f, ScanCutscene);
 		AddJob("letterbox", 0.2f, LetterboxJob);
 		AddJob("scan save-room masks", 2f, SaveRoomMasks.Scan);
+		AddJob("scan loading cameras", 2f, LoadingScreenPresentation.Scan);
 		AddJob("save-room masks", 0.2f, SaveRoomMasks.Apply);
 		AddJob("scan video", 5f, ScanVideo);
 		AddJob("video", 0.25f, VideoJob);
@@ -415,6 +417,7 @@ public class UwBehaviour : MonoBehaviour
 			Guard("dialogue history", DialogueHistory.Tick);
 			Guard("mod menu", ModMenu.Tick);
 			Guard("resolution", ResAction);
+			Guard("loading presentation", LoadingScreenPresentation.Apply);
 			Guard("camera", CamAction);
 			Guard("zone camera size", SizeAction);
 			Guard("skip intros", IntroAction);
@@ -1051,6 +1054,7 @@ public class UwBehaviour : MonoBehaviour
 		for (int i = 0; i < cameraCount; i++)
 		{
 			Camera allCamera = CameraBuffer[i];
+			if (LoadingScreenPresentation.Owns(allCamera)) continue;
 			if (_menuViewportApplied && _menuViewportCamera != null && allCamera != null && allCamera.Pointer == _menuViewportCamera.Pointer) continue;
 			if (!(allCamera == null) && !(allCamera.targetTexture != null))
 			{
@@ -1457,7 +1461,13 @@ public class UwBehaviour : MonoBehaviour
 	// size is fixed for a 16:9 height. On screens narrower than 16:9 the canvas is taller than that, so
 	// the camera only sees the middle of it (zoomed in, tabs and footer cut off). Size the camera to
 	// the canvas instead.
-	private static readonly System.Collections.Generic.List<Canvas> WorldCanvases = new System.Collections.Generic.List<Canvas>();
+	private struct WorldCanvasEntry
+	{
+		internal Canvas Canvas;
+		internal RectTransform Root;
+	}
+
+	private static readonly System.Collections.Generic.List<WorldCanvasEntry> WorldCanvases = new();
 
 	private static readonly System.Collections.Generic.Dictionary<int, float> OrigOrthoSize = new System.Collections.Generic.Dictionary<int, float>();
 
@@ -1486,7 +1496,7 @@ public class UwBehaviour : MonoBehaviour
 			Canvas component = scaler.Scaler.GetComponent<Canvas>();
 			if (component != null && component.renderMode == RenderMode.WorldSpace && component.worldCamera != null && component.worldCamera.orthographic)
 			{
-				WorldCanvases.Add(component);
+				WorldCanvases.Add(new WorldCanvasEntry { Canvas = component, Root = scaler.Root });
 			}
 		}
 	}
@@ -1497,30 +1507,31 @@ public class UwBehaviour : MonoBehaviour
 		{
 			if (OrigOrthoSize.Count > 0)
 			{
-				foreach (Canvas item in WorldCanvases)
+				foreach (var entry in WorldCanvases)
 				{
-					if (item != null && item.worldCamera != null && OrigOrthoSize.TryGetValue(item.worldCamera.GetInstanceID(), out var value))
+					var camera = entry.Canvas == null ? null : entry.Canvas.worldCamera;
+					if (camera != null && OrigOrthoSize.TryGetValue(camera.GetInstanceID(), out var value))
 					{
-						item.worldCamera.orthographicSize = value;
+						camera.orthographicSize = value;
 					}
 				}
 				OrigOrthoSize.Clear();
 			}
 			return;
 		}
-		foreach (Canvas item2 in WorldCanvases)
+		foreach (var entry in WorldCanvases)
 		{
-			if (item2 == null || item2.worldCamera == null)
+			var worldCamera = entry.Canvas == null ? null : entry.Canvas.worldCamera;
+			if (worldCamera == null || entry.Root == null)
 			{
 				continue;
 			}
-			RectTransform rectTransform = item2.GetComponent<RectTransform>();
+			RectTransform rectTransform = entry.Root;
 			float num = rectTransform.rect.height * rectTransform.lossyScale.y * 0.5f;
 			if (num <= 1f)
 			{
 				continue;
 			}
-			Camera worldCamera = item2.worldCamera;
 			int instanceID = worldCamera.GetInstanceID();
 			if (!OrigOrthoSize.ContainsKey(instanceID))
 			{
@@ -2176,7 +2187,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.9 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.10 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2197,6 +2208,7 @@ public class UwBehaviour : MonoBehaviour
 			handler.AppendFormatted(Plugin.CenterHud.Value);
 			stringBuilder3.AppendLine(ref handler);
 			SaveRoomMasks.Dump(stringBuilder);
+			LoadingScreenPresentation.Dump(stringBuilder);
 			stringBuilder.AppendLine("Cutscene letterbox: enabled=" + Plugin.RemoveLetterbox.Value + " cached=" + LetterboxGraphics.Count);
 			foreach (var graphic in LetterboxGraphics)
 			{
@@ -2504,7 +2516,7 @@ public class UwBehaviour : MonoBehaviour
 			string lower = n.ToLowerInvariant();
 			string mat = (r.sharedMaterial == null) ? "" : r.sharedMaterial.name;
 			string lowerMat = mat.ToLowerInvariant();
-			if (!(lower.Contains("light") || lower.Contains("vignet") || lower.Contains("spot") || lower.Contains("dark") || lower.Contains("fog") || lower.Contains("glow") || lower.Contains("shaft") || lowerMat.Contains("light") || lowerMat.Contains("vignet") || lowerMat.Contains("dark") || lowerMat.Contains("fog") || lowerMat.Contains("glow")))
+			if (!(lower.Contains("black") || lowerMat.Contains("black") || lower.Contains("light") || lower.Contains("vignet") || lower.Contains("spot") || lower.Contains("dark") || lower.Contains("fog") || lower.Contains("glow") || lower.Contains("shaft") || lowerMat.Contains("light") || lowerMat.Contains("vignet") || lowerMat.Contains("dark") || lowerMat.Contains("fog") || lowerMat.Contains("glow")))
 			{
 				continue;
 			}

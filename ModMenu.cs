@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BepInEx.Configuration;
+using HarmonyLib;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -46,6 +47,11 @@ internal static class ModMenu
 	private static bool _global, _confirmReset, _cursorWasVisible;
 	private static EventSystem _events;
 	private static bool _eventsWere;
+	private static GameObject _previousSelection;
+	private static bool _restoreInput;
+	private static int _closedFrame;
+	private static int _releasedFrame = -1;
+	private static Harmony _inputHooks;
 	private static int _footerDevice = -2, _footerVisible;
 	private static bool _footerSlider;
 	private static bool _retryFooterGlyphs;
@@ -58,6 +64,46 @@ internal static class ModMenu
 	private const float PanelWidth = 1000, RowHeight = 46, TitleHeight = 78, FooterHeight = 84;
 
 	internal static bool IsOpen { get; private set; }
+
+	internal static void Init()
+	{
+		try
+		{
+			_inputHooks = new Harmony("local.belmontscurse.ultrawide.modmenu");
+			_inputHooks.Patch(AccessTools.Method(typeof(InputActionsToUnityEvent), "OnInputPerformed"),
+				prefix: new HarmonyMethod(AccessTools.Method(typeof(ModMenu), nameof(AllowGameInput))));
+		}
+		catch (Exception ex) { Plugin.Instance.Log.LogWarning("Mod menu input isolation unavailable: " + ex.Message); }
+	}
+
+	// The game also handles Back through InputActionsToUnityEvent, independently of EventSystem.
+	// Keep the closing press isolated through its release, regardless of Update ordering.
+	private static bool AllowGameInput() => !IsOpen && !_restoreInput;
+
+	private static bool ClosingControlHeld()
+	{
+		var kb = Keyboard.current;
+		var pad = Gamepad.current;
+		var mouse = Mouse.current;
+		return (kb != null && (kb.escapeKey.isPressed || kb.backspaceKey.isPressed || kb.enterKey.isPressed
+			|| kb.numpadEnterKey.isPressed || (Plugin.KeyMenu.Value != Key.None && kb[Plugin.KeyMenu.Value].isPressed)))
+			|| (pad != null && (pad.buttonEast.isPressed || pad.buttonSouth.isPressed || pad.selectButton.isPressed
+				|| pad[Plugin.PadMenu.Value].isPressed))
+			|| (mouse != null && mouse.leftButton.isPressed);
+	}
+
+	private static void RestoreInput()
+	{
+		if (_events != null && _eventsWere)
+		{
+			_events.enabled = true;
+			if (_previousSelection != null && _previousSelection.activeInHierarchy)
+				_events.SetSelectedGameObject(_previousSelection);
+		}
+		_events = null;
+		_previousSelection = null;
+		_restoreInput = false;
+	}
 
 	// F1 / controller shortcut: open from anywhere, even when the Settings screen is unusable. The game is paused meanwhile.
 	internal static void Toggle()
@@ -113,6 +159,7 @@ internal static class ModMenu
 	internal static void Open(GameObject anchor)
 	{
 		if (IsOpen) return;
+		if (_restoreInput) RestoreInput();
 		try
 		{
 			BuildItems();
@@ -150,6 +197,7 @@ internal static class ModMenu
 			Cursor.visible = true;
 			_sel = FirstSelectable(); _top = 0; _confirmReset = false;
 			_events = EventSystem.current;
+			_previousSelection = _events == null ? null : _events.currentSelectedGameObject;
 			// The game's own menu would also react to these keys; hold its input while this panel is open.
 			if (_events != null) { _eventsWere = _events.enabled; _events.enabled = false; }
 			_root.SetActive(true);
@@ -176,8 +224,12 @@ internal static class ModMenu
 		}
 		if (wasOpen) Cursor.visible = _cursorWasVisible;
 		if (_root != null) _root.SetActive(false);
-		if (_events != null && _eventsWere) _events.enabled = true;
-		_events = null;
+		if (wasOpen || _events != null)
+		{
+			_closedFrame = Time.frameCount;
+			_releasedFrame = -1;
+			_restoreInput = true;
+		}
 	}
 
 	private static void ApplyFont()
@@ -195,6 +247,12 @@ internal static class ModMenu
 
 	internal static void Tick()
 	{
+		if (_restoreInput && Time.frameCount > _closedFrame)
+		{
+			if (ClosingControlHeld()) _releasedFrame = -1;
+			else if (_releasedFrame < 0) _releasedFrame = Time.frameCount;
+			else if (Time.frameCount > _releasedFrame) RestoreInput();
+		}
 		if (!IsOpen) return;
 		// Back out together with the game's Settings screen (its Back button, tab change, closing the menu).
 		if (!_global && (_anchor == null || !_anchor.activeInHierarchy)) { Close(); return; }
@@ -221,7 +279,7 @@ internal static class ModMenu
 		if (dx != 0) Adjust(Items[_sel], dx);
 
 		bool activate = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) || (pad != null && pad.buttonSouth.wasPressedThisFrame);
-		bool back = (kb != null && kb.backspaceKey.wasPressedThisFrame) || (pad != null && pad.buttonEast.wasPressedThisFrame);
+		bool back = (kb != null && (kb.escapeKey.wasPressedThisFrame || kb.backspaceKey.wasPressedThisFrame)) || (pad != null && pad.buttonEast.wasPressedThisFrame);
 		if (back) { Close(); return; }
 
 		// Mouse: hover selects a row, a click acts on it, the wheel moves the selection.

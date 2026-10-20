@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.10 (local test build; unreleased)
+
+- Reduce repeated Unity API calls in per-frame paths: reuse the current auto-advance reader's validity result, cache narrow-screen world-canvas transforms during scanning, read each canvas camera once per pass, and skip loading render-target queries for inactive cameras. No polling intervals changed and no measured frametime gain is claimed.
+- Handle Escape inside the mod settings panel and suppress the game's separate InputActionsToUnityEvent callbacks while it is open. Restore EventSystem input and the previous selection after the closing controls have been released for a full frame, preventing the closing press from also navigating the underlying Graphics tab. Addresses the reported blank tab after Escape; in-game verification remains pending.
+- Keep cameras referenced by LoadingScreenCameraManager in a centered 16:9 viewport on ultrawide screens, exempt them from general viewport expansion, and draw opaque black side bars. Restore the original viewport when the camera becomes inactive, the mod is disabled, or the display is no longer ultrawide.
+- Hook loading-camera enable/disable for immediate updates, with scene scanning and per-frame refresh as a fallback. Main-menu and loading-screen bars share the same drawing code with separate visibility state.
+- Add F9 loading-camera/artwork details, save-room mask bounds, and black-named scene renderers to help identify remaining room-edge problems.
+- Preserve the existing v0.8.8 save-room and main-menu fixes. The post-ending loading-art report is distinct from the final-boss cinematic-bar report; neither is visually verified by this change. Other rooms still need affected-scene evidence before a targeted masking fix can be chosen.
+- 34 logic tests pass, including presentation geometry at 3440x1440, 5120x1440, 16:9 and narrower/invalid screen sizes. Tests do not exercise Unity or Harmony.
+
 ## 0.8.9
 
 - Scan the cutscene controller's referenced UI view as well as its own hierarchy when removing cinematic bars. Deduplicate graphics shared by both paths.

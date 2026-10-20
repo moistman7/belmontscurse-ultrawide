@@ -16,6 +16,10 @@ internal static class SaveRoomMasks
         foreach (var renderer in Hidden) if (renderer != null && !renderer.enabled) hidden++;
         output.AppendLine("Save-room side masks: found=" + found + " hidden=" + hidden
             + " mainMenu=" + (StartMenu != null && StartMenu.activeInHierarchy));
+        foreach (var renderer in Masks)
+            if (renderer != null)
+                output.AppendLine("  save-room mask active=" + renderer.gameObject.activeInHierarchy
+                    + " enabled=" + renderer.enabled + " bounds=" + renderer.bounds);
     }
 
     internal static void Scan()

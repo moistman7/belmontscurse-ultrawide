@@ -42,12 +42,14 @@ internal static class VoiceAdvance
 			return;
 		}
 		float now = Time.unscaledTime;
-		if ((_reader == null || !_reader.isActiveAndEnabled || !_reader._isActive) && now >= _nextSearch)
+		bool readerActive = _reader != null && _reader.isActiveAndEnabled && _reader._isActive;
+		if (!readerActive && now >= _nextSearch)
 		{
 			_nextSearch = now + 0.1f;
 			_reader = FindActiveReader();
+			readerActive = _reader != null && _reader.isActiveAndEnabled && _reader._isActive;
 		}
-		if (_reader == null || !_reader.isActiveAndEnabled || !_reader._isActive)
+		if (!readerActive)
 		{
 			Reset();
 			return;

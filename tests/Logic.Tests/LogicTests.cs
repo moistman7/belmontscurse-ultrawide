@@ -3,6 +3,27 @@ using BelmontsCurseUltrawide;
 public class LogicTests
 {
 	[Theory]
+	[InlineData(3440, 1440, 2560f)]
+	[InlineData(5120, 1440, 2560f)]
+	[InlineData(1920, 1080, 1920f)]
+	public void Presentation_keeps_a_centered_16_by_9_picture(int width, int height, float picturePixels)
+	{
+		float picture = Logic.PresentationWidth(width, height);
+		float left = (1f - picture) * 0.5f;
+		float right = left + picture;
+		Assert.Equal(picturePixels, picture * width, 2);
+		Assert.Equal(1f, left + right, 5);
+		Assert.InRange(left, 0f, 0.5f);
+	}
+
+	[Theory]
+	[InlineData(1280, 800)]
+	[InlineData(0, 1440)]
+	[InlineData(3440, 0)]
+	public void Presentation_does_not_crop_narrow_or_invalid_screens(int width, int height)
+		=> Assert.Equal(1f, Logic.PresentationWidth(width, height));
+
+	[Theory]
 	[InlineData(1.25f, 1, 1.0f, 1.6f, 0.05f, 1.3f)]
 	[InlineData(1.25f, -1, 1.0f, 1.6f, 0.05f, 1.2f)]
 	[InlineData(1.6f, 1, 1.0f, 1.6f, 0.05f, 1.6f)]
