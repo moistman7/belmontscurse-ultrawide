@@ -200,6 +200,8 @@ public class UwBehaviour : MonoBehaviour
 
 	internal static void Init()
 	{
+		EndingCreditsPresentation.Init();
+		AddJob("scan ending credits", 2f, EndingCreditsPresentation.Scan);
 		AddJob("scan canvases", 4f, ScanCanvases);
 		AddJob("ui", 0.25f, UiJob);
 		AddJob("scan cutscene", 5f, ScanCutscene);
@@ -418,6 +420,7 @@ public class UwBehaviour : MonoBehaviour
 			Guard("mod menu", ModMenu.Tick);
 			Guard("resolution", ResAction);
 			Guard("loading presentation", LoadingScreenPresentation.Apply);
+			Guard("ending credits presentation", EndingCreditsPresentation.Apply);
 			Guard("camera", CamAction);
 			Guard("zone camera size", SizeAction);
 			Guard("skip intros", IntroAction);
@@ -2199,7 +2202,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.11 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.12 === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2221,6 +2224,7 @@ public class UwBehaviour : MonoBehaviour
 			stringBuilder3.AppendLine(ref handler);
 			SaveRoomMasks.Dump(stringBuilder);
 			LoadingScreenPresentation.Dump(stringBuilder);
+			EndingCreditsPresentation.Dump(stringBuilder);
 			stringBuilder.AppendLine("Cutscene letterbox: enabled=" + Plugin.RemoveLetterbox.Value + " cached=" + LetterboxGraphics.Count);
 			foreach (var graphic in LetterboxGraphics)
 			{

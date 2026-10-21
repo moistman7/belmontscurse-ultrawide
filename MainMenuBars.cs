@@ -9,16 +9,19 @@ internal sealed class ScreenSideBars
     private RectTransform Left, Right;
     private float LastWidth = -1f;
     private readonly string Name;
+    private bool IsVisible;
 
     internal ScreenSideBars(string name) => Name = name;
 
-    internal bool Visible => Root != null && Root.activeSelf;
+    internal bool Visible => IsVisible;
 
     internal void Set(bool visible, float viewportWidth = 1f)
     {
         if (!visible)
         {
-            if (Root != null && Root.activeSelf) Root.SetActive(false);
+            if (!IsVisible) return;
+            if (Root != null) Root.SetActive(false);
+            IsVisible = false;
             return;
         }
         if (Root == null)
@@ -32,8 +35,10 @@ internal sealed class ScreenSideBars
             Left = Create("Left");
             Right = Create("Right");
             LastWidth = -1f;
+            IsVisible = false;
         }
-        if (!Root.activeSelf) Root.SetActive(true);
+        if (!IsVisible) Root.SetActive(true);
+        IsVisible = true;
         if (Mathf.Abs(LastWidth - viewportWidth) < 0.00001f) return;
         LastWidth = viewportWidth;
         float edge = (1f - viewportWidth) * 0.5f;

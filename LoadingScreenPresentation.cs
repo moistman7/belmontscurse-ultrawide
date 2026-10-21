@@ -83,14 +83,21 @@ internal static class LoadingScreenPresentation
     {
         // No scene cameras have been discovered: avoid native Screen reads in the per-frame path.
         if (Cameras.Count == 0) { Bars.Set(false); return; }
-        float width = Logic.PresentationWidth(Screen.width, Screen.height);
+        float width = 1f;
+        bool widthRead = false;
         bool show = false;
         foreach (var entry in Cameras)
         {
             var camera = entry.Camera;
             if (camera == null) continue;
             // Inactive loading cameras are the normal gameplay case. Test that before querying the render target.
-            bool apply = Plugin.On && width < 1f && camera.isActiveAndEnabled && camera.targetTexture == null;
+            bool active = Plugin.On && camera.isActiveAndEnabled;
+            if (active && !widthRead)
+            {
+                width = Logic.PresentationWidth(Screen.width, Screen.height);
+                widthRead = true;
+            }
+            bool apply = active && width < 1f && camera.targetTexture == null;
             if (apply)
             {
                 if (!entry.Applied)

@@ -22,7 +22,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 - Optional: HUD in the centered 16:9 area, and a bigger HUD (see Keys).
 - Optional HUD safe-area margins and a dialogue history for the current game session.
 
-Version 0.8.11 turns Unity's default blue camera background black, so screens such as the post-credits screen no longer show blue side bars on ultrawide. It also includes the 0.8.10 changes (16:9 loading-camera presentation with black side bars, mod-menu Escape fix). The post-credits screen and final-boss cinematic bars still need visual verification. The existing save-room and main-menu fixes are retained.
+Version 0.8.12 adds explicit black side bars to the standalone ending credits and final Continue screen, covering the blue sides that the earlier camera-color fix missed. It also reduces repeated Unity calls for side-bar visibility and inactive loading cameras. The ending-credits fix and final-boss cinematic bars still need visual verification; no measured frametime improvement is claimed. Existing save-room and main-menu fixes are retained.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ Version 0.8.11 turns Unity's default blue camera background black, so screens su
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.11 loaded`.
+   `Belmont's Curse Ultrawide 0.8.12 loaded`.
 
 To uninstall, delete the DLL.
 

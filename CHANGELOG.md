@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.12
+
+- Add opaque centered-16:9 side bars while the standalone `CreditsViewManager` is active, including the final Continue artwork. This covers the reported ending-credits blue sides independently of camera clear flags. Start hook plus polling fallback; restores visibility on exit, mod disable, and aspect changes. In-game verification pending.
+- Cache owned side-bar visibility to avoid repeated native active-state reads; skip screen-size queries when all tracked loading cameras are inactive. Polling intervals unchanged. No measured frametime gain claimed.
+- Release build clean; 34 existing logic tests pass. These tests do not exercise Unity/Harmony presentation paths.
+
 ## 0.8.11
 
 - Turn Unity's untouched default camera background (49, 77, 121) black on solid-color screen cameras. On ultrawide this color showed as blue side bars wherever a narrower viewport left the screen uncovered, as reported on the post-credits "Credits end" screen. Checked in the once-per-second camera job whenever the mod is on, so a brief blue flash on scene entry is possible; not restored when the mod is disabled.
