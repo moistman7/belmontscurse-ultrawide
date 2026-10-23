@@ -219,7 +219,8 @@ internal static class ModMenu
 		{
 			_global = false;
 			// Restore only if nothing else (the game's own pause) has changed it since.
-			if (Time.timeScale == 0f) Time.timeScale = _previousScale > 0f ? _previousScale : 1f;
+			// Put back exactly what was there: opening over the game's own pause (scale 0) must not unpause it.
+			if (Time.timeScale == 0f) Time.timeScale = _previousScale;
 			if (!DialogueHistory.IsOpen) DialogueHistory.HookSkip(false);
 		}
 		if (wasOpen) Cursor.visible = _cursorWasVisible;
