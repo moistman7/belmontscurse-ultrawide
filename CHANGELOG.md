@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.19 (camera timing prerelease)
+
+- Fix a startup crash in 0.8.17 and 0.8.18: the Harmony patch on `UniversalRenderPipeline.InitializeCameraData` (a static method with an `out` struct parameter) made the game fault with an access violation about a second after the plugin loaded. The patch is removed; the begin-camera render callback builds and applies the final projection as it did before. Found by installing the build locally and bisecting: no camera hooks and the two Cinemachine solver hooks alone both run; the URP hook alone crashes. Do not use 0.8.17 or 0.8.18.
+- Keep the two Cinemachine solver hooks (`UpdateVirtualCameras` and `ProcessActiveCamera`). They install and are invoked at the title screen; their gameplay behaviour is not yet tested.
+- Includes the 0.8.18 changes (exact time scale restored when the mod menu closes, panels closed if their feature is switched off while open, hook exception safety, executable Steam Deck scripts).
+- Candidate only. Verified: Release build clean, 37 pure tests pass, game launches and stays up at the title screen with the hooks installed. Not verified: gameplay, the original snapping and Alt-Tab reports, any frametime change.
+
 ## 0.8.18 (camera timing prerelease)
 
 - Closing the mod menu (F1 / controller shortcut) now restores the exact time scale it found. Opened over the game's own pause (scale 0) it used to set the scale to 1 and unpause the game behind its pause menu.

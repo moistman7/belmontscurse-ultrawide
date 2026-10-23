@@ -22,7 +22,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 - Optional: HUD in the centered 16:9 area, and a bigger HUD (see Keys).
 - Optional HUD safe-area margins and a dialogue history for the current game session.
 
-Version 0.8.18 is a prerelease test build for reported camera snapping, loss of ultrawide presentation after Alt-Tab, and apparent slowdown. It enforces the camera aspect immediately before Cinemachine solves and again just before the render pipeline snapshots camera data, with the begin-camera callback as a fallback. It also spreads the save-room mask scan over several frames and adds timing diagnostics to the F9 dump. It also fixes the mod menu unpausing the game when closed over the game's own pause. Nothing here is verified in game: the cause of the reports is not confirmed, and no measured frametime improvement is claimed. Existing features and menu/loading presentation protections are retained.
+Version 0.8.19 is a prerelease test build for reported camera snapping, loss of ultrawide presentation after Alt-Tab, and apparent slowdown. It enforces the camera aspect immediately before Cinemachine solves and applies the final projection in the begin-camera render callback. It also spreads the save-room mask scan over several frames and adds timing diagnostics to the F9 dump. It also fixes the mod menu unpausing the game when closed over the game's own pause. It loads and reaches the title screen, but gameplay has not been tested; nothing here is verified in game: the cause of the reports is not confirmed, and no measured frametime improvement is claimed. Existing features and menu/loading presentation protections are retained.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ Version 0.8.18 is a prerelease test build for reported camera snapping, loss of 
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.18 loaded`.
+   `Belmont's Curse Ultrawide 0.8.19 loaded`.
 
 To uninstall, delete the DLL.
 

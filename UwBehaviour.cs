@@ -275,37 +275,7 @@ public class UwBehaviour : MonoBehaviour
 	private static string _cachedCapSetting;
 	private static float _cachedCap = Aspect16x9;
 
-	internal static void BeforeCameraData(Camera camera)
-	{
-		// InitializeCameraData is also called by standalone render APIs that do not
-		// emit begin/end-camera events. Only borrow the aspect inside a paired scope.
-		try
-		{
-			if (!_renderCallbacksReady || !_renderAspectSwapped || !_camSpoofed || !Plugin.On
-				|| camera == null || _cam == null || camera.Pointer != _cam.Pointer) return;
-			_projectionPrepared = false;
-			Guard("camera picture", ProjAction);
-			if (!_projectionPrepared) return;
-			// Reassert after every begin-camera subscriber, before URP snapshots the
-			// viewport, lens and projection. Always schedule restoration, even if
-			// an earlier callback already left the aspect at the rendering value.
-			_logicAspect = LogicAspectCap(0f);
-			_savedProjection = _projectionMatrix;
-			_renderAspectSwapped = true;
-			if (Math.Abs(camera.aspect - _projectionAspect) > 0.0001f)
-			{
-				camera.aspect = _projectionAspect;
-				camera.projectionMatrix = _savedProjection;
-			}
-		}
-		catch (Exception ex)
-		{
-			if (!_renderAspectErrorLogged) Plugin.Instance.Log.LogWarning("Final camera-data repair: " + ex.Message);
-			_renderAspectErrorLogged = true;
-		}
-	}
-
-	// The 16:9 aspect is only meant for the game's camera logic. While the camera renders, effects
+// The 16:9 aspect is only meant for the game's camera logic. While the camera renders, effects
 	// such as the door light shafts build a "fullscreen" quad from camera.aspect; with the 16:9 value
 	// that quad covers only the middle of an ultrawide screen and the light gets squashed.
 	private static void OnBeginCameraRendering(UnityEngine.Rendering.ScriptableRenderContext ctx, Camera cam)
@@ -320,10 +290,7 @@ public class UwBehaviour : MonoBehaviour
 			// after focus/display changes. Clear readiness even if Guard skips a disabled feature.
 			_beginCallbacks++;
 			_lastBeginUpdate = _updateRuns;
-			// Always build the projection here, even when the final camera-data hook is
-			// installed: a patch that applied but never fires (e.g. an inlined native
-			// caller) must not leave the camera with a stale 16:9 matrix. The hook only
-			// reasserts these values later.
+			// Build the final lens projection from the camera's real pixel size just before rendering.
 			_projectionPrepared = false;
 			Guard("camera picture", ProjAction);
 			if (!_projectionPrepared)
@@ -2338,7 +2305,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.18 camera-timing-prerelease === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.19 camera-timing-prerelease === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);

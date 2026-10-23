@@ -2,18 +2,18 @@ using System;
 using System.Text;
 using Cinemachine;
 using HarmonyLib;
-using UnityEngine;
-using UnityEngine.Rendering.Universal;
 
 namespace BelmontsCurseUltrawide;
 
-// Enforce the camera invariants at their consumers, independently of MonoBehaviour order.
+// Enforce the logic aspect at the camera solver, independently of MonoBehaviour order.
+// A UniversalRenderPipeline.InitializeCameraData patch was tried in 0.8.17/0.8.18 and crashed the
+// game at startup (a static method with an out struct parameter); the begin/end camera render
+// callbacks in UwBehaviour apply the final projection instead.
 internal static class CameraTimingHooks
 {
     private static Harmony Hooks;
-    internal static bool RenderReady { get; private set; }
     private static int SolverHooks;
-    private static long SolverRuns, RenderRuns;
+    private static long SolverRuns;
 
     internal static void Init()
     {
@@ -31,18 +31,7 @@ internal static class CameraTimingHooks
             }
             catch (Exception ex) { Plugin.Instance.Log.LogWarning("Camera timing hook " + name + " unavailable: " + ex.Message); }
         }
-        try
-        {
-            var target = AccessTools.Method(typeof(UniversalRenderPipeline), "InitializeCameraData");
-            if (target == null) throw new MissingMethodException("InitializeCameraData");
-            Hooks.Patch(target, prefix: new HarmonyMethod(typeof(CameraTimingHooks), nameof(BeforeCameraData)));
-            RenderReady = true;
-        }
-        catch (Exception ex)
-        {
-            Plugin.Instance.Log.LogWarning("Final camera-data hook unavailable; render callback fallback remains: " + ex.Message);
-        }
-        Plugin.Instance.Log.LogInfo("Camera timing candidate: solver hooks=" + SolverHooks + "/2 final render hook=" + RenderReady);
+        Plugin.Instance.Log.LogInfo("Camera timing: solver hooks=" + SolverHooks + "/2");
     }
 
     private static void BeforeSolver(CinemachineBrain __instance)
@@ -51,13 +40,6 @@ internal static class CameraTimingHooks
         UwBehaviour.BeforeCameraSolve(__instance);
     }
 
-    private static void BeforeCameraData(Camera camera)
-    {
-        RenderRuns++;
-        UwBehaviour.BeforeCameraData(camera);
-    }
-
     internal static void Dump(StringBuilder output)
-        => output.AppendLine("Camera timing hooks: solver=" + SolverHooks + "/2 runs=" + SolverRuns
-            + " finalRender=" + RenderReady + " runs=" + RenderRuns);
+        => output.AppendLine("Camera timing hooks: solver=" + SolverHooks + "/2 runs=" + SolverRuns);
 }
