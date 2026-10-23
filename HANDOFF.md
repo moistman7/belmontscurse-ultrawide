@@ -1,10 +1,12 @@
 # Belmont's Curse ultrawide plugin: handoff
 
-Updated 2026-10-19. A BepInEx 6 (be.788) IL2CPP plugin for *Castlevania: Belmont's Curse* (Unity 2022.3.62f2, game 1.1.3) that makes the game
+Updated 2026-10-23. A BepInEx 6 (be.788) IL2CPP plugin for *Castlevania: Belmont's Curse* (Unity 2022.3.62f2, game 1.1.3) that makes the game
 work on ultrawide and non-16:9 screens, plus quality-of-life features (dialogue history, voice replay, auto-advance, mod settings menu).
 Repo: https://github.com/moistman7/belmontscurse-ultrawide. Separate from the Spirit of the Samurai plugin.
 
 ## Current state
+
+- **0.8.13 camera recovery test (2026-10-23):** stable active-camera selection; releases invalid cameras and rejects disabled brains. Repairs tracked gameplay pillarbox viewport each projection pass, retaining menu/loading ownership exclusions. Builds final lens projection in beginCameraRendering; LateUpdate remains only when render-hook setup fails. Reuses computed aspect/matrix for render-time aspect swap. Focus return clears interrupted swap state and refreshes jobs. Full viewport skips target-texture/ownership queries. Candidate only: reporter's 0.8.12 log includes 5120x1440 dumps with full viewport, tracked camera, active aspect limit and no plugin errors. Root cause and Alt-Tab recovery unconfirmed. Build clean, 34 pure tests pass; no runtime frametime measurement. Test DLL SHA-256 84DC61E22FEE21EDF7EAF0A6224420115C4F77081D5238DE310518E60571D4ED. Release requested for GitHub and Nexus; publication status to be recorded after verification. Do not claim a confirmed fix or measured gain.
 
 - **0.8.12 ZIP repair (2026-10-21):** fresh original GitHub downloads showed zero entries in Windows Shell ZIP namespace despite .NET/tar extracting successfully. Original archives contained a `./` root entry. Rebuilt all four GitHub/Nexus ZIPs with `System.IO.Compression.ZipFile.CreateFromDirectory` (no containing directory); Windows ZIP handler lists all repaired archives. Replaced both GitHub ZIPs/checksums and updated release notes; fresh downloads extracted and every file hash matches staging (7 plain / 234 AllInOne files). Nexus replacement files 328 (Main/Primary) and 329 (Optional) published at 0.8.12, prior broken files archived; both virus scans pending when verified. Nexus packages omit scripts and keep manual Proton README. Plugin DLL unchanged. Repaired Nexus packages/checksums and screenshot: chat `outputs/nexus-0.8.12-repaired/`. GitHub evidence: ignored `dist/github-repair-0.8.12/`.
 

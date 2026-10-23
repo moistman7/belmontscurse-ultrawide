@@ -140,8 +140,13 @@ public class UwBehaviour : MonoBehaviour
 	private static Matrix4x4 _savedProjection;
 
 	private static bool _renderAspectErrorLogged;
+	private static bool _renderCallbacksReady;
+	private static bool _projectionPrepared;
+	private static float _projectionAspect;
+	private static Matrix4x4 _projectionMatrix;
 
 	private static bool _wide;
+	private static bool _wasFocused = true;
 
 	private static readonly Action KeysAction = ReadKeys;
 
@@ -236,6 +241,7 @@ public class UwBehaviour : MonoBehaviour
 			_endCamera = DelegateSupport.ConvertDelegate<Il2CppSystem.Action<UnityEngine.Rendering.ScriptableRenderContext, Camera>>((Action<UnityEngine.Rendering.ScriptableRenderContext, Camera>)OnEndCameraRendering);
 			UnityEngine.Rendering.RenderPipelineManager.add_beginCameraRendering(_beginCamera);
 			UnityEngine.Rendering.RenderPipelineManager.add_endCameraRendering(_endCamera);
+			_renderCallbacksReady = true;
 		}
 		catch (Exception ex2)
 		{
@@ -254,17 +260,20 @@ public class UwBehaviour : MonoBehaviour
 			{
 				return;
 			}
-			int pixelHeight = cam.pixelHeight;
-			if (pixelHeight <= 0)
+			// Build from the final lens and viewport just before rendering, including
+			// after focus/display changes. Clear readiness even if Guard skips a disabled feature.
+			_projectionPrepared = false;
+			Guard("camera picture", ProjAction);
+			if (!_projectionPrepared)
 			{
 				return;
 			}
-			float num = (float)cam.pixelWidth / (float)pixelHeight;
+			float num = _projectionAspect;
 			float aspect = cam.aspect;
 			if (Math.Abs(aspect - num) > 0.0001f)
 			{
 				_logicAspect = aspect;
-				_savedProjection = cam.projectionMatrix;
+				_savedProjection = _projectionMatrix;
 				cam.aspect = num;
 				cam.projectionMatrix = _savedProjection;
 				_renderAspectSwapped = true;
@@ -333,7 +342,9 @@ public class UwBehaviour : MonoBehaviour
 
 	private void LateUpdate()
 	{
-		Guard("camera picture", ProjAction);
+		// With SRP callbacks installed, the final lens is handled immediately before
+		// rendering. Retain LateUpdate as the fallback if callback installation fails.
+		if (!_renderCallbacksReady) Guard("camera picture", ProjAction);
 		Guard("mouse hide", MouseHide.Tick);
 	}
 
@@ -408,7 +419,18 @@ public class UwBehaviour : MonoBehaviour
 
 	private void Update()
 	{
-		if (Application.isFocused) FrameSamples.Record(Stopwatch.GetTimestamp(), ModMenu.IsOpen ? 2 : DialogueHistory.IsOpen ? 1 : 0);
+		bool focused = Application.isFocused;
+		if (focused && !_wasFocused)
+		{
+			// A render interrupted by Alt-Tab may never deliver its end callback.
+			// CameraLogic below restores the logic aspect; do not reuse that render's state.
+			_renderAspectSwapped = false;
+			_nextCamSearch = 0f;
+			Kick();
+			Plugin.Instance.Log.LogInfo("Focus recovery test: refreshing camera presentation; screen=" + Screen.width + "x" + Screen.height);
+		}
+		_wasFocused = focused;
+		if (focused) FrameSamples.Record(Stopwatch.GetTimestamp(), ModMenu.IsOpen ? 2 : DialogueHistory.IsOpen ? 1 : 0);
 		else FrameSamples.ResetClock();
 		int dumpBefore = _dumpSerial;
 		FrameWatch.Restart();
@@ -744,16 +766,33 @@ public class UwBehaviour : MonoBehaviour
 
 	private static Camera GameplayCamera()
 	{
-		float unscaledTime = Time.unscaledTime;
-		if (_cam != null && unscaledTime < _nextCamSearch)
+		// Keep the current valid camera: an unordered scene scan must not move the
+		// aspect spoof between active brains every five seconds.
+		if (_cam != null && _cam.isActiveAndEnabled && _cam.targetTexture == null
+			&& _camBrain != null && _camBrain.isActiveAndEnabled)
 		{
 			return _cam;
 		}
-		_nextCamSearch = unscaledTime + ((_cam != null) ? 5f : 1f);
+		float unscaledTime = Time.unscaledTime;
+		// Release invalid cameras immediately, even while waiting to retry a search.
+		if (_cam != null)
+		{
+			if (_camSpoofed)
+			{
+				_cam.ResetAspect();
+				_cam.ResetProjectionMatrix();
+			}
+			_cam = null;
+			_camBrain = null;
+			_camSpoofed = false;
+			_nextCamSearch = 0f;
+		}
+		if (unscaledTime < _nextCamSearch) return null;
+		_nextCamSearch = unscaledTime + 1f;
 		Camera camera = null;
 		foreach (CinemachineBrain item in UnityEngine.Object.FindObjectsByType<CinemachineBrain>(FindObjectsSortMode.None))
 		{
-			if (!(item == null))
+			if (item != null && item.isActiveAndEnabled)
 			{
 				Camera component = item.GetComponent<Camera>();
 				if (component != null && component.targetTexture == null && component.isActiveAndEnabled)
@@ -762,10 +801,6 @@ public class UwBehaviour : MonoBehaviour
 					break;
 				}
 			}
-		}
-		if (camera == null && _cam != null)
-		{
-			return _cam;
 		}
 		if (camera == null || _cam == null || camera.Pointer != _cam.Pointer)
 		{
@@ -864,6 +899,7 @@ public class UwBehaviour : MonoBehaviour
 
 	private static void UpdateProjection()
 	{
+		_projectionPrepared = false;
 		if (!_camSpoofed)
 		{
 			return;
@@ -876,6 +912,7 @@ public class UwBehaviour : MonoBehaviour
 			{
 				return;
 			}
+			RestoreGameplayViewport(cam);
 			int pixelHeight = cam.pixelHeight;
 			if (pixelHeight > 0)
 			{
@@ -904,6 +941,10 @@ public class UwBehaviour : MonoBehaviour
 					projectionMatrix.m32 = -1f;
 				}
 				cam.projectionMatrix = projectionMatrix;
+				// Reuse values already read/computed here in the render-aspect swap.
+				_projectionAspect = num;
+				_projectionMatrix = projectionMatrix;
+				_projectionPrepared = true;
 			}
 		}
 		catch (Exception ex)
@@ -924,6 +965,20 @@ public class UwBehaviour : MonoBehaviour
 				_renderMaxMs = num5;
 			}
 		}
+	}
+
+	// The game can reapply its pillarbox viewport on focus return. Repair the
+	// tracked gameplay camera each frame; loading and menu presentations own theirs.
+	private static void RestoreGameplayViewport(Camera camera)
+	{
+		if (!Plugin.On || !Plugin.FixCameraRect.Value || camera == null) return;
+		Rect rect = camera.rect;
+		// Normal gameplay already fills the viewport: avoid render-target reads and
+		// ownership traversal until a viewport actually needs repair.
+		if (!(rect.height > 0.999f && rect.width < 0.999f)) return;
+		if (camera.targetTexture != null || LoadingScreenPresentation.Owns(camera)) return;
+		if (_menuViewportApplied && _menuViewportCamera != null && camera.Pointer == _menuViewportCamera.Pointer) return;
+		camera.rect = new Rect(0f, rect.y, 1f, rect.height);
 	}
 
 	private static void ScanScreenSizes()
@@ -2202,7 +2257,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.12 === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.13 focus-recovery-test === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.13 (camera recovery test)
+
+- Keep a valid active gameplay camera instead of periodically choosing the first brain in an unordered scan. Release inactive cameras and reject disabled brains.
+- Repair a narrowed full-height gameplay viewport each frame and rebuild the ultrawide projection immediately before rendering from the final camera lens. Preserve the menu/loading viewport exclusions and the logic/render aspect swap.
+- Refresh scheduled fixes and discard interrupted render-swap state when focus returns after Alt-Tab.
+- Avoid the duplicate LateUpdate projection rebuild when render callbacks are installed, reuse computed projection values for the aspect swap, and skip unnecessary render-target/ownership checks for an already full viewport. LateUpdate remains the fallback if render-hook setup fails.
+- Candidate fix for reported camera snapping and loss of ultrawide presentation after Alt-Tab at 5120x1440. The supplied 0.8.12 dumps showed full resolution, a full viewport, an active aspect limit and no plugin errors; the cause is not confirmed. In-game verification and comparative frametime measurements are pending. No measured performance gain is claimed.
+- Release build clean; all 34 existing pure logic tests pass. These tests do not exercise Unity rendering, focus changes or camera selection.
+
 ## 0.8.12
 
 - Add opaque centered-16:9 side bars while the standalone `CreditsViewManager` is active, including the final Continue artwork. This covers the reported ending-credits blue sides independently of camera clear flags. Start hook plus polling fallback; restores visibility on exit, mod disable, and aspect changes. In-game verification pending.

@@ -4,10 +4,11 @@ CASTLEVANIA: BELMONT'S CURSE - ULTRAWIDE & STEAM DECK FIX
 An unofficial community mod. It contains no game files. Use at your own risk and keep a backup
 of your saves.
 
-VERSION 0.8.12
-Adds explicit black side bars to standalone ending credits and the final Continue screen.
-Reduces repeated Unity calls for side bars and inactive loading cameras.
-Ending-credits visual verification is pending; no measured frametime gain is claimed.
+VERSION 0.8.13 - CAMERA RECOVERY TEST
+Candidate fix for camera snapping and loss of ultrawide presentation after Alt-Tab.
+Keeps a valid active camera, repairs gameplay viewports each frame and reapplies the final
+projection before rendering. Avoids duplicate projection work; preserves menu/loading protections.
+In-game verification and comparative frametime measurements are pending.
 -------------
 Expanded cutscene-bar detection and reduced camera allocations/dialogue-search sorting.
 The reported bad-ending final-boss side bars remain unverified. No measured frametime
