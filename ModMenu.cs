@@ -233,6 +233,14 @@ internal static class ModMenu
 		}
 	}
 
+	// The panel's feature was switched off after repeated failures: close it and return input now,
+	// because Tick (which normally does that) will no longer run.
+	internal static void Abort()
+	{
+		Close();
+		if (_restoreInput) RestoreInput();
+	}
+
 	private static void ApplyFont()
 	{
 		GameUiFont.Apply(_title);

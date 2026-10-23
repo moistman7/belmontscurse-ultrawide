@@ -256,9 +256,9 @@ public class UwBehaviour : MonoBehaviour
 	internal static void BeforeCameraSolve(CinemachineBrain brain)
 	{
 		// No searches, lens rebuilds or allocations in the normal solver path.
-		if (!_camSpoofed || !Plugin.On || brain == null || _camBrain == null || brain.Pointer != _camBrain.Pointer) return;
 		try
 		{
+			if (!_camSpoofed || !Plugin.On || brain == null || _camBrain == null || brain.Pointer != _camBrain.Pointer) return;
 			Camera camera = brain.OutputCamera;
 			if (camera == null || _cam == null || camera.Pointer != _cam.Pointer) return;
 			float cap = LogicAspectCap(0f);
@@ -279,10 +279,10 @@ public class UwBehaviour : MonoBehaviour
 	{
 		// InitializeCameraData is also called by standalone render APIs that do not
 		// emit begin/end-camera events. Only borrow the aspect inside a paired scope.
-		if (!_renderCallbacksReady || !_renderAspectSwapped || !_camSpoofed || !Plugin.On
-			|| camera == null || _cam == null || camera.Pointer != _cam.Pointer) return;
 		try
 		{
+			if (!_renderCallbacksReady || !_renderAspectSwapped || !_camSpoofed || !Plugin.On
+				|| camera == null || _cam == null || camera.Pointer != _cam.Pointer) return;
 			_projectionPrepared = false;
 			Guard("camera picture", ProjAction);
 			if (!_projectionPrepared) return;
@@ -460,6 +460,13 @@ public class UwBehaviour : MonoBehaviour
 				{
 					ResetCamera();
 				}
+				// Their Tick is what closes them and hands input back; with it switched off nothing else would.
+				try
+				{
+					if (name == "mod menu") ModMenu.Abort();
+					else if (name == "dialogue history") DialogueHistory.Abort();
+				}
+				catch (Exception abortEx) { Plugin.Instance.Log.LogWarning("Could not close '" + name + "' after switching it off: " + abortEx.Message); }
 			}
 		}
 	}
@@ -2331,7 +2338,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.17 camera-timing-prerelease === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.18 camera-timing-prerelease === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);

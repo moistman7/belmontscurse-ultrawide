@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.18 (camera timing prerelease)
+
+- Closing the mod menu (F1 / controller shortcut) now restores the exact time scale it found. Opened over the game's own pause (scale 0) it used to set the scale to 1 and unpause the game behind its pause menu.
+- If the mod menu or dialogue history is switched off after repeated failures while open, close it and hand input back at once; their Tick, which normally does that, no longer runs. Previously game input stayed blocked and the time scale stayed at 0.
+- Wrap the ending-credits start hook in a try/catch (as the loading hook already was) and move the pointer checks of the new camera hooks inside their try blocks, so an unexpected exception cannot propagate into the game.
+- Steam Deck: the ZIPs now carry Unix permissions, so the install/uninstall scripts and launchers are executable after extraction (`./steamdeck/install.sh` works, and the desktop launchers need no manual trust step).
+- Includes all 0.8.17 changes. Still a candidate only: the hooks have not been observed in game, the cause of the reported snapping and Alt-Tab black sides is not confirmed, and no frametime gain is claimed. Release build clean; 37 pure logic tests pass (they do not exercise Unity, Harmony or the menus).
+
 ## 0.8.17 (camera timing prerelease)
 
 - Add Harmony prefixes on `CinemachineBrain.UpdateVirtualCameras` and `ProcessActiveCamera` that apply the configured logic aspect immediately before camera solving, and on `UniversalRenderPipeline.InitializeCameraData` that reasserts the render aspect and ultrawide projection just before URP snapshots camera data. Hooks install independently and log a warning if one is unavailable; the begin/end camera-render callbacks remain as the fallback and always build the projection themselves. The final hook only acts inside an active begin/end scope.

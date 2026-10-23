@@ -30,8 +30,15 @@ internal static class EndingCreditsPresentation
 
     private static void Started(CreditsViewManager __instance)
     {
-        Track(__instance);
-        Apply();
+        try
+        {
+            Track(__instance);
+            Apply();
+        }
+        catch (Exception ex)
+        {
+            Plugin.Instance.Log.LogWarning("Ending credits presentation: " + ex.Message);
+        }
     }
 
     private static void Track(CreditsViewManager view)

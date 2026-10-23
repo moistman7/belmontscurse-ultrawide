@@ -483,6 +483,9 @@ internal static class DialogueHistory
 		Refresh();
 	}
 
+	// The feature was switched off after repeated failures; Tick will no longer close the window.
+	internal static void Abort() => Close();
+
 	private static void Close()
 	{
 		if (IsOpen) Cursor.visible = _cursorWas;
