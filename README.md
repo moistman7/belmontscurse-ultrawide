@@ -22,7 +22,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 - Optional: HUD in the centered 16:9 area, and a bigger HUD (see Keys).
 - Optional HUD safe-area margins and a dialogue history for the current game session.
 
-Version 0.8.13 is a camera recovery test release for reported snapping and loss of ultrawide presentation after Alt-Tab. It keeps a valid active camera, repairs the gameplay viewport each frame, refreshes state on focus return and applies the final projection immediately before rendering. The render path avoids a duplicate projection rebuild and redundant camera reads. The reported issue, ending credits and final-boss cinematic bars still need in-game verification; no measured frametime improvement is claimed. Existing features and menu/loading presentation protections are retained.
+Version 0.8.17 is a prerelease test build for reported camera snapping, loss of ultrawide presentation after Alt-Tab, and apparent slowdown. It enforces the camera aspect immediately before Cinemachine solves and again just before the render pipeline snapshots camera data, with the begin-camera callback as a fallback. It also spreads the save-room mask scan over several frames and adds timing diagnostics to the F9 dump. Nothing here is verified in game: the cause of the reports is not confirmed, and no measured frametime improvement is claimed. Existing features and menu/loading presentation protections are retained.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ Version 0.8.13 is a camera recovery test release for reported snapping and loss 
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.13 loaded`.
+   `Belmont's Curse Ultrawide 0.8.17 loaded`.
 
 To uninstall, delete the DLL.
 

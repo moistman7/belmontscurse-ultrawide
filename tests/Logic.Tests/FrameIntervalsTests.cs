@@ -4,6 +4,34 @@ using BelmontsCurseUltrawide;
 public class FrameIntervalsTests
 {
 	[Fact]
+	public void Session_hitches_survive_after_recent_window_has_rolled_over()
+	{
+		var samples = new FrameIntervals(2);
+		long start = Stopwatch.Frequency;
+		samples.Record(start, 0);
+		samples.Record(start * 2, 0);
+		samples.Record(start * 2 + 1, 0);
+		samples.Record(start * 2 + 2, 0);
+		Assert.True(samples.Snapshot(0).Max() < 25);
+		Assert.Equal(1000d, samples.LifetimeWorst(0), 6);
+		Assert.Equal(1, samples.LifetimeOver25(0));
+	}
+
+	[Fact]
+	public void Session_hitch_totals_exclude_focus_gaps_and_mode_switches()
+	{
+		var samples = new FrameIntervals();
+		samples.Record(Stopwatch.Frequency, 0);
+		samples.ResetClock();
+		samples.Record(Stopwatch.Frequency * 10, 0);
+		samples.Record(Stopwatch.Frequency * 20, 1);
+		Assert.Equal(0d, samples.LifetimeWorst(0));
+		Assert.Equal(0d, samples.LifetimeWorst(1));
+		Assert.Equal(0, samples.LifetimeOver25(0));
+		Assert.Equal(0, samples.LifetimeOver25(1));
+	}
+
+	[Fact]
 	public void Converts_clock_ticks_to_milliseconds()
 	{
 		var samples = new FrameIntervals();

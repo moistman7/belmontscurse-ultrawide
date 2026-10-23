@@ -9,6 +9,8 @@ internal sealed class FrameIntervals
 {
 	private readonly double[][] _samples;
 	private readonly int[] _counts = new int[3], _positions = new int[3];
+	private readonly double[] _lifetimeWorst = new double[3];
+	private readonly long[] _lifetimeOver25 = new long[3];
 	private long _previous;
 	private int _mode;
 
@@ -24,6 +26,8 @@ internal sealed class FrameIntervals
 		if (_previous != 0 && _mode == mode)
 		{
 			double ms = (timestamp - _previous) * 1000.0 / Stopwatch.Frequency;
+			_lifetimeWorst[mode] = Math.Max(_lifetimeWorst[mode], ms);
+			if (ms > 25) _lifetimeOver25[mode]++;
 			_samples[mode][_positions[mode]] = ms;
 			_positions[mode] = (_positions[mode] + 1) % _samples[mode].Length;
 			_counts[mode] = Math.Min(_counts[mode] + 1, _samples[mode].Length);
@@ -40,6 +44,9 @@ internal sealed class FrameIntervals
 		return copy;
 	}
 
+	internal double LifetimeWorst(int mode) => _lifetimeWorst[mode];
+	internal long LifetimeOver25(int mode) => _lifetimeOver25[mode];
+
 	internal void Dump(StringBuilder sb)
 	{
 		sb.AppendLine("Frame intervals: wall time between Unity Updates; recent 2048 samples per mode, excluding focus gaps, mode transitions and diagnostic dumps. Includes loading/startup; not GPU presentation timing.");
@@ -47,6 +54,7 @@ internal sealed class FrameIntervals
 		for (int mode = 0; mode < names.Length; mode++)
 		{
 			var sorted = Snapshot(mode);
+			sb.AppendLine(FormattableString.Invariant($"  {names[mode]} session history: worst={LifetimeWorst(mode):F3}ms >25ms={LifetimeOver25(mode)} (same focus/mode/dump exclusions)"));
 			if (sorted.Length == 0) { sb.AppendLine("  " + names[mode] + ": no samples"); continue; }
 			double sum = 0;
 			int over25 = 0, over50 = 0;

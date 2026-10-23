@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.17 (camera timing prerelease)
+
+- Add Harmony prefixes on `CinemachineBrain.UpdateVirtualCameras` and `ProcessActiveCamera` that apply the configured logic aspect immediately before camera solving, and on `UniversalRenderPipeline.InitializeCameraData` that reasserts the render aspect and ultrawide projection just before URP snapshots camera data. Hooks install independently and log a warning if one is unavailable; the begin/end camera-render callbacks remain as the fallback and always build the projection themselves. The final hook only acts inside an active begin/end scope.
+- Track the camera actually output by the Cinemachine brain (including a controlled-object override) and keep the selected camera while it stays valid.
+- Cache the parsed logic-aspect setting and avoid scans or allocations in the normal solver path. Do not re-enable the aspect limit after the camera-picture feature has been switched off by repeated failures.
+- Filter the save-room mask scan incrementally (up to 128 renderers per step with a best-effort 0.25 ms check) instead of in one pass. The object snapshot itself is still synchronous. Existing masks stay active until a complete new set is published; refresh requests that arrive mid-scan are queued, not dropped.
+- Keep the worst frame and count of frames over 25 ms per mode for the whole session, and add timing hook counters, projection/culling matrices, pixel sizes, time-scale values and frame-rate settings to the F9 dump. Focus-return log lines now include screen mode, display size and whether the aspect limit is active.
+- Candidate only: the cause of the reported snapping, black sides after Alt-Tab and slowdown is not confirmed, and the hooks have not been observed running in the game. No measured frametime improvement is claimed. Release build clean; 37 pure logic tests pass (they use fake Unity types and do not exercise Unity, Harmony or rendering).
 ## 0.8.13 (camera recovery test)
 
 - Keep a valid active gameplay camera instead of periodically choosing the first brain in an unordered scan. Release inactive cameras and reject disabled brains.

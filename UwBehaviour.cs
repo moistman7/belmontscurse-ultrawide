@@ -144,6 +144,8 @@ public class UwBehaviour : MonoBehaviour
 	private static bool _projectionPrepared;
 	private static float _projectionAspect;
 	private static Matrix4x4 _projectionMatrix;
+	private static long _cameraSelections, _focusReturns, _beginCallbacks, _endCallbacks;
+	private static long _lastBeginUpdate = -1, _lastEndUpdate = -1;
 
 	private static bool _wide;
 	private static bool _wasFocused = true;
@@ -247,6 +249,60 @@ public class UwBehaviour : MonoBehaviour
 		{
 			Plugin.Instance.Log.LogWarning("Could not hook camera rendering (door/fullscreen lights may look squashed): " + ex2.Message);
 		}
+		try { CameraTimingHooks.Init(); }
+		catch (Exception ex3) { Plugin.Instance.Log.LogWarning("Camera timing hooks unavailable; render callbacks remain: " + ex3.Message); }
+	}
+
+	internal static void BeforeCameraSolve(CinemachineBrain brain)
+	{
+		// No searches, lens rebuilds or allocations in the normal solver path.
+		if (!_camSpoofed || !Plugin.On || brain == null || _camBrain == null || brain.Pointer != _camBrain.Pointer) return;
+		try
+		{
+			Camera camera = brain.OutputCamera;
+			if (camera == null || _cam == null || camera.Pointer != _cam.Pointer) return;
+			float cap = LogicAspectCap(0f);
+			if (Math.Abs(camera.aspect - cap) > 0.0001f) camera.aspect = cap;
+		}
+		catch (Exception ex)
+		{
+			if (!_solverErrorLogged) Plugin.Instance.Log.LogWarning("Camera solver aspect hook: " + ex.Message);
+			_solverErrorLogged = true;
+		}
+	}
+
+	private static bool _solverErrorLogged;
+	private static string _cachedCapSetting;
+	private static float _cachedCap = Aspect16x9;
+
+	internal static void BeforeCameraData(Camera camera)
+	{
+		// InitializeCameraData is also called by standalone render APIs that do not
+		// emit begin/end-camera events. Only borrow the aspect inside a paired scope.
+		if (!_renderCallbacksReady || !_renderAspectSwapped || !_camSpoofed || !Plugin.On
+			|| camera == null || _cam == null || camera.Pointer != _cam.Pointer) return;
+		try
+		{
+			_projectionPrepared = false;
+			Guard("camera picture", ProjAction);
+			if (!_projectionPrepared) return;
+			// Reassert after every begin-camera subscriber, before URP snapshots the
+			// viewport, lens and projection. Always schedule restoration, even if
+			// an earlier callback already left the aspect at the rendering value.
+			_logicAspect = LogicAspectCap(0f);
+			_savedProjection = _projectionMatrix;
+			_renderAspectSwapped = true;
+			if (Math.Abs(camera.aspect - _projectionAspect) > 0.0001f)
+			{
+				camera.aspect = _projectionAspect;
+				camera.projectionMatrix = _savedProjection;
+			}
+		}
+		catch (Exception ex)
+		{
+			if (!_renderAspectErrorLogged) Plugin.Instance.Log.LogWarning("Final camera-data repair: " + ex.Message);
+			_renderAspectErrorLogged = true;
+		}
 	}
 
 	// The 16:9 aspect is only meant for the game's camera logic. While the camera renders, effects
@@ -256,12 +312,18 @@ public class UwBehaviour : MonoBehaviour
 	{
 		try
 		{
-			if (!_camSpoofed || cam == null || _cam == null || cam.Pointer != _cam.Pointer)
+			if (!_renderCallbacksReady || !_camSpoofed || !Plugin.On || cam == null || _cam == null || cam.Pointer != _cam.Pointer)
 			{
 				return;
 			}
 			// Build from the final lens and viewport just before rendering, including
 			// after focus/display changes. Clear readiness even if Guard skips a disabled feature.
+			_beginCallbacks++;
+			_lastBeginUpdate = _updateRuns;
+			// Always build the projection here, even when the final camera-data hook is
+			// installed: a patch that applied but never fires (e.g. an inlined native
+			// caller) must not leave the camera with a stale 16:9 matrix. The hook only
+			// reasserts these values later.
 			_projectionPrepared = false;
 			Guard("camera picture", ProjAction);
 			if (!_projectionPrepared)
@@ -269,14 +331,13 @@ public class UwBehaviour : MonoBehaviour
 				return;
 			}
 			float num = _projectionAspect;
-			float aspect = cam.aspect;
-			if (Math.Abs(aspect - num) > 0.0001f)
+			_logicAspect = LogicAspectCap(0f);
+			_savedProjection = _projectionMatrix;
+			_renderAspectSwapped = true;
+			if (Math.Abs(cam.aspect - num) > 0.0001f)
 			{
-				_logicAspect = aspect;
-				_savedProjection = _projectionMatrix;
 				cam.aspect = num;
 				cam.projectionMatrix = _savedProjection;
-				_renderAspectSwapped = true;
 			}
 		}
 		catch (Exception ex)
@@ -298,6 +359,8 @@ public class UwBehaviour : MonoBehaviour
 				return;
 			}
 			_renderAspectSwapped = false;
+			_endCallbacks++;
+			_lastEndUpdate = _updateRuns;
 			if (_camSpoofed)
 			{
 				cam.aspect = _logicAspect;
@@ -422,12 +485,15 @@ public class UwBehaviour : MonoBehaviour
 		bool focused = Application.isFocused;
 		if (focused && !_wasFocused)
 		{
+			_focusReturns++;
 			// A render interrupted by Alt-Tab may never deliver its end callback.
 			// CameraLogic below restores the logic aspect; do not reuse that render's state.
 			_renderAspectSwapped = false;
 			_nextCamSearch = 0f;
 			Kick();
-			Plugin.Instance.Log.LogInfo("Focus recovery test: refreshing camera presentation; screen=" + Screen.width + "x" + Screen.height);
+			Plugin.Instance.Log.LogInfo("Camera timing candidate: refreshing camera presentation; screen=" + Screen.width + "x" + Screen.height
+				+ " mode=" + Screen.fullScreenMode + " system=" + Display.main.systemWidth + "x" + Display.main.systemHeight
+				+ " spoofed=" + _camSpoofed);
 		}
 		_wasFocused = focused;
 		if (focused) FrameSamples.Record(Stopwatch.GetTimestamp(), ModMenu.IsOpen ? 2 : DialogueHistory.IsOpen ? 1 : 0);
@@ -445,6 +511,7 @@ public class UwBehaviour : MonoBehaviour
 			Guard("ending credits presentation", EndingCreditsPresentation.Apply);
 			Guard("camera", CamAction);
 			Guard("zone camera size", SizeAction);
+			Guard("save-room mask scan step", SaveRoomMasks.ScanStep);
 			Guard("skip intros", IntroAction);
 			Guard("startup fps cap", CapAction);
 			Guard("world ui camera", WorldUiAction);
@@ -771,7 +838,8 @@ public class UwBehaviour : MonoBehaviour
 		if (_cam != null && _cam.isActiveAndEnabled && _cam.targetTexture == null
 			&& _camBrain != null && _camBrain.isActiveAndEnabled)
 		{
-			return _cam;
+			Camera output = _camBrain.OutputCamera;
+			if (output != null && output.Pointer == _cam.Pointer) return _cam;
 		}
 		float unscaledTime = Time.unscaledTime;
 		// Release invalid cameras immediately, even while waiting to retry a search.
@@ -790,14 +858,16 @@ public class UwBehaviour : MonoBehaviour
 		if (unscaledTime < _nextCamSearch) return null;
 		_nextCamSearch = unscaledTime + 1f;
 		Camera camera = null;
+		CinemachineBrain selectedBrain = null;
 		foreach (CinemachineBrain item in UnityEngine.Object.FindObjectsByType<CinemachineBrain>(FindObjectsSortMode.None))
 		{
 			if (item != null && item.isActiveAndEnabled)
 			{
-				Camera component = item.GetComponent<Camera>();
+				Camera component = item.OutputCamera;
 				if (component != null && component.targetTexture == null && component.isActiveAndEnabled)
 				{
 					camera = component;
+					selectedBrain = item;
 					break;
 				}
 			}
@@ -811,18 +881,20 @@ public class UwBehaviour : MonoBehaviour
 			}
 			_camSpoofed = false;
 			_cam = camera;
-			_camBrain = camera == null ? null : camera.GetComponent<CinemachineBrain>();
+			if (camera != null) _cameraSelections++;
+			_camBrain = selectedBrain;
 		}
 		return _cam;
 	}
 
 	private static float LogicAspectCap(float real)
 	{
-		if (float.TryParse((Plugin.CameraMaxAspect.Value ?? "auto").Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var result) && result > 0f)
-		{
-			return Math.Max(1.7777778f, result);
-		}
-		return 1.7777778f;
+		string setting = Plugin.CameraMaxAspect.Value ?? "auto";
+		if (setting == _cachedCapSetting) return _cachedCap;
+		_cachedCapSetting = setting;
+		_cachedCap = float.TryParse(setting.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var result) && result > 0f
+			? Math.Max(Aspect16x9, result) : Aspect16x9;
+		return _cachedCap;
 	}
 
 	private static void CameraLogic()
@@ -835,7 +907,9 @@ public class UwBehaviour : MonoBehaviour
 		}
 		float num = ((Screen.height > 0) ? ((float)Screen.width / (float)Screen.height) : 1.7777778f);
 		float num2 = LogicAspectCap(num);
-		if (Plugin.On && num > num2 + 0.01f)
+		// Do not re-enable the aspect spoof on the next Update if its projection
+		// partner was disabled by Guard after repeated failures.
+		if (Plugin.On && !DisabledFeatures.Contains("camera picture") && num > num2 + 0.01f)
 		{
 			if (!_camSpoofed)
 			{
@@ -2257,7 +2331,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.13 focus-recovery-test === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.17 camera-timing-prerelease === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2277,6 +2351,20 @@ public class UwBehaviour : MonoBehaviour
 			handler.AppendLiteral(" centerHud=");
 			handler.AppendFormatted(Plugin.CenterHud.Value);
 			stringBuilder3.AppendLine(ref handler);
+			CameraTimingHooks.Dump(stringBuilder);
+			stringBuilder.AppendLine("Simulation timing snapshot: timeScale=" + Time.timeScale.ToString("R", CultureInfo.InvariantCulture)
+				+ " deltaTime=" + Time.deltaTime.ToString("R", CultureInfo.InvariantCulture)
+				+ " unscaledDeltaTime=" + Time.unscaledDeltaTime.ToString("R", CultureInfo.InvariantCulture)
+				+ " fixedDeltaTime=" + Time.fixedDeltaTime.ToString("R", CultureInfo.InvariantCulture)
+				+ " maximumDeltaTime=" + Time.maximumDeltaTime.ToString("R", CultureInfo.InvariantCulture)
+				+ " captureFramerate=" + Time.captureFramerate + " targetFrameRate=" + Application.targetFrameRate
+				+ " vsync=" + QualitySettings.vSyncCount);
+			stringBuilder.AppendLine("Camera diagnostics: build=" + typeof(UwBehaviour).Assembly.ManifestModule.ModuleVersionId
+				+ " focused=" + Application.isFocused + " focusReturns=" + _focusReturns + " selections=" + _cameraSelections
+				+ " renderHooks=" + _renderCallbacksReady + " begin=" + _beginCallbacks + " swappedEnd=" + _endCallbacks
+				+ " lastBeginUpdate=" + _lastBeginUpdate + " lastSwappedEndUpdate=" + _lastEndUpdate + " updates=" + _updateRuns
+				+ " prepared=" + _projectionPrepared + " swapPending=" + _renderAspectSwapped + " preparedAspect=" + _projectionAspect);
+			foreach (var feature in DisabledFeatures) stringBuilder.AppendLine("Disabled feature: " + feature);
 			SaveRoomMasks.Dump(stringBuilder);
 			LoadingScreenPresentation.Dump(stringBuilder);
 			EndingCreditsPresentation.Dump(stringBuilder);
@@ -2510,6 +2598,16 @@ public class UwBehaviour : MonoBehaviour
 					handler.AppendLiteral(" targetTexture=");
 					handler.AppendFormatted((allCamera.targetTexture == null) ? "none" : (allCamera.targetTexture.width + "x" + allCamera.targetTexture.height));
 					stringBuilder12.AppendLine(ref handler);
+					// Snapshot only on F9: no extra native camera reads in the frame path.
+					Matrix4x4 actualProjection = allCamera.projectionMatrix;
+					stringBuilder.AppendLine("  projection m00=" + actualProjection.m00.ToString("R", CultureInfo.InvariantCulture)
+						+ " m11=" + actualProjection.m11.ToString("R", CultureInfo.InvariantCulture)
+						+ " matrixAspect=" + (actualProjection.m00 == 0f ? "undefined" : (actualProjection.m11 / actualProjection.m00).ToString("R", CultureInfo.InvariantCulture))
+						+ " pixelRect=" + allCamera.pixelRect + " scaledPixels=" + allCamera.scaledPixelWidth + "x" + allCamera.scaledPixelHeight
+						+ " active=" + allCamera.isActiveAndEnabled + " display=" + allCamera.targetDisplay + " dynamicResolution=" + allCamera.allowDynamicResolution);
+					stringBuilder.AppendLine("  projection=" + actualProjection.ToString("F6"));
+					stringBuilder.AppendLine("  nonJitteredProjection=" + allCamera.nonJitteredProjectionMatrix.ToString("F6"));
+					stringBuilder.AppendLine("  cullingMatrix=" + allCamera.cullingMatrix.ToString("F6"));
 				}
 			}
 			DumpLights(stringBuilder);
