@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.20 (camera timing update)
+
+- Measured on a 3440x1440 screen: auto-advance's idle cost fell from 0.095 ms to 0.024 ms per frame and the plugin's average Update from 0.159 ms to 0.090 ms. With the dialogue Begin hook installed, the scene-wide search for the active line reader is only a fallback, so it now runs every 0.5 s instead of 0.1 s. Picking up a line already in progress (for example, switching auto-advance on mid-dialogue) can take up to half a second longer.
+- The F9 dump now lists every per-frame feature's average time, run count and total, sorted by total.
+- Includes 0.8.19 (the fix for the startup crash in 0.8.17 and 0.8.18). Played in gameplay without crashes: solver hooks fire and the begin/end render callbacks pair exactly.
+- Not verified: auto-advance firing after the interval change (a test run did not reach dialogue), the original Alt-Tab and snapping reports, and any frametime change beyond the plugin's own cost. Release build clean; 37 pure tests pass.
+
 ## 0.8.19 (camera timing prerelease)
 
 - Fix a startup crash in 0.8.17 and 0.8.18: the Harmony patch on `UniversalRenderPipeline.InitializeCameraData` (a static method with an `out` struct parameter) made the game fault with an access violation about a second after the plugin loaded. The patch is removed; the begin-camera render callback builds and applies the final projection as it did before. Found by installing the build locally and bisecting: no camera hooks and the two Cinemachine solver hooks alone both run; the URP hook alone crashes. Do not use 0.8.17 or 0.8.18.
