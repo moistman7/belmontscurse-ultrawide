@@ -81,6 +81,9 @@ public class UwBehaviour : MonoBehaviour
 	// Slowest single run of each per-frame feature since the last dump; shows what a frame spike came from.
 	private static readonly System.Collections.Generic.Dictionary<string, double> ActionMaxMs = new System.Collections.Generic.Dictionary<string, double>();
 
+	// Lifetime total time and run count of each per-frame feature, for the F9 dump's per-feature averages.
+	private static readonly System.Collections.Generic.Dictionary<string, double[]> ActionTotals = new System.Collections.Generic.Dictionary<string, double[]>();
+
 	private static readonly Stopwatch FrameWatch = new Stopwatch();
 	private static readonly FrameIntervals FrameSamples = new();
 	private static int _dumpSerial;
@@ -393,6 +396,9 @@ public class UwBehaviour : MonoBehaviour
 			double took = (Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency;
 			ActionMaxMs.TryGetValue(name, out var worst);
 			if (took > worst) ActionMaxMs[name] = took;
+			if (!ActionTotals.TryGetValue(name, out var totals)) ActionTotals[name] = totals = new double[2];
+			totals[0] += took;
+			totals[1]++;
 		}
 		catch (Exception t)
 		{
@@ -2392,6 +2398,12 @@ public class UwBehaviour : MonoBehaviour
 			}
 			foreach (var pair in ActionMaxMs) if (pair.Value >= 1.0) stringBuilder.AppendLine("    feature '" + pair.Key + "' slowest run " + pair.Value.ToString("F1") + "ms");
 			ActionMaxMs.Clear();
+			// Where the average per-frame plugin time goes (whole session; excludes frames that wrote a dump).
+			var byTotal = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, double[]>>(ActionTotals);
+			byTotal.Sort((x, y) => y.Value[0].CompareTo(x.Value[0]));
+			foreach (var pair in byTotal)
+				stringBuilder.AppendLine("    feature '" + pair.Key + "' avg=" + (pair.Value[0] / Math.Max(1.0, pair.Value[1])).ToString("F4", CultureInfo.InvariantCulture)
+					+ "ms runs=" + (long)pair.Value[1] + " total=" + pair.Value[0].ToString("F0", CultureInfo.InvariantCulture) + "ms");
 			_updateMaxMs = 0.0;
 			_renderMaxMs = 0.0;
 			foreach (Job job2 in Jobs)

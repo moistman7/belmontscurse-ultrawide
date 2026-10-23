@@ -45,7 +45,9 @@ internal static class VoiceAdvance
 		bool readerActive = _reader != null && _reader.isActiveAndEnabled && _reader._isActive;
 		if (!readerActive && now >= _nextSearch)
 		{
-			_nextSearch = now + 0.1f;
+			// With the Begin hook installed, Track() hands over the reader the moment a line starts, so this
+			// scene-wide search is only a fallback (e.g. auto-advance switched on mid-line): run it less often.
+			_nextSearch = now + (DialogueHistory.Available ? 0.5f : 0.1f);
 			_reader = FindActiveReader();
 			readerActive = _reader != null && _reader.isActiveAndEnabled && _reader._isActive;
 		}
