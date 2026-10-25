@@ -148,7 +148,9 @@ internal static class DialogueHistory
 
 	private static void RecordPortrait(Entry entry, CutscenePortraitUI portrait, Sprite sprite)
 	{
-		entry.Portrait = GameUiSprites.Keep(sprite);
+		var kept = GameUiSprites.Keep(sprite);
+		if (entry.Portrait != kept) QueueRelease(entry.Portrait);
+		entry.Portrait = kept;
 		entry.PortraitRight = portrait._isRight;
 		entry.PortraitFlipped = portrait._foregroundImage != null && portrait._foregroundImage.transform.lossyScale.x < 0;
 	}
@@ -341,10 +343,48 @@ internal static class DialogueHistory
 		Plugin.Instance.Log.LogInfo("Dialogue history: line without a speaker label at " + string.Join("/", parts));
 	}
 
+	// Portrait copies of trimmed entries are freed once no remaining entry uses them. Never while the history window
+	// is open: its cards still point at them.
+	private static readonly List<Sprite> ReleaseQueue = new();
+	private static bool _releaseErrorLogged;
+
+	private static void QueueRelease(Sprite portrait)
+	{
+		if (portrait != null && !ReleaseQueue.Contains(portrait)) ReleaseQueue.Add(portrait);
+	}
+
+	private static void FlushReleases()
+	{
+		if (IsOpen || ReleaseQueue.Count == 0) return;
+		// Freeing memory must never take the history capture down with it: a failure here is logged once and skipped.
+		foreach (var portrait in ReleaseQueue)
+		{
+			try
+			{
+				bool used = false;
+				foreach (var entry in Entries) if (entry.Portrait == portrait) { used = true; break; }
+				if (!used) GameUiSprites.Release(portrait);
+			}
+			catch (Exception ex)
+			{
+				if (!_releaseErrorLogged) Plugin.Instance.Log.LogWarning("History portrait cleanup skipped: " + ex.Message);
+				_releaseErrorLogged = true;
+			}
+		}
+		ReleaseQueue.Clear();
+	}
+
 	private static void Trim()
+	{
+		TrimEntries();
+		FlushReleases();
+	}
+
+	private static void TrimEntries()
 	{
 		int excess = Entries.Count - Math.Clamp(Plugin.HistoryLimit.Value, 20, 1000);
 		if (excess <= 0) return;
+		for (int i = 0; i < excess; i++) QueueRelease(Entries[i].Portrait);
 		Entries.RemoveRange(0, excess);
 		var stale = new List<int>();
 		foreach (var pair in Labels) if (!Entries.Contains(pair.Value)) stale.Add(pair.Key);
@@ -394,7 +434,11 @@ internal static class DialogueHistory
 	{
 		if (!Plugin.HistoryEnabled.Value)
 		{
-			Close(); Entries.Clear(); Labels.Clear(); NameLabels.Clear(); Pages.Clear(); return;
+			Close();
+			foreach (var entry in Entries) QueueRelease(entry.Portrait);
+			Entries.Clear(); Labels.Clear(); NameLabels.Clear(); Pages.Clear();
+			FlushReleases();
+			return;
 		}
 		if (!IsOpen && _prewarm < 6 && _available && Time.unscaledTime > 6f && Time.unscaledTime >= _nextPrewarm) { _nextPrewarm = Time.unscaledTime + 0.6f; HistoryView.Prewarm(_prewarm++); }
 		Poll();

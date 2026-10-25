@@ -479,6 +479,29 @@ public class UwBehaviour : MonoBehaviour
 		_camSpoofed = false;
 	}
 
+	private static float _focusWatchStart, _focusWatchUntil;
+	private static string _focusWatchLast;
+
+	// For a few seconds after the window regains focus, log every change in screen size, display mode and camera
+	// state, so a report of "ultrawide lost after Alt-Tab" shows what changed and when.
+	private static void WatchAfterFocus()
+	{
+		try
+		{
+			Camera cam = _cam;
+			string state = Screen.width + "x" + Screen.height + " " + Screen.fullScreenMode + " spoofed=" + _camSpoofed
+				+ (cam != null ? " camAspect=" + cam.aspect.ToString("F3", CultureInfo.InvariantCulture) + " rect=" + cam.rect : " cam=none");
+			if (state == _focusWatchLast) return;
+			_focusWatchLast = state;
+			Plugin.Instance.Log.LogInfo("Alt-Tab watch (+" + (Time.unscaledTime - _focusWatchStart).ToString("F2", CultureInfo.InvariantCulture) + "s): " + state);
+		}
+		catch (Exception ex)
+		{
+			_focusWatchUntil = 0f;
+			Plugin.Instance.Log.LogWarning("Alt-Tab watch stopped: " + ex.Message);
+		}
+	}
+
 	private void Update()
 	{
 		bool focused = Application.isFocused;
@@ -493,8 +516,12 @@ public class UwBehaviour : MonoBehaviour
 			Plugin.Instance.Log.LogInfo("Camera timing candidate: refreshing camera presentation; screen=" + Screen.width + "x" + Screen.height
 				+ " mode=" + Screen.fullScreenMode + " system=" + Display.main.systemWidth + "x" + Display.main.systemHeight
 				+ " spoofed=" + _camSpoofed);
+			_focusWatchStart = Time.unscaledTime;
+			_focusWatchUntil = _focusWatchStart + 6f;
+			_focusWatchLast = null;
 		}
 		_wasFocused = focused;
+		if (focused && Time.unscaledTime < _focusWatchUntil) WatchAfterFocus();
 		if (focused) FrameSamples.Record(Stopwatch.GetTimestamp(), ModMenu.IsOpen ? 2 : DialogueHistory.IsOpen ? 1 : 0);
 		else FrameSamples.ResetClock();
 		int dumpBefore = _dumpSerial;
@@ -600,6 +627,7 @@ public class UwBehaviour : MonoBehaviour
 
 	private static bool _autoHudDone;
 	private static IntPtr _padPtr;
+	private static long _padPolls, _padSkipped, _padSwitches;
 	private static readonly GamepadButton[] PadButtons = new GamepadButton[9];
 	private static readonly ButtonControl[] PadControls = new ButtonControl[9];
 
@@ -625,10 +653,18 @@ public class UwBehaviour : MonoBehaviour
 		{
 			return;
 		}
+		_padPolls++;
 		if (_padPtr != current.Pointer)
 		{
 			_padPtr = current.Pointer;
+			_padSwitches++;
 			Array.Clear(PadControls, 0, PadControls.Length);
+		}
+		// "Pressed this frame" can only be true on a frame the device received input, so an idle pad needs no reads.
+		if (!current.wasUpdatedThisFrame)
+		{
+			_padSkipped++;
+			return;
 		}
 		if (PadCtl(current, 0, Plugin.PadModifier.Value).isPressed)
 		{
@@ -2330,7 +2366,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.21 camera-timing-update === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.22 camera-timing-update === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2351,6 +2387,7 @@ public class UwBehaviour : MonoBehaviour
 			handler.AppendFormatted(Plugin.CenterHud.Value);
 			stringBuilder3.AppendLine(ref handler);
 			CameraTimingHooks.Dump(stringBuilder);
+			stringBuilder.AppendLine("Gamepad poll: polls=" + _padPolls + " idleSkips=" + _padSkipped + " padSwitches=" + _padSwitches);
 			stringBuilder.AppendLine("Simulation timing snapshot: timeScale=" + Time.timeScale.ToString("R", CultureInfo.InvariantCulture)
 				+ " deltaTime=" + Time.deltaTime.ToString("R", CultureInfo.InvariantCulture)
 				+ " unscaledDeltaTime=" + Time.unscaledDeltaTime.ToString("R", CultureInfo.InvariantCulture)
@@ -2378,7 +2415,7 @@ public class UwBehaviour : MonoBehaviour
 			stringBuilder.AppendLine("Main-menu 16:9 viewport=" + _menuViewportApplied);
 			stringBuilder.AppendLine("Main-menu pure-black bars=" + MainMenuBars.Visible);
 			stringBuilder.AppendLine("HUD safe area: horizontal=" + Plugin.HudSafeHorizontal.Value + "% vertical=" + Plugin.HudSafeVertical.Value + "%");
-			stringBuilder.AppendLine("Dialogue history: hooks=" + DialogueHistory.Available + " enabled=" + Plugin.HistoryEnabled.Value + " lines=" + DialogueHistory.Count + " open=" + DialogueHistory.IsOpen);
+			stringBuilder.AppendLine("Dialogue history: hooks=" + DialogueHistory.Available + " enabled=" + Plugin.HistoryEnabled.Value + " lines=" + DialogueHistory.Count + " open=" + DialogueHistory.IsOpen + " keptPortraits=" + GameUiSprites.KeptCount);
 			stringBuilder.AppendLine("History voices: recorded=" + DialogueHistory.VoicedCount + " replaying=" + HistoryVoice.Playing);
 			GamepadGlyphs.Dump(stringBuilder);
 			HistoryView.Dump(stringBuilder);

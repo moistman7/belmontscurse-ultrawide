@@ -7,6 +7,7 @@ set -euo pipefail
 GAME_EXE="Castlevania Belmont's Curse.exe"
 GAME_DIR_NAME="Castlevania Belmont's Curse"
 BEPINEX_URL='https://builds.bepinex.dev/projects/bepinex_be/788/BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.788%2B5b766a3.zip'
+BEPINEX_SHA256='f4cc496bd098a0df4164b81e3737297707f13a47c2478dba2f60eefab784817a'
 REPO='moistman7/belmontscurse-ultrawide'
 LAUNCH_OPT='WINEDLLOVERRIDES="winhttp=n,b" %command%'
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -57,7 +58,10 @@ elif [ -f "$HERE/../winhttp.dll" ] && [ -d "$HERE/../BepInEx/core" ]; then
 else
     need curl; need unzip
     echo "Downloading BepInEx 6 be.788 ..."
+    need sha256sum
     curl -fL --progress-bar -o "$TMP/bepinex.zip" "$BEPINEX_URL"
+    echo "$BEPINEX_SHA256  $TMP/bepinex.zip" | sha256sum -c --status - \
+        || die "The BepInEx download did not match its expected checksum (incomplete or changed). Nothing was installed. Run this again, or install BepInEx by hand."
     unzip -qo "$TMP/bepinex.zip" -d "$GAME"
 fi
 mkdir -p "$GAME/BepInEx/plugins"
@@ -109,7 +113,8 @@ set_launch_option() {
         ?*) echo "The game already has launch options ($cur); not overwriting them."; return 1 ;;
     esac
 
-    cp -f "$cfg" "$cfg.bak-belmonts-curse"
+    # Keep the first backup: it is the config as it was before this mod touched it.
+    [ -e "$cfg.bak-belmonts-curse" ] || cp -f "$cfg" "$cfg.bak-belmonts-curse"
     if awk -v appid="$appid" -v opt="$LAUNCH_OPT" -f "$HERE/set-launch-option.awk" "$cfg" > "$TMP/localconfig.vdf" \
         && [ -s "$TMP/localconfig.vdf" ]; then
         cp -f "$TMP/localconfig.vdf" "$cfg"

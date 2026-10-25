@@ -53,6 +53,30 @@ internal static class GameUiSprites
             if (target != null) RenderTexture.ReleaseTemporary(target);
         }
     }
+    // Free a copy made by Keep (and its trimmed display sprite) once no history entry uses it any more.
+    // Only copies this class made are destroyed; a fallback that returned the game's own sprite is left alone.
+    internal static void Release(Sprite kept)
+    {
+        if (kept == null) return;
+        int key = 0;
+        bool ours = false;
+        foreach (var pair in Kept)
+            if (pair.Value == kept) { key = pair.Key; ours = true; break; }
+        if (!ours) return;
+        Kept.Remove(key);
+        int id = kept.GetInstanceID();
+        if (Cache.TryGetValue(id, out var cached))
+        {
+            Cache.Remove(id);
+            if (cached.Display != null && cached.Display != cached.Source) UnityEngine.Object.Destroy(cached.Display);
+        }
+        var texture = kept.texture;
+        UnityEngine.Object.Destroy(kept);
+        if (texture != null) UnityEngine.Object.Destroy(texture);
+    }
+
+    internal static int KeptCount => Kept.Count;
+
     internal static Sprite Trim(Sprite source)
     {
         if (source == null) return null;

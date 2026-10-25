@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.22 (camera timing and housekeeping update)
+
+- Controller polling: the shortcut poll is skipped on frames where the pad received no input (a button can only be 'pressed this frame' on a frame the device updated, so behavior is identical). Measured on a 3440x1440 PC with a gamepad: the shortcut's average cost fell from 0.039 ms to 0.001 ms per frame (99.98% of polls skipped) and the plugin's average Update from 0.136 ms to 0.062 ms. The F9 dump shows poll, idle-skip and pad-switch counts.
+- Dialogue history: the portrait copies it keeps are now freed when their entries are trimmed (or replaced), instead of accumulating for the whole session; never while the history window is open. The dump shows the number of kept portraits. A failure in this cleanup is logged once and cannot disable history capture.
+- Alt-Tab: for 6 s after the window regains focus the log records every change in screen size, display mode and camera state, so a report of lost ultrawide shows what changed and when. In four test focus returns nothing changed.
+- Steam Deck installer: it keeps the first Steam config backup instead of overwriting it on every run (install and uninstall), and verifies the downloaded BepInEx zip against a pinned SHA-256 (the same file as the BepInEx bundled in the AllInOne package) before extracting it.
+- Includes 0.8.21. Not changed: the history window's one-time ~22 ms warm-up frame (splitting it would flash the window). Release build clean; 37 pure tests pass; played in gameplay on 3440x1440 without crashes. Not verified: portrait cleanup at runtime (no dialogue in the test), auto-advance after the 0.8.20 change, the 10 s scan interval in a heavy room, the original Alt-Tab and hitching reports.
+
 ## 0.8.21 (camera timing update)
 
 - A reporter's dump from a busy late-game room (5120x1440, 0.8.13) showed the scene scans costing 4-9 ms each every 2-5 s, with one save-room mask scan spike of 205 ms and 6 frames over 25 ms in 18 s. The save-room mask, loading-camera and ending-credits scans (the costliest; each is also driven by a game hook or by the scene-load kick) now run every 10 s instead of every 2 s once a scene has been stable for 15 s. For 15 s after any scene load, focus return or settings change they still run at the normal rate. If the game hook cannot be installed the scan keeps the 2 s rate. The other scans are unchanged.

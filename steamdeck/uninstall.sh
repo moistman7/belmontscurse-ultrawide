@@ -83,7 +83,8 @@ clear_launch_option() {
         sleep 2
     fi
     local tmp; tmp="$(mktemp)"
-    cp -f "$cfg" "$cfg.bak-belmonts-curse"
+    # Keep the first backup (the config from before this mod touched it); do not overwrite it.
+    [ -e "$cfg.bak-belmonts-curse" ] || cp -f "$cfg" "$cfg.bak-belmonts-curse"
     if awk -v appid="$appid" -v remove=1 -f "$HERE/set-launch-option.awk" "$cfg" > "$tmp" && [ -s "$tmp" ]; then
         cp -f "$tmp" "$cfg"; rm -f "$tmp"
         echo "Launch option cleared (backup: $cfg.bak-belmonts-curse)."
