@@ -22,7 +22,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 - Optional: HUD in the centered 16:9 area, and a bigger HUD (see Keys).
 - Optional HUD safe-area margins and a dialogue history for the current game session.
 
-Version 0.8.20 is a camera timing update for reported camera snapping, loss of ultrawide presentation after Alt-Tab, and apparent slowdown. It enforces the camera aspect immediately before Cinemachine solves and applies the final projection in the begin-camera render callback, spreads the save-room mask scan over several frames, and cuts the idle cost of auto-advance. The F9 dump now shows each per-frame feature's average cost. It has been played in gameplay on a 3440x1440 screen without crashes, but the original reports are not confirmed fixed, auto-advance has not been re-verified after the change, and no frametime improvement is claimed beyond the measured plugin cost. Do not use 0.8.17 or 0.8.18 (startup crash). Existing features and menu/loading presentation protections are retained.
+Version 0.8.21 is a camera timing update for reported camera snapping, loss of ultrawide presentation after Alt-Tab, and apparent slowdown. It enforces the camera aspect immediately before Cinemachine solves and applies the final projection in the begin-camera render callback, spreads the save-room mask scan over several frames, cuts the idle cost of auto-advance, and in heavy scenes runs the three costliest scene scans (save-room masks, loading cameras, ending credits) every 10 s instead of every 2 s once a scene has been stable for 15 s. That last change targets periodic hitching seen in a reporter's dump from a busy late-game room; it is not yet confirmed to fix the reports. The F9 dump shows each per-frame feature's average cost. It has been played in gameplay on a 3440x1440 screen without crashes. Do not use 0.8.17 or 0.8.18 (startup crash). Existing features and menu/loading presentation protections are retained.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ Version 0.8.20 is a camera timing update for reported camera snapping, loss of u
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.20 loaded`.
+   `Belmont's Curse Ultrawide 0.8.21 loaded`.
 
 To uninstall, delete the DLL.
 

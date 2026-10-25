@@ -233,6 +233,7 @@ public class UwBehaviour : MonoBehaviour
 				Guard("skip intros", IntroAction);
 			}));
 			SceneManager.add_sceneLoaded(_sceneLoaded);
+			_sceneHooked = true;
 		}
 		catch (Exception ex)
 		{
@@ -254,6 +255,11 @@ public class UwBehaviour : MonoBehaviour
 		}
 		try { CameraTimingHooks.Init(); }
 		catch (Exception ex3) { Plugin.Instance.Log.LogWarning("Camera timing hooks unavailable; render callbacks remain: " + ex3.Message); }
+		// In heavy scenes each of these scans cost 5-9 ms (one spike 205 ms in a reporter dump). Their results also arrive
+		// through a game hook (credits, loading cameras) or the scene-load kick (save-room masks), so only the steady state relaxes.
+		RelaxJob("scan ending credits", EndingCreditsPresentation.Hooked);
+		RelaxJob("scan loading cameras", LoadingScreenPresentation.Hooked);
+		RelaxJob("scan save-room masks", _sceneHooked);
 	}
 
 	internal static void BeforeCameraSolve(CinemachineBrain brain)
@@ -364,8 +370,21 @@ public class UwBehaviour : MonoBehaviour
 		Kick();
 	}
 
+	private static float _lastKick;
+	private static bool _sceneHooked;
+	private const float StableAfter = 15f, RelaxedScanSeconds = 10f;
+
+	// Scene scans that a game hook or the scene-load kick already covers need not run every 2 s once the scene has settled.
+	private static void RelaxJob(string name, bool covered)
+	{
+		if (!covered) return;
+		foreach (Job job in Jobs)
+			if (job.Name == name) job.Relaxed = RelaxedScanSeconds;
+	}
+
 	private static void Kick()
 	{
+		_lastKick = Time.unscaledTime;
 		foreach (Job job in Jobs)
 		{
 			job.Next = 0f;
@@ -529,7 +548,7 @@ public class UwBehaviour : MonoBehaviour
 			{
 				continue;
 			}
-			job.Next = unscaledTime + job.Interval;
+			job.Next = unscaledTime + ((job.Relaxed > job.Interval && unscaledTime - _lastKick > StableAfter) ? job.Relaxed : job.Interval);
 			_jobIndex = (num + 1) % count;
 			JobWatch.Restart();
 			try
@@ -2311,7 +2330,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.20 camera-timing-prerelease === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.21 camera-timing-update === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);

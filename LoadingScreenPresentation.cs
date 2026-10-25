@@ -21,6 +21,7 @@ internal static class LoadingScreenPresentation
     private static readonly List<Entry> Cameras = new();
     private static readonly ScreenSideBars Bars = new("UwLoadingScreenBars");
     private static Harmony Hooks;
+    internal static bool Hooked { get; private set; }
 
     internal static void Init()
     {
@@ -30,6 +31,7 @@ internal static class LoadingScreenPresentation
             var postfix = new HarmonyMethod(AccessTools.Method(typeof(LoadingScreenPresentation), nameof(CameraChanged)));
             Hooks.Patch(AccessTools.Method(typeof(LoadingScreenCameraManager), "EnableLoadingScreenCamera"), postfix: postfix);
             Hooks.Patch(AccessTools.Method(typeof(LoadingScreenCameraManager), "DisableLoadingScreenCamera"), postfix: postfix);
+            Hooked = true;
         }
         catch (Exception ex)
         {

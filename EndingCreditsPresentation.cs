@@ -13,6 +13,7 @@ internal static class EndingCreditsPresentation
 {
     private static readonly List<CreditsViewManager> Views = new();
     private static readonly ScreenSideBars Bars = new("UwEndingCreditsBars");
+    internal static bool Hooked { get; private set; }
 
     internal static void Init()
     {
@@ -21,6 +22,7 @@ internal static class EndingCreditsPresentation
             new Harmony("local.belmontscurse.ultrawide.credits").Patch(
                 AccessTools.Method(typeof(CreditsViewManager), "Start"),
                 postfix: new HarmonyMethod(AccessTools.Method(typeof(EndingCreditsPresentation), nameof(Started))));
+            Hooked = true;
         }
         catch (Exception ex)
         {

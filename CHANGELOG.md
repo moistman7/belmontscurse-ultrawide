@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.21 (camera timing update)
+
+- A reporter's dump from a busy late-game room (5120x1440, 0.8.13) showed the scene scans costing 4-9 ms each every 2-5 s, with one save-room mask scan spike of 205 ms and 6 frames over 25 ms in 18 s. The save-room mask, loading-camera and ending-credits scans (the costliest; each is also driven by a game hook or by the scene-load kick) now run every 10 s instead of every 2 s once a scene has been stable for 15 s. For 15 s after any scene load, focus return or settings change they still run at the normal rate. If the game hook cannot be installed the scan keeps the 2 s rate. The other scans are unchanged.
+- Expected effect: roughly 60% less scan cost in heavy scenes and rarer spikes. Not measured in that room and not confirmed to fix the reported hitching; a single scan can still take tens of milliseconds in a very heavy scene.
+- Includes 0.8.20. Release build clean; 37 pure tests pass; played in gameplay on 3440x1440 without crashes.
+
 ## 0.8.20 (camera timing update)
 
 - Measured on a 3440x1440 screen: auto-advance's idle cost fell from 0.095 ms to 0.024 ms per frame and the plugin's average Update from 0.159 ms to 0.090 ms. With the dialogue Begin hook installed, the scene-wide search for the active line reader is only a fallback, so it now runs every 0.5 s instead of 0.1 s. Picking up a line already in progress (for example, switching auto-advance on mid-dialogue) can take up to half a second longer.
