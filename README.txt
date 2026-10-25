@@ -4,13 +4,11 @@ CASTLEVANIA: BELMONT'S CURSE - ULTRAWIDE & STEAM DECK FIX
 An unofficial community mod. It contains no game files. Use at your own risk and keep a backup
 of your saves.
 
-VERSION 0.8.22 - CAMERA TIMING AND HOUSEKEEPING UPDATE
-Test build for camera snapping, loss of ultrawide after Alt-Tab and apparent slowdown.
-Enforces the camera aspect just before Cinemachine solves; idle auto-advance and controller
-polling cost far less; in heavy scenes the three costliest scene scans now run every 10 s once
-the scene is stable (aimed at periodic hitching; unconfirmed); dialogue-history portrait copies
-are freed; Alt-Tab changes are logged; the Steam Deck installer verifies BepInEx's checksum and
-keeps your first Steam config backup. Played in gameplay without crashes.
+VERSION 0.8.23 - HITCH LOG AND SCAN BUDGET UPDATE
+Frames that take 80 ms or more are now logged with the scene and what the mod had just done, so
+hitching reports come with evidence. Slow scene scans back off automatically in heavy rooms, and
+Performance.ScanSlowdown (1-5, also in the mod menu) can slow them further. Camera behavior is
+unchanged. Played in gameplay without crashes. The original reports are unconfirmed.
 Do not use 0.8.17/0.8.18 (startup crash).
 -------------
 Expanded cutscene-bar detection and reduced camera allocations/dialogue-search sorting.
@@ -80,7 +78,7 @@ Plain zip (mod only), if you don't have BepInEx yet:
    Run the game once; the first launch can sit on a black screen for a few minutes.
 2. Extract this zip into the game folder (the BepInEx/plugins folder gets the mod DLL). You can
    ignore the "steamdeck" folder on Windows.
-3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.22 loaded".
+3. Launch the game. BepInEx/LogOutput.log should contain "Belmont's Curse Ultrawide 0.8.23 loaded".
 
 To uninstall: delete BepInEx/plugins/BelmontsCurseUltrawide.dll.
 

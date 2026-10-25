@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace BelmontsCurseUltrawide;
 
-[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.8.22")]
+[BepInPlugin("local.belmontscurse.ultrawide", "Belmont's Curse Ultrawide", "0.8.23")]
 public class Plugin : BasePlugin
 {
 	internal static Plugin Instance;
@@ -30,6 +30,7 @@ public class Plugin : BasePlugin
 	internal static ConfigEntry<bool> HideMouse;
 	internal static ConfigEntry<bool> HideMouseAlways;
 	internal static ConfigEntry<float> MouseIdleSeconds;
+	internal static ConfigEntry<float> ScanSlowdown;
 	internal static ConfigEntry<bool> AutoBigHud;
 	internal static ConfigEntry<bool> AutoBigHudDone;
 	internal static ConfigEntry<string> LastGameVersion;
@@ -169,6 +170,7 @@ public class Plugin : BasePlugin
 		FixNarrow = Config.Bind("UI", "FixNarrowScreens", defaultValue: true, "On screens narrower than 16:9 (16:10 such as the Steam Deck), match the UI to the screen width so menus are not cropped/zoomed.");
 		HideMouse = Config.Bind("Input", "HideMouseOnIdle", false, "Hide the mouse cursor after it has been still for MouseIdleSeconds, and show it again when you move or click it.");
 		MouseIdleSeconds = Config.Bind("Input", "MouseIdleSeconds", 3f, "Seconds of mouse stillness before the cursor is hidden (0.5 or more).");
+		ScanSlowdown = Config.Bind("Performance", "ScanSlowdown", 1f, new ConfigDescription("Multiplies how long the mod waits between its scene scans (canvases, cutscenes, videos, camera sizes, masks, loading cameras, credits). 1 = normal. Raise it (up to 5) if busy rooms hitch; a fix for something that appears mid-scene can then take proportionally longer to apply. Scans that run slowly already back off automatically.", new AcceptableValueRange<float>(1f, 5f)));
 		HideMouseAlways = Config.Bind("Input", "HideMouseAlways", false, "Keep the cursor hidden all the time (works without HideMouseOnIdle; it is still shown in the history window and the mod menu). Game menus can then only be used with the keyboard or a controller.");
 		PadShortcuts = Config.Bind("Input", "GamepadShortcuts", defaultValue: true, "Controller shortcut for players without a keyboard (Steam Deck): press the left and right stick buttons (L3 + R3) together to toggle the bigger HUD.");
 		AutoBigHud = Config.Bind("UI", "AutoBigHUD", defaultValue: true, "On small screens (height 900 or less, such as the Steam Deck) turn the bigger HUD on once, the first time the game runs there. After that your own choice (F6 / L3+R3 / BigHUD) is kept.");
@@ -241,7 +243,7 @@ public class Plugin : BasePlugin
 		{
 			Log.LogWarning("Startup FPS cap: " + ex2.Message);
 		}
-		Log.LogInfo("Belmont's Curse Ultrawide 0.8.22 loaded. F5 = auto-advance voiced dialogue, F6 = auto-advance unvoiced dialogue, F7 = big HUD (controller: L3 + R3), F8 = HUD centered / at screen edges, F9 = diagnostic dump, F10 = dialogue history (controller: Select + North). Controller: hold Select, then R3 / Right Shoulder / L3 / Start for the other functions in that order.");
+		Log.LogInfo("Belmont's Curse Ultrawide 0.8.23 loaded. F5 = auto-advance voiced dialogue, F6 = auto-advance unvoiced dialogue, F7 = big HUD (controller: L3 + R3), F8 = HUD centered / at screen edges, F9 = diagnostic dump, F10 = dialogue history (controller: Select + North). Controller: hold Select, then R3 / Right Shoulder / L3 / Start for the other functions in that order.");
 		try
 		{
 			string gameVersion = UnityEngine.Application.version;

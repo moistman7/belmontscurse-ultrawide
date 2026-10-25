@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.23 (hitch log and scan budget)
+
+- Automatic hitch log: a frame that takes 80 ms or more (not counting focus changes or frames right after an F9 dump) writes one line to LogOutput.log: the active scene, loaded scene count, the previous plugin Update's cost, whether and which scan job ran in it, garbage-collection counts and the time scale. At most one line per 2 s and 40 per session; the F9 dump shows a summary and the last 10. In a test the logger caught 4-5 stalls during boot and level loads (scenes BootLoader, MainMenu, Boot, 06_MainHall_Level with 12-13 scenes loaded) while the mod's own jobs cost 0-2 ms, i.e. they were the game loading.
+- Scan budget: a scan job now waits long enough that it uses at most about 0.5% of the time (a 20 ms scan waits at least 4 s; the wait is capped at 30 s). Cheap scans keep their normal 2-5 s interval, so only heavy scenes change. The scheduling decision is now a pure function (Scheduling.cs) with 10 unit tests; each job's current wait appears in the F9 dump as lastWait.
+- New setting Performance.ScanSlowdown (1-5, default 1, also 'Scene scan slowdown' in the mod menu) multiplies the scan intervals for people whose rooms still hitch. Only scene scans are scaled; UI and presentation jobs are not.
+- Developer tools (not shipped in the ZIPs): tools/smoke-test.ps1 launches the game with a DLL, loads the save, takes an F9 dump and checks for crashes, errors, hook counts and paired render callbacks (rejecting any log older than the launch); tools/release.ps1 builds and byte-verifies the four release ZIPs.
+- Includes 0.8.22. Release build clean; 48 pure tests pass; played in gameplay on 3440x1440 without crashes (the 10 s relaxed scans showed lastWait=10.0s in a stable scene). Not verified: auto-advance after the 0.8.20 change and portrait cleanup (no dialogue was reached), and whether any of this fixes the reported hitching and the original Alt-Tab and snapping reports.
+
 ## 0.8.22 (camera timing and housekeeping update)
 
 - Controller polling: the shortcut poll is skipped on frames where the pad received no input (a button can only be 'pressed this frame' on a frame the device updated, so behavior is identical). Measured on a 3440x1440 PC with a gamepad: the shortcut's average cost fell from 0.039 ms to 0.001 ms per frame (99.98% of polls skipped) and the plugin's average Update from 0.136 ms to 0.062 ms. The F9 dump shows poll, idle-skip and pad-switch counts.

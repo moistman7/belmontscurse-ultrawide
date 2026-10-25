@@ -479,6 +479,37 @@ public class UwBehaviour : MonoBehaviour
 		_camSpoofed = false;
 	}
 
+	private static readonly HitchGate Hitches = new HitchGate();
+	private static readonly string[] RecentHitches = new string[10];
+	private static int _recentHitchCount, _hitchDumpSerial;
+	private static string _lastJobName = "";
+	private static double _lastJobMs, _lastUpdateMs;
+	private static int _lastJobFrame = -10;
+	private static int _gc0, _gc1, _gc2;
+
+	// A frame that took 80 ms or more (outside focus gaps and dump writes) gets one log line saying where we were and what
+	// the mod had just done, so a report of "it hitches in room X" arrives with evidence instead of a guess.
+	private static void NoteFrame(double ms)
+	{
+		if (ms < 0) return;
+		// The frame after an F9 dump includes the file write itself: not a game stall.
+		if (_dumpSerial != _hitchDumpSerial) { _hitchDumpSerial = _dumpSerial; return; }
+		if (!Hitches.ShouldLog(ms, Time.unscaledTime)) return;
+		try
+		{
+			int g0 = GC.CollectionCount(0), g1 = GC.CollectionCount(1), g2 = GC.CollectionCount(2);
+			bool jobBefore = _lastJobFrame == Time.frameCount - 1;
+			string line = "Hitch " + ms.ToString("F1", CultureInfo.InvariantCulture) + " ms (scene '" + SceneManager.GetActiveScene().name
+				+ "', loaded scenes " + SceneManager.sceneCount + ", previous plugin Update " + _lastUpdateMs.ToString("F2", CultureInfo.InvariantCulture) + " ms, "
+				+ (jobBefore ? "job '" + _lastJobName + "' " + _lastJobMs.ToString("F1", CultureInfo.InvariantCulture) + " ms ran in it" : "no scan job ran in it")
+				+ ", GC +" + (g0 - _gc0) + "/+" + (g1 - _gc1) + "/+" + (g2 - _gc2) + ", timeScale " + Time.timeScale.ToString("R", CultureInfo.InvariantCulture) + ")";
+			_gc0 = g0; _gc1 = g1; _gc2 = g2;
+			RecentHitches[_recentHitchCount++ % RecentHitches.Length] = line;
+			Plugin.Instance.Log.LogInfo(line);
+		}
+		catch (Exception ex) { Plugin.Instance.Log.LogWarning("Hitch log line failed: " + ex.Message); }
+	}
+
 	private static float _focusWatchStart, _focusWatchUntil;
 	private static string _focusWatchLast;
 
@@ -522,7 +553,7 @@ public class UwBehaviour : MonoBehaviour
 		}
 		_wasFocused = focused;
 		if (focused && Time.unscaledTime < _focusWatchUntil) WatchAfterFocus();
-		if (focused) FrameSamples.Record(Stopwatch.GetTimestamp(), ModMenu.IsOpen ? 2 : DialogueHistory.IsOpen ? 1 : 0);
+		if (focused) NoteFrame(FrameSamples.Record(Stopwatch.GetTimestamp(), ModMenu.IsOpen ? 2 : DialogueHistory.IsOpen ? 1 : 0));
 		else FrameSamples.ResetClock();
 		int dumpBefore = _dumpSerial;
 		FrameWatch.Restart();
@@ -555,6 +586,7 @@ public class UwBehaviour : MonoBehaviour
 		FrameWatch.Stop();
 		if (dumpBefore != _dumpSerial) return;
 		double totalMilliseconds = FrameWatch.Elapsed.TotalMilliseconds;
+		_lastUpdateMs = totalMilliseconds;
 		_updateTotalMs += totalMilliseconds;
 		_updateRuns++;
 		if (totalMilliseconds > _updateMaxMs)
@@ -575,7 +607,9 @@ public class UwBehaviour : MonoBehaviour
 			{
 				continue;
 			}
-			job.Next = unscaledTime + ((job.Relaxed > job.Interval && unscaledTime - _lastKick > StableAfter) ? job.Relaxed : job.Interval);
+			// Provisional: if the run fails or a Kick happens during it, the job is still rescheduled; the real wait is set below.
+			job.Next = unscaledTime + job.Interval;
+			float kickBefore = _lastKick;
 			_jobIndex = (num + 1) % count;
 			JobWatch.Restart();
 			try
@@ -615,6 +649,17 @@ public class UwBehaviour : MonoBehaviour
 			}
 			JobWatch.Stop();
 			double totalMilliseconds = JobWatch.Elapsed.TotalMilliseconds;
+			// Wait according to the job's interval, the stable-scene relaxation, the user's slowdown setting and how long
+			// the run took (a slow scan in a heavy scene backs off). A Kick during the run keeps its immediate rerun.
+			if (_lastKick == kickBefore)
+			{
+				job.LastGap = Scheduling.NextGap(job.Interval, job.Relaxed, unscaledTime - _lastKick > StableAfter,
+					job.Name.StartsWith("scan ", StringComparison.Ordinal), Plugin.ScanSlowdown.Value, totalMilliseconds);
+				job.Next = unscaledTime + job.LastGap;
+			}
+			_lastJobName = job.Name;
+			_lastJobMs = totalMilliseconds;
+			_lastJobFrame = Time.frameCount;
 			job.TotalMs += totalMilliseconds;
 			job.Runs++;
 			if (totalMilliseconds > job.MaxMs)
@@ -2366,7 +2411,7 @@ public class UwBehaviour : MonoBehaviour
 			StringBuilder stringBuilder2 = stringBuilder;
 			StringBuilder stringBuilder3 = stringBuilder2;
 			StringBuilder.AppendInterpolatedStringHandler handler = new StringBuilder.AppendInterpolatedStringHandler(105, 9, stringBuilder2);
-			handler.AppendLiteral("=== DUMP 0.8.22 camera-timing-update === enabled=");
+			handler.AppendLiteral("=== DUMP 0.8.23 hitch-log-update === enabled=");
 			handler.AppendFormatted(Plugin.On);
 			handler.AppendLiteral(" screen ");
 			handler.AppendFormatted(Screen.width);
@@ -2388,6 +2433,10 @@ public class UwBehaviour : MonoBehaviour
 			stringBuilder3.AppendLine(ref handler);
 			CameraTimingHooks.Dump(stringBuilder);
 			stringBuilder.AppendLine("Gamepad poll: polls=" + _padPolls + " idleSkips=" + _padSkipped + " padSwitches=" + _padSwitches);
+			stringBuilder.AppendLine("Scan scheduling: slowdown=" + Plugin.ScanSlowdown.Value.ToString("R", CultureInfo.InvariantCulture) + " (see each job's lastWait; slow scans back off automatically)");
+			stringBuilder.AppendLine("Hitch log: frames>=" + HitchGate.ThresholdMs + "ms total=" + Hitches.Total + " logged=" + Hitches.Logged + " suppressed=" + Hitches.Suppressed + " worst=" + Hitches.Worst.ToString("F1", CultureInfo.InvariantCulture) + "ms");
+			for (int h = Math.Max(0, _recentHitchCount - RecentHitches.Length); h < _recentHitchCount; h++)
+				stringBuilder.AppendLine("  " + RecentHitches[h % RecentHitches.Length]);
 			stringBuilder.AppendLine("Simulation timing snapshot: timeScale=" + Time.timeScale.ToString("R", CultureInfo.InvariantCulture)
 				+ " deltaTime=" + Time.deltaTime.ToString("R", CultureInfo.InvariantCulture)
 				+ " unscaledDeltaTime=" + Time.unscaledDeltaTime.ToString("R", CultureInfo.InvariantCulture)
@@ -2449,7 +2498,9 @@ public class UwBehaviour : MonoBehaviour
 				handler.AppendFormatted((job.Runs > 0) ? (job.TotalMs / (double)job.Runs) : 0.0, "F3");
 				handler.AppendLiteral("ms max=");
 				handler.AppendFormatted(job.MaxMs, "F3");
-				handler.AppendLiteral("ms");
+				handler.AppendLiteral("ms lastWait=");
+				handler.AppendFormatted(job.LastGap, "F1");
+				handler.AppendLiteral("s");
 				stringBuilder5.AppendLine(ref handler);
 			}
 			foreach (var pair in ActionMaxMs) if (pair.Value >= 1.0) stringBuilder.AppendLine("    feature '" + pair.Key + "' slowest run " + pair.Value.ToString("F1") + "ms");

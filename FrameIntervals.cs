@@ -21,11 +21,15 @@ internal sealed class FrameIntervals
 
 	internal void ResetClock() => _previous = 0;
 
-	internal void Record(long timestamp, int mode)
+	// Returns the interval since the previous recorded frame in milliseconds, or -1 when there is no valid sample
+	// (first frame, after a focus gap, or a mode change): callers use it to spot stalls without a second clock.
+	internal double Record(long timestamp, int mode)
 	{
+		double result = -1;
 		if (_previous != 0 && _mode == mode)
 		{
 			double ms = (timestamp - _previous) * 1000.0 / Stopwatch.Frequency;
+			result = ms;
 			_lifetimeWorst[mode] = Math.Max(_lifetimeWorst[mode], ms);
 			if (ms > 25) _lifetimeOver25[mode]++;
 			_samples[mode][_positions[mode]] = ms;
@@ -34,6 +38,7 @@ internal sealed class FrameIntervals
 		}
 		_previous = timestamp;
 		_mode = mode;
+		return result;
 	}
 
 	internal double[] Snapshot(int mode)

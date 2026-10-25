@@ -68,4 +68,16 @@ public class FrameIntervalsTests
 		Assert.Equal(3 * 1000d / Stopwatch.Frequency, sorted[1], 10);
 		Assert.Equal(sorted, samples.Snapshot(0));
 	}
+
+	[Fact]
+	public void Record_returns_the_interval_or_minus_one_when_there_is_no_valid_sample()
+	{
+		var samples = new FrameIntervals(4);
+		long second = Stopwatch.Frequency;
+		Assert.Equal(-1, samples.Record(second, 0));          // first frame
+		Assert.Equal(1000, samples.Record(second * 2, 0), 3);  // 1 s later
+		Assert.Equal(-1, samples.Record(second * 3, 1));       // mode change
+		samples.ResetClock();
+		Assert.Equal(-1, samples.Record(second * 9, 1));       // after a focus gap
+	}
 }

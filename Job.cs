@@ -14,6 +14,9 @@ internal class Job
 	// results also arrive through a game hook or a scene-load kick.
 	public float Relaxed;
 
+	// The wait chosen after the most recent run (shown in the F9 dump).
+	public float LastGap;
+
 	public Action Run;
 
 	public double MaxMs;

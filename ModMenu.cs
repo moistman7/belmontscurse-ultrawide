@@ -149,6 +149,7 @@ internal static class ModMenu
 		Switch("Hide mouse when idle", Plugin.HideMouse);
 		Switch("Keep mouse always hidden", Plugin.HideMouseAlways);
 		Slide("Mouse idle time", Plugin.MouseIdleSeconds, 0.5f, 15f, 0.5f, " s");
+		Slide("Scene scan slowdown", Plugin.ScanSlowdown, 1f, 5f, 0.5f, "x");
 		Switch("TAA in Video menu", Plugin.EnableTaaOption, "reopen Settings");
 		Switch("Skip intros", Plugin.SkipIntros, "next launch");
 		Switch("Force resolution", Plugin.ForceResolution, "next launch");

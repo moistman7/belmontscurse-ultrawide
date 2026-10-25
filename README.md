@@ -22,7 +22,7 @@ monitors (21:9, 32:9 and wider). Everything is automatic: no launch options, no 
 - Optional: HUD in the centered 16:9 area, and a bigger HUD (see Keys).
 - Optional HUD safe-area margins and a dialogue history for the current game session.
 
-Version 0.8.22 is a camera timing and housekeeping update for reported camera snapping, loss of ultrawide presentation after Alt-Tab, and apparent slowdown. It enforces the camera aspect immediately before Cinemachine solves and applies the final projection in the begin-camera render callback, spreads the save-room mask scan over several frames, cuts the idle cost of auto-advance and of controller polling, and in heavy scenes runs the three costliest scene scans every 10 s once a scene has been stable for 15 s (aimed at periodic hitching seen in a reporter's dump from a busy late-game room; not confirmed to fix the reports). It also frees dialogue-history portrait copies that are no longer needed, logs screen and camera changes for a few seconds after Alt-Tab, and the Steam Deck installer now keeps the first Steam config backup and checks the BepInEx download against a pinned SHA-256. The F9 dump shows each per-frame feature's average cost. Tested in gameplay on a 3440x1440 screen without crashes, including repeated focus returns. Do not use 0.8.17 or 0.8.18 (startup crash). Existing features and menu/loading presentation protections are retained.
+Version 0.8.23 adds an automatic hitch log and a scan budget, on top of the 0.8.22 camera, polling and housekeeping changes. Any frame that takes 80 ms or more (outside focus changes and dumps) now writes one line to BepInEx/LogOutput.log with the scene name, how many scenes are loaded, what the mod had just done and the garbage-collection counts, so a report of hitching in a particular room arrives with evidence; the F9 dump summarizes them. Scene scans that run slowly (heavy rooms) now back off automatically so they use at most about 0.5% of the time, and a new Performance.ScanSlowdown setting (1-5, also in the mod settings menu) lets you slow the scans further. Camera behavior is unchanged: the aspect is enforced just before Cinemachine solves and the final projection is applied in the begin-camera render callback. Tested in gameplay on a 3440x1440 screen without crashes. Do not use 0.8.17 or 0.8.18 (startup crash). The original Alt-Tab, snapping and hitching reports are not confirmed fixed. Existing features and menu/loading presentation protections are retained.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ Version 0.8.22 is a camera timing and housekeeping update for reported camera sn
 2. Copy `BelmontsCurseUltrawide.dll` to `BepInEx/plugins/` (replace any older version). The release
    zip already has it in that folder, so you can extract it straight into the game folder.
 3. Launch the game. `BepInEx/LogOutput.log` should contain
-   `Belmont's Curse Ultrawide 0.8.22 loaded`.
+   `Belmont's Curse Ultrawide 0.8.23 loaded`.
 
 To uninstall, delete the DLL.
 
